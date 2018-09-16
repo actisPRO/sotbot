@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -157,6 +158,57 @@ namespace SeaOfThieves.Commands
                 $"`{Bot.BotSettings.Prefix}yes {ship.Name}` для принятия приглашения, или `{Bot.BotSettings.Prefix}no {ship.Name}` для отказа.");
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно отправлено приглашение участнику {member.Username}!");
+        }
+
+        [Command("list")]
+        [Description("Отправляет список членов вашего корабля")]
+        public async Task List(CommandContext ctx)
+        {
+            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                return;
+            }
+
+            var fs = File.Create(ship.Name + ".txt");
+            var sw = new StreamWriter(fs);
+            
+            foreach (var member in ship.Members.Values)
+            {
+                var type = "";
+                var discordMember = await ctx.Guild.GetMemberAsync(member.Id);
+                var status = "";
+
+                if (member.Status)
+                {
+                    status = "приглашён";
+                }
+                else
+                {
+                    status = "член экипажа";
+                }
+                switch (member.Type)
+                {
+                    case MemberType.Owner:
+                        type = "Капитан";
+                        break;
+                    case MemberType.Member:
+                        type = "Матрос";
+                        break;
+                }
+                await sw.WriteLineAsync($"{type} {discordMember.DisplayName}#{discordMember.Discriminator}. " +
+                                        $"Статус: {status}. Номер: {member.Id}.");
+            }
+            
+            sw.Close();
+            fs.Close();
+
+            await ctx.Member.SendFileAsync(ship.Name + ".txt",
+                $"{Bot.BotSettings.OkEmoji} Список членов экипажа вашего корабля.");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Список членов экипажа отправлен в личные сообщения!");
+            
+            File.Delete(ship.Name + ".txt"); //дабы не плодить мусор
         }
 
         [Command("yes"), Aliases("y")]

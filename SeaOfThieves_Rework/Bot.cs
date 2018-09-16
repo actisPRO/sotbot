@@ -102,6 +102,7 @@ namespace SeaOfThieves
         private Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
             var message = e.Message.Content.ToLower();
+            // боремся со спамом от одной мошеннической группы
             if (message.Contains("sea") && message.Contains("of") && message.Contains("cheat") && !e.Message.Author.IsBot)
             {
                 e.Guild.BanMemberAsync(e.Author.Id, 7, "Auto banned for message, containing 'seaofcheat'");
