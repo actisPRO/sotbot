@@ -215,3 +215,11 @@ FakesAssemblies/
 **/*.Server/GeneratedArtifacts
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
+
+\.idea/\.idea\.SeaOfThieves_Rework/\.idea/
+
+\.idea/\.idea\.SeaOfThieves_Rework/
+
+SeaOfThieves_Rework/changelog\.md
+
+SeaOfThieves_Rework/settings\.xml

@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{31C4784B-6062-4C76-86F6-BECE5ECDF927}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SeaOfThieves</RootNamespace>
+    <AssemblyName>SeaOfThieves</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DSharpPlus, Version=3.2.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\DSharpPlus.3.2.3\lib\net47\DSharpPlus.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DSharpPlus.CommandsNext, Version=3.2.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\DSharpPlus.CommandsNext.3.2.3\lib\net47\DSharpPlus.CommandsNext.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DSharpPlus.WebSocket.WebSocketSharp, Version=3.2.3.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\DSharpPlus.WebSocket.WebSocketSharp.3.2.3\lib\net47\DSharpPlus.WebSocket.WebSocketSharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="websocket-sharp, Version=1.0.2.32519, Culture=neutral, PublicKeyToken=5660b08a1845a91e">
+      <HintPath>..\packages\WebSocketSharp-NonPreRelease.1.0.0\lib\net35\websocket-sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Bot.cs" />
+    <Compile Include="Commands\CreationCommands.cs" />
+    <Compile Include="Commands\DonatorCommands.cs" />
+    <Compile Include="Commands\ModerationCommands.cs" />
+    <Compile Include="Commands\PrivateCommands.cs" />
+    <Compile Include="Commands\UtilsCommands.cs" />
+    <Compile Include="Entities\Donator.cs" />
+    <Compile Include="Entities\DonatorList.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="changelog.md" />
+    <Content Include="settings.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ModeratorAPI\ModeratorAPI.csproj">
+      <Project>{06f5f5b9-acaa-4466-ba31-d05bead9b25c}</Project>
+      <Name>ModeratorAPI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShipAPI\ShipAPI.csproj">
+      <Project>{52d09d44-a43e-44b2-b250-2513f3f44d72}</Project>
+      <Name>ShipAPI</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
+</Project>
