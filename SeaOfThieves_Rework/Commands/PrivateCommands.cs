@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using ShipAPI;
 
 namespace SeaOfThieves.Commands
@@ -177,10 +178,19 @@ namespace SeaOfThieves.Commands
             foreach (var member in ship.Members.Values)
             {
                 var type = "";
-                var discordMember = await ctx.Guild.GetMemberAsync(member.Id);
+
+                DiscordMember discordMember = null;
+                try
+                {
+                    discordMember = await ctx.Guild.GetMemberAsync(member.Id);
+                }
+                catch (NotFoundException)
+                {
+                    continue;
+                }
                 var status = "";
 
-                if (member.Status)
+                if (!member.Status)
                 {
                     status = "приглашён";
                 }
