@@ -45,6 +45,7 @@ namespace SeaOfThieves
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
             
+            
             DonatorList.SaveToXML(BotSettings.DonatorXML);
             
             bot.RunBotAsync().GetAwaiter().GetResult();
@@ -115,10 +116,14 @@ namespace SeaOfThieves
 
         private Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
         {
-            e.Guild.GetChannel(BotSettings.FulllogChannel)
-                .SendMessageAsync($"**Удаление сообщения**\n" +
-                                  $"**Автор:** {e.Message.Author.Mention} ({e.Message.Author.Id})\n" +
-                                  $"**Содержимое: ```{e.Message.Content}```**");
+            if (!GetIgnoredChannels(BotSettings.IgnoredChannels).Contains(e.Channel.Id))
+            {
+                e.Guild.GetChannel(BotSettings.FulllogChannel)
+                    .SendMessageAsync($"**Удаление сообщения**\n" +
+                                      $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                      $"**Канал:** {e.Channel}\n" +
+                                      $"**Содержимое: ```{e.Message.Content}```**");
+            }
             return Task.CompletedTask;
         }
 
@@ -141,7 +146,7 @@ namespace SeaOfThieves
                                         $"**Удачной игры!**");
             
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
-                .SendMessageAsync($"**Участник присоединился:** {e.Member.Mention} ({e.Member.Id})");
+                .SendMessageAsync($"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
         }
 
         private Task CommandsOnCommandErrored(CommandErrorEventArgs e)
@@ -230,6 +235,25 @@ namespace SeaOfThieves
                 BotSettings = (Settings) serializer.Deserialize(reader);
             }
         }
+
+        private static List<ulong> GetIgnoredChannels(string ignoredChannels)
+        {
+            string[] ignoredStrings = ignoredChannels.Split(',');
+            List<ulong> result = new List<ulong>();
+            foreach (var ignoredString in ignoredStrings)
+            {
+                try
+                {
+                    result.Add(Convert.ToUInt64(ignoredString));
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            return result;
+        }
     }
 
     public struct Settings
@@ -262,5 +286,7 @@ namespace SeaOfThieves
         public ulong ModlogChannel;
         public ulong FulllogChannel;
         public ulong UserlogChannel;
+
+        public string IgnoredChannels;
     }
 }
