@@ -45,6 +45,13 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
+            if (DonatorList.Donators[ctx.Member.Id].Balance < 50)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 50 рублей. " +
+                                       $"Если вы донатили до *17.09.2018*, обратитесь к Actis для смены цвета.");
+                return;
+            }
+
             DiscordColor discordColor = new DiscordColor(000000);
             try
             {
@@ -61,6 +68,54 @@ namespace SeaOfThieves.Commands
             await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
             
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен цвет донатера!");
+        }
+
+        [Command("drename")]
+        [Description("Измененяет название роли донатера.")]
+        public async Task DRename(CommandContext ctx, [RemainingText] string newName)
+        {
+            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
+                return;
+            }
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < 250)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
+                return;
+            }
+
+            await ctx.Guild.UpdateRoleAsync
+                (ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole), newName);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
+        }
+
+        [Command("dfriend")]
+        [Description("Добавляет вашему другу цвет донатера (ваш)")]
+        public async Task DInvite(CommandContext ctx, DiscordMember member)
+        {
+            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
+                return;
+            }
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < 250)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
+                return;
+            }
+
+            if (DonatorList.Donators[ctx.Member.Id].Friends.Count == 5)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
+                return;
+            }
+            DonatorList.Donators[ctx.Member.Id].AddFriend(member.Id);
+            await member.GrantRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
         }
 
         [Command("droleadd")]

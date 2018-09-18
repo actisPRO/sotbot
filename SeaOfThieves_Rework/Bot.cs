@@ -48,6 +48,8 @@ namespace SeaOfThieves
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
             
+            DonatorList.SaveToXML(BotSettings.DonatorXML);
+            
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
 

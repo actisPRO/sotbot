@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using DSharpPlus.Entities;
 
@@ -16,8 +17,15 @@ namespace SeaOfThieves.Entities
             
             foreach (var donator in Donators.Values)
             {
-                root.Add(new XElement("donator", donator.Member, new XAttribute("balance", donator.Balance), 
-                    new XAttribute("color", donator.ColorRole)));
+                var dElement = new XElement("donator");
+                dElement.Add(new XElement("id", donator.Member));
+                dElement.Add(new XElement("balance", donator.Balance));
+                dElement.Add(new XElement("colorRole", donator.ColorRole));
+                foreach (var friend in donator.Friends)
+                {
+                    dElement.Add(new XElement("friend", friend));
+                }
+                root.Add(dElement);
             }
             
             doc.Add(root);
@@ -30,9 +38,13 @@ namespace SeaOfThieves.Entities
             foreach (var donator in doc.Element("donators").Elements("donator"))
             {
                 var created = 
-                    new Donator(Convert.ToUInt64(donator.Value), 
-                        Convert.ToUInt64(donator.Attribute("color").Value), 
-                        Convert.ToDouble(donator.Attribute("balance").Value));
+                    new Donator(Convert.ToUInt64(donator.Element("id").Value), 
+                        Convert.ToUInt64(donator.Element("colorRole").Value),
+                        Convert.ToDouble(donator.Element("balance").Value));
+                foreach (var friend in donator.Elements("friend"))
+                {
+                    created.AddFriend(Convert.ToUInt64(friend));
+                }
             }
         }
     }
