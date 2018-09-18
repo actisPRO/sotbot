@@ -15,10 +15,14 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task DonatorAdd(CommandContext ctx, DiscordMember member, int balance)
         {
-            var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
-            await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
-
-            var res = new Donator(member.Id, role.Id, balance);
+            var res = new Donator(member.Id, 0, balance);
+            if (balance >= 50)
+            {
+                var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
+                res.SetRole(role.Id);
+                await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
+                await member.GrantRoleAsync(role);
+            }
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
             
             var over100Message = ".";
@@ -40,8 +44,6 @@ namespace SeaOfThieves.Commands
                 over50Message = "Используйте команду " +
                                 $"`!dcolor код_цвета` для изменения цвета{over100Message}{over250Message}";
             }
-
-            await member.GrantRoleAsync(role);
             await member.SendMessageAsync(
                 $"Администратор **{ctx.Member.Username}** добавил вас в качестве донатера. Ваш баланс: **{balance} рублей**. {over50Message}");
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
@@ -202,7 +204,7 @@ namespace SeaOfThieves.Commands
 
         [Command("dfriend")]
         [Description("Добавляет вашему другу цвет донатера (ваш)")]
-        public async Task DInvite(CommandContext ctx, DiscordMember member)
+        public async Task DFriend(CommandContext ctx, DiscordMember member)
         {
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
@@ -223,8 +225,33 @@ namespace SeaOfThieves.Commands
             }
             DonatorList.Donators[ctx.Member.Id].AddFriend(member.Id);
             await member.GrantRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
-
+            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
+        }
+
+        [Command("dunfriend")]
+        [Description("Убирает цвет у друга")]
+        public async Task DUnFriend(CommandContext ctx, DiscordMember member)
+        {
+            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
+                return;
+            }
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < 250)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
+                return;
+            }
+            
+            await member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
+            
+            DonatorList.Donators[ctx.Member.Id].RemoveFriend(member.Id);
+            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет!");
         }
 
         [Command("droleadd")]

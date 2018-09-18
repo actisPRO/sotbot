@@ -44,6 +44,14 @@ namespace SeaOfThieves.Entities
             ShipList.Remove(Name);
         }
 
+        public void Rename(string name)
+        {
+            ShipList.Update(Name, null);
+            Name = name;
+            
+            ShipList.Update(Name, this);
+        }
+
         public void AddMember(ulong id, MemberType type = MemberType.Member, bool status = false)
         {
             if (Members.ContainsKey(id))

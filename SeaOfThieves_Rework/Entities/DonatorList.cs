@@ -43,7 +43,7 @@ namespace SeaOfThieves.Entities
                         Convert.ToDouble(donator.Element("balance").Value));
                 foreach (var friend in donator.Elements("friend"))
                 {
-                    created.AddFriend(Convert.ToUInt64(friend));
+                    created.AddFriend(Convert.ToUInt64(friend.Value));
                 }
             }
         }

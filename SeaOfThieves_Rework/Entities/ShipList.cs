@@ -54,6 +54,11 @@ namespace SeaOfThieves.Entities
             
             foreach (var ship in Ships.Values)
             {
+                if (ship == null)
+                {
+                    continue;
+                }
+                
                 XElement shipE = new XElement("ship", new XAttribute("name", ship.Name), new XAttribute("status", ship.Status));
                 
                 shipE.Add(new XElement("role", ship.Role));

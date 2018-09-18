@@ -328,5 +328,29 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы покинули корабль **{name}**!");
         }
+
+        [Command("rename")]
+        [Description("Переименовывает корабль")]
+        public async Task Rename(CommandContext ctx, [RemainingText] [Description("Новое название")]
+            string name)
+        {
+            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                return;
+            }
+            
+            ship.Rename(name);
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+            ShipList.ReadFromXML(Bot.BotSettings.ShipXML); //костыль адовый
+
+            name = "☠" + name + "☠";
+
+            await ctx.Guild.UpdateRoleAsync(ctx.Guild.GetRole(ship.Role), name);
+            await ctx.Guild.GetChannel(ship.Channel).ModifyAsync(name);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
+        }
     }
 }

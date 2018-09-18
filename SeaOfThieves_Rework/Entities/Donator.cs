@@ -27,6 +27,13 @@ namespace SeaOfThieves.Entities
             DonatorList.Donators[Member] = this;
         }
 
+        public void RemoveFriend(ulong friend)
+        {
+            Friends.Remove(friend);
+            
+            DonatorList.Donators[Member] = this;
+        }
+
         public void SetBalance(double newBalance)
         {
             Balance = newBalance;
