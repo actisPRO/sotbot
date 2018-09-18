@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
-namespace ModeratorAPI
+namespace SeaOfThieves.Entities
 {
     public static class UserList
     {

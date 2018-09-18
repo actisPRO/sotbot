@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ModeratorAPI
+namespace SeaOfThieves.Entities
 {
     public class User
     {

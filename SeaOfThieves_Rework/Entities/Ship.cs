@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
-namespace ShipAPI
+namespace SeaOfThieves.Entities
 {
     public class Ship
     {

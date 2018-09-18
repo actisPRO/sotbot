@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable UnusedMember.Global
 
-namespace ShipAPI
+namespace SeaOfThieves.Entities
 {
     public static class ShipList
     {

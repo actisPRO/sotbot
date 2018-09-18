@@ -10,10 +10,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Net.WebSocket;
-using ModeratorAPI;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
-using ShipAPI;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global

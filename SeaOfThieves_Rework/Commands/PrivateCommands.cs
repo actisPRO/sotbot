@@ -10,7 +10,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
-using ShipAPI;
+using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
