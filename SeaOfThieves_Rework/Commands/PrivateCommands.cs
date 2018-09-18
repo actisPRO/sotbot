@@ -9,7 +9,8 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using ShipAPI;
+using DSharpPlus.Exceptions;
+using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
@@ -177,10 +178,19 @@ namespace SeaOfThieves.Commands
             foreach (var member in ship.Members.Values)
             {
                 var type = "";
-                var discordMember = await ctx.Guild.GetMemberAsync(member.Id);
+
+                DiscordMember discordMember = null;
+                try
+                {
+                    discordMember = await ctx.Guild.GetMemberAsync(member.Id);
+                }
+                catch (NotFoundException)
+                {
+                    continue;
+                }
                 var status = "";
 
-                if (member.Status)
+                if (!member.Status)
                 {
                     status = "приглашён";
                 }
@@ -317,6 +327,30 @@ namespace SeaOfThieves.Commands
             await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(ShipList.Ships[name].Role));
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы покинули корабль **{name}**!");
+        }
+
+        [Command("rename")]
+        [Description("Переименовывает корабль")]
+        public async Task Rename(CommandContext ctx, [RemainingText] [Description("Новое название")]
+            string name)
+        {
+            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                return;
+            }
+            
+            ship.Rename(name);
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+            ShipList.ReadFromXML(Bot.BotSettings.ShipXML); //костыль адовый
+
+            name = "☠" + name + "☠";
+
+            await ctx.Guild.UpdateRoleAsync(ctx.Guild.GetRole(ship.Role), name);
+            await ctx.Guild.GetChannel(ship.Channel).ModifyAsync(name);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
         }
     }
 }

@@ -10,10 +10,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Net.WebSocket;
-using ModeratorAPI;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
-using ShipAPI;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -25,7 +23,6 @@ namespace SeaOfThieves
         public DiscordClient Client { get; set; }
         public CommandsNextModule Commands { get; set; }
         public static Settings BotSettings { get; private set; }
-        public static DiscordGuild Guild { get; private set; }
             
         public static void Main(string[] args)
         {
@@ -47,6 +44,8 @@ namespace SeaOfThieves
             ShipList.ReadFromXML(BotSettings.ShipXML);
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
+            
+            DonatorList.SaveToXML(BotSettings.DonatorXML);
             
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -93,8 +92,6 @@ namespace SeaOfThieves
             Commands.CommandErrored += CommandsOnCommandErrored;
 
             await Client.ConnectAsync();
-
-            Guild = await Client.GetGuildAsync(BotSettings.Guild);
             
             await Task.Delay(-1);
         }
@@ -106,7 +103,7 @@ namespace SeaOfThieves
             if (message.Contains("sea") && message.Contains("of") && message.Contains("cheat") && !e.Message.Author.IsBot)
             {
                 e.Guild.BanMemberAsync(e.Author.Id, 7, "Auto banned for message, containing 'seaofcheat'");
-                e.Guild.GetChannel(Bot.BotSettings.ModlogChannel)
+                e.Guild.GetChannel(BotSettings.ModlogChannel)
                     .SendMessageAsync($"**Блокировка**\n\n" +
                                       $"**Модератор:** {e.Client.CurrentUser.Mention} ({e.Client.CurrentUser.Id})\n" +
                                       $"**Получатель:** {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id})\n" +

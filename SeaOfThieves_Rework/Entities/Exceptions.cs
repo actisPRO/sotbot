@@ -1,8 +1,9 @@
 ﻿using System;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantBaseConstructorCall
 
-namespace ShipAPI
+namespace SeaOfThieves.Entities
 {
     public class ShipExistsException : Exception
     {

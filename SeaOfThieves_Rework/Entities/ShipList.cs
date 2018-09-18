@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable UnusedMember.Global
 
-namespace ShipAPI
+namespace SeaOfThieves.Entities
 {
     public static class ShipList
     {
@@ -53,6 +54,11 @@ namespace ShipAPI
             
             foreach (var ship in Ships.Values)
             {
+                if (ship == null)
+                {
+                    continue;
+                }
+                
                 XElement shipE = new XElement("ship", new XAttribute("name", ship.Name), new XAttribute("status", ship.Status));
                 
                 shipE.Add(new XElement("role", ship.Role));

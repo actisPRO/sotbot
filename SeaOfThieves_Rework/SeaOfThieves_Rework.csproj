@@ -75,6 +75,14 @@
     <Compile Include="Commands\UtilsCommands.cs" />
     <Compile Include="Entities\Donator.cs" />
     <Compile Include="Entities\DonatorList.cs" />
+    <Compile Include="Entities\Exceptions.cs" />
+    <Compile Include="Entities\MemberType.cs" />
+    <Compile Include="Entities\Ship.cs" />
+    <Compile Include="Entities\ShipList.cs" />
+    <Compile Include="Entities\ShipMember.cs" />
+    <Compile Include="Entities\User.cs" />
+    <Compile Include="Entities\UserList.cs" />
+    <Compile Include="Entities\Warn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

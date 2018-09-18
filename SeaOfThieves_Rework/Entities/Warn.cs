@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ModeratorAPI
+namespace SeaOfThieves.Entities
 {
     public class Warn
     {

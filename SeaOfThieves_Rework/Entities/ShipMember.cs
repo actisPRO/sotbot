@@ -1,4 +1,4 @@
-﻿namespace ShipAPI
+﻿namespace SeaOfThieves.Entities
 {
     public class ShipMember
     {

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
-namespace ShipAPI
+namespace SeaOfThieves.Entities
 {
     public class Ship
     {
@@ -37,10 +38,18 @@ namespace ShipAPI
                 return ShipList.Ships[name]; 
             }
         }
-
+        
         public void Delete()
         {
             ShipList.Remove(Name);
+        }
+
+        public void Rename(string name)
+        {
+            ShipList.Update(Name, null);
+            Name = name;
+            
+            ShipList.Update(Name, this);
         }
 
         public void AddMember(ulong id, MemberType type = MemberType.Member, bool status = false)
