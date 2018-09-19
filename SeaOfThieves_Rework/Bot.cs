@@ -116,7 +116,7 @@ namespace SeaOfThieves
 
         private Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
         {
-            if (!GetIgnoredChannels(BotSettings.IgnoredChannels).Contains(e.Channel.Id))
+            if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id))
             {
                 e.Guild.GetChannel(BotSettings.FulllogChannel)
                     .SendMessageAsync($"**Удаление сообщения**\n" +
@@ -236,15 +236,16 @@ namespace SeaOfThieves
             }
         }
 
-        private static List<ulong> GetIgnoredChannels(string ignoredChannels)
+        public static List<ulong> GetMultiplySettingsSeparated(string notSeparatedStrings) //предназначено для разделения строки с настройками
+                                                                                        //(например, IgnoredChannels)
         {
-            string[] ignoredStrings = ignoredChannels.Split(',');
+            string[] separatedStrings = notSeparatedStrings.Split(',');
             List<ulong> result = new List<ulong>();
-            foreach (var ignoredString in ignoredStrings)
+            foreach (var separatedString in separatedStrings)
             {
                 try
                 {
-                    result.Add(Convert.ToUInt64(ignoredString));
+                    result.Add(Convert.ToUInt64(separatedString));
                 }
                 catch
                 {

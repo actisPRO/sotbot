@@ -352,5 +352,42 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
         }
+
+        [Command("prune")]
+        [Description("Очищает корабль от участников, покинувших сервер.")]
+        public async Task Prune(CommandContext ctx)
+        {
+            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                return;
+            }
+            
+            List<ulong> toBePruned = new List<ulong>();
+            foreach (var member in ship.Members)
+            {
+                try
+                {
+                    var m = await ctx.Guild.GetMemberAsync(member.Value.Id);
+                }
+                catch (NotFoundException)
+                {
+                    toBePruned.Add(member.Value.Id);
+                }
+            }
+
+            int i = 0;
+            foreach (var member in toBePruned)
+            {
+                ship.RemoveMember(member);
+                ++i;
+            }
+            
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно завершена очистка! Было удалено **{i}** человек.");
+        }
+        
     }
 }
