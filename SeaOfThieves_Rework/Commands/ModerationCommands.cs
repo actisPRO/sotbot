@@ -31,7 +31,7 @@ namespace SeaOfThieves.Commands
                 ($"**Предупреждение**\n\n" +
                  $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
                  $"**Кому:** {member.Mention} ({member.Id})\n" +
-                 $"**Дата:** {DateTime.Now.ToUniversalTime()}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
                  $"**Причина:** {reason}");
         }
