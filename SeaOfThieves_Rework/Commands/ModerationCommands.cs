@@ -29,8 +29,8 @@ namespace SeaOfThieves.Commands
                                           $"Количество предупреждений: **{UserList.Users[member.Id].Warns.Count}**");
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
                 ($"**Предупреждение**\n\n" +
-                 $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
-                 $"**Кому:** {member.Mention} ({member.Id})\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {member} ({member.Id})\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
                  $"**Причина:** {reason}");
