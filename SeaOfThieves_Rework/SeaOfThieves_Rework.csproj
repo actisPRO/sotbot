@@ -83,6 +83,7 @@
     <Compile Include="Entities\User.cs" />
     <Compile Include="Entities\UserList.cs" />
     <Compile Include="Entities\Warn.cs" />
+    <Compile Include="Misc\RandomString.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
