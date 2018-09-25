@@ -352,5 +352,95 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
         }
+
+        [Command("prune")]
+        [Description("Очищает корабль от участников, покинувших сервер.")]
+        public async Task Prune(CommandContext ctx)
+        {
+            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                return;
+            }
+            
+            List<ulong> toBePruned = new List<ulong>();
+            foreach (var member in ship.Members)
+            {
+                try
+                {
+                    var m = await ctx.Guild.GetMemberAsync(member.Value.Id);
+                }
+                catch (NotFoundException)
+                {
+                    toBePruned.Add(member.Value.Id);
+                }
+            }
+
+            int i = 0;
+            foreach (var member in toBePruned)
+            {
+                ship.RemoveMember(member);
+                ++i;
+            }
+            
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно завершена очистка! Было удалено **{i}** человек.");
+        } 
+        
+        /* Секция для админ-команд */
+
+        [Command("adelete")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task ADelete(CommandContext ctx, [RemainingText] string name)
+        {
+            if (!ShipList.Ships.ContainsKey(name))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не найден корабль с названием **{name}**!");
+                return;
+            }
+
+            var ship = ShipList.Ships[name];
+
+            var role = ctx.Guild.GetRole(ship.Role);
+            var channel = ctx.Guild.GetChannel(ship.Channel);
+
+            DiscordMember owner = null;
+            foreach (var member in ship.Members.Values)
+            {
+                if (member.Type == MemberType.Owner)
+                {
+                    owner = await ctx.Guild.GetMemberAsync(member.Id);
+                    break;
+                }
+            }
+            
+            ship.Delete();
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+            await ctx.Guild.DeleteRoleAsync(role);
+            await channel.DeleteAsync();
+            
+            var doc = XDocument.Load("actions.xml");
+            foreach (var action in doc.Element("actions").Elements("action"))
+            {
+                if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
+                {
+                    action.Remove();
+                }
+            }
+            doc.Save("actions.xml");
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален корабль!");
+
+            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                $"**Удаление корабля**\n\n" +
+                $"**Модератор:** {ctx.Member}\n" +
+                $"**Корабль:** {name}\n" +
+                $"**Владелец:** {owner}\n" +
+                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC");
+        }
     }
 }

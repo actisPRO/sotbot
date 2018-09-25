@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using SeaOfThieves.Misc;
 
 namespace SeaOfThieves.Entities
 {
@@ -34,7 +35,8 @@ namespace SeaOfThieves.Entities
                 {
                     userEl.Add(new XElement("warn", new XAttribute("moderator", warn.Moderator),
                         new XAttribute("date", warn.Date),
-                        new XAttribute("reason", warn.Reason)));
+                        new XAttribute("reason", warn.Reason),
+                        new XAttribute("id", warn.Id)));
                 }
                 root.Add(userEl);
             }
@@ -53,8 +55,17 @@ namespace SeaOfThieves.Entities
                 var created = User.Create(Convert.ToUInt64(user.Attribute("id").Value));
                 foreach (var warnEl in user.Elements("warn"))
                 {
+                    var id = "";
+                    if (warnEl.Attribute("id") == null)
+                    {
+                        id = RandomString.NextString(12);
+                    }
+                    else
+                    {
+                        id = warnEl.Attribute("id").Value;
+                    }
                     created.AddWarning(Convert.ToUInt64(warnEl.Attribute("moderator").Value),
-                        Convert.ToDateTime(warnEl.Attribute("date").Value), warnEl.Attribute("reason").Value);
+                        Convert.ToDateTime(warnEl.Attribute("date").Value), warnEl.Attribute("reason").Value, id);
                 }
             }
         }

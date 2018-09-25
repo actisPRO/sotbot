@@ -46,6 +46,7 @@ namespace SeaOfThieves
             UserList.ReadFromXML(BotSettings.WarningsXML);
             
             DonatorList.SaveToXML(BotSettings.DonatorXML);
+            UserList.SaveToXML(BotSettings.WarningsXML);
             
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -115,10 +116,14 @@ namespace SeaOfThieves
 
         private Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
         {
-            e.Guild.GetChannel(BotSettings.FulllogChannel)
-                .SendMessageAsync($"**Удаление сообщения**\n" +
-                                  $"**Автор:** {e.Message.Author.Mention} ({e.Message.Author.Id})\n" +
-                                  $"**Содержимое: ```{e.Message.Content}```**");
+            if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id))
+            {
+                e.Guild.GetChannel(BotSettings.FulllogChannel)
+                    .SendMessageAsync($"**Удаление сообщения**\n" +
+                                      $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                      $"**Канал:** {e.Channel}\n" +
+                                      $"**Содержимое: ```{e.Message.Content}```**");
+            }
             return Task.CompletedTask;
         }
 
@@ -141,7 +146,7 @@ namespace SeaOfThieves
                                         $"**Удачной игры!**");
             
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
-                .SendMessageAsync($"**Участник присоединился:** {e.Member.Mention} ({e.Member.Id})");
+                .SendMessageAsync($"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
         }
 
         private Task CommandsOnCommandErrored(CommandErrorEventArgs e)
@@ -230,6 +235,26 @@ namespace SeaOfThieves
                 BotSettings = (Settings) serializer.Deserialize(reader);
             }
         }
+
+        public static List<ulong> GetMultiplySettingsSeparated(string notSeparatedStrings) //предназначено для разделения строки с настройками
+                                                                                        //(например, IgnoredChannels)
+        {
+            string[] separatedStrings = notSeparatedStrings.Split(',');
+            List<ulong> result = new List<ulong>();
+            foreach (var separatedString in separatedStrings)
+            {
+                try
+                {
+                    result.Add(Convert.ToUInt64(separatedString));
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            return result;
+        }
     }
 
     public struct Settings
@@ -262,5 +287,7 @@ namespace SeaOfThieves
         public ulong ModlogChannel;
         public ulong FulllogChannel;
         public ulong UserlogChannel;
+
+        public string IgnoredChannels;
     }
 }
