@@ -293,5 +293,20 @@ namespace SeaOfThieves.Commands
             await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
         }
+
+        [Command("sethidden")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task SetHidden(CommandContext ctx, DiscordMember member, bool hidden = true)
+        {
+            if (!DonatorList.Donators.ContainsKey(member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Участник не является донатером!");
+                return;
+            }
+            
+            DonatorList.Donators[member.Id].UpdateHidden(hidden);
+            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+        }
     }
 }

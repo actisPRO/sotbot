@@ -91,9 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="changelog.md" />
-    <Content Include="settings.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="settings.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ModeratorAPI\ModeratorAPI.csproj">

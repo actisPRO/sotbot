@@ -14,6 +14,20 @@ namespace SeaOfThieves.Commands
         {
             if (ctx.Member.VoiceState.Channel != null)
             {
+                if (Bot.ShipCooldowns.ContainsKey(ctx.User))
+                {
+                    if ((Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds > 0)
+                    {
+                        var m = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+                        await m.PlaceInAsync(ctx.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
+                                                 $"**{(Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds}** секунд прежде чем " +
+                                                 $"создавать новый корабль!");
+                        return;
+                    }
+                }
+                Bot.ShipCooldowns[ctx.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
+                
                 if (slots < 2 || slots > 4)
                 {
                     await ctx.RespondAsync(

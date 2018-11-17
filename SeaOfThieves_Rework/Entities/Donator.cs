@@ -9,6 +9,7 @@ namespace SeaOfThieves.Entities
         public double Balance { get; private set; }
         public ulong ColorRole { get; private set; }
         public List<ulong> Friends { get; private set; }
+        public bool Hidden { get; private set; }
 
         public Donator(ulong member, ulong colorRole, double balance = 0)
         {
@@ -16,6 +17,7 @@ namespace SeaOfThieves.Entities
             Balance = balance;
             ColorRole = colorRole;
             Friends = new List<ulong>();
+            Hidden = false;
 
             DonatorList.Donators[Member] = this;
         }
@@ -44,6 +46,13 @@ namespace SeaOfThieves.Entities
         public void SetRole(ulong colorRole)
         {
             ColorRole = colorRole;
+            
+            DonatorList.Donators[Member] = this;
+        }
+
+        public void UpdateHidden(bool hidden)
+        {
+            Hidden = hidden;
             
             DonatorList.Donators[Member] = this;
         }

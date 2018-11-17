@@ -21,6 +21,10 @@ namespace SeaOfThieves.Entities
                 dElement.Add(new XElement("id", donator.Member));
                 dElement.Add(new XElement("balance", donator.Balance));
                 dElement.Add(new XElement("colorRole", donator.ColorRole));
+                if (donator.Hidden)
+                {
+                    dElement.Add(new XElement("hidden", "True"));
+                }
                 foreach (var friend in donator.Friends)
                 {
                     dElement.Add(new XElement("friend", friend));
@@ -44,6 +48,11 @@ namespace SeaOfThieves.Entities
                 foreach (var friend in donator.Elements("friend"))
                 {
                     created.AddFriend(Convert.ToUInt64(friend.Value));
+                }
+
+                if (donator.Element("hidden") != null)
+                {
+                    created.UpdateHidden(true);
                 }
             }
         }
