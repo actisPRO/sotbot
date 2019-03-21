@@ -12,7 +12,7 @@ namespace SeaOfThieves.Commands
     public class ModerationCommands
     {
         [Command("warn"), Aliases("w")]
-        [RequirePermissions(Permissions.BanMembers)]
+        [RequirePermissions(Permissions.KickMembers)]
         [Hidden]
         public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {

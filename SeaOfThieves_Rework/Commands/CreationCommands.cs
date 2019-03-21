@@ -15,7 +15,7 @@ namespace SeaOfThieves.Commands
             if (ctx.Member.VoiceState.Channel != null)
             {
                 if (Bot.ShipCooldowns.ContainsKey(ctx.User))
-                {
+                {   
                     if ((Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds > 0)
                     {
                         var m = await ctx.Guild.GetMemberAsync(ctx.User.Id);
