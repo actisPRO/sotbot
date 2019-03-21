@@ -12,10 +12,19 @@ namespace SeaOfThieves.Commands
     public class ModerationCommands
     {
         [Command("warn"), Aliases("w")]
-        [RequirePermissions(Permissions.KickMembers)]
         [Hidden]
         public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
+            foreach (var role in ctx.Member.Roles)
+            {
+                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
+                {
+                    break;
+                }
+
+                return;
+            }
+            
             if (!UserList.Users.ContainsKey(member.Id))
             {
                 User.Create(member.Id);
@@ -25,9 +34,9 @@ namespace SeaOfThieves.Commands
             
             UserList.Users[member.Id].AddWarning(ctx.Member.Id, DateTime.Now.ToUniversalTime(), reason, id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
-
+            
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
-            await member.SendMessageAsync($"Вы получили предупреждение от администратора " +
+            await member.SendMessageAsync($"Вы получили предупреждение от модератора " +
                                           $"**{ctx.Member.Username}#{ctx.Member.Discriminator}**. Причина: {reason}. " +
                                           $"Количество предупреждений: **{UserList.Users[member.Id].Warns.Count}**. ID предупреждения: `{id}`");
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync

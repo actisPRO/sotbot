@@ -438,5 +438,10 @@ namespace SeaOfThieves
         /// Игнорируемые каналы (в логе удаленных сообщений)
         /// </summary>
         public string IgnoredChannels;
+
+        /// <summary>
+        /// Роли с правами администратора
+        /// </summary>
+        public string AdminRoles;
     }
 }
