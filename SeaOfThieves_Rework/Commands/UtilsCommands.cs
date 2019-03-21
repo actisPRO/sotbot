@@ -74,13 +74,12 @@ namespace SeaOfThieves.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task UpdateDonatorMessage(CommandContext ctx)
         {
-            Dictionary<DiscordMember, double> donators = new Dictionary<DiscordMember, double>();
+            Dictionary<ulong, double> donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
             foreach (var donator in DonatorList.Donators.Values)
             {
                 if (!donator.Hidden)
                 {
-                    var member = await ctx.Guild.GetMemberAsync(donator.Member);
-                    donators.Add(member, donator.Balance);
+                    donators.Add(donator.Member, donator.Balance);
                 }
             }
 
@@ -96,7 +95,18 @@ namespace SeaOfThieves.Commands
                     prevValue = el.Value;
                     i++;
                 }
-                message += $"**{i}.** {el.Key.Mention} — {el.Value}₽\n";
+
+                string mention = "";
+                try
+                {
+                    var donatorMemberEntity = await ctx.Guild.GetMemberAsync(el.Key);
+                    mention = donatorMemberEntity.Mention;
+                }
+                catch (NotFoundException) //пользователь мог покинуть сервер 
+                {
+                    mention = "*Участник покинул сервер*";
+                }
+                message += $"**{i}.** {mention} — {el.Value}₽\n";
             }
             
             //TODO: settings.xml
