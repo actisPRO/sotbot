@@ -15,13 +15,19 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
+            bool isModerator = false;
             foreach (var role in ctx.Member.Roles)
             {
                 if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
                 {
+                    isModerator = true;
                     break;
                 }
+            }
 
+            if (!isModerator)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
             
