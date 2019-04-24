@@ -15,17 +15,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
-            bool isModerator = false;
-            foreach (var role in ctx.Member.Roles)
-            {
-                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
-                {
-                    isModerator = true;
-                    break;
-                }
-            }
-
-            if (!isModerator)
+            if (!IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -56,10 +46,15 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("unwarn"), Aliases("uw")]
-        [RequirePermissions(Permissions.BanMembers)]
         [Hidden]
         public async Task Unwarn(CommandContext ctx, DiscordMember member, string id)
         {
+            if (!IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+            
             if (!UserList.Users.ContainsKey(member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У этого участника нет предупреждений!");
@@ -101,6 +96,57 @@ namespace SeaOfThieves.Commands
                 $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n");
             await member.SendMessageAsync(
                 $"Администратор **{ctx.Member.Username}** снял ваше предупреждение с ID `{id}`");
+        }
+
+        [Command("kick")]
+        public async Task Kick(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
+        {
+            if (!IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            Kick(ctx.Member, ctx.Guild, member, reason);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно исключён участник!");
+        }
+        
+        /// <summary>
+        /// Исключает участника и отправляет уведомление в лог и в ЛС
+        /// </summary>
+        /// <param name="moderator">Модератор</param>
+        /// <param name="guild">Сервер</param>
+        /// <param name="member">Исключаемый</param>
+        /// <param name="reason">Причина исключения</param>
+        public async void Kick(DiscordMember moderator, DiscordGuild guild, DiscordMember member, string reason)
+        {
+            await member.SendMessageAsync(
+                $"Вы были кикнуты модератором **{moderator.Username}#{moderator.Discriminator}** по причине: {reason}.");
+            await guild.RemoveMemberAsync(member, reason);
+            await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
+            ($"**Кик**\n\n" +
+             $"**От:** {moderator}\n" +
+             $"**Кому:** {member}\n" +
+             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+             $"**Причина:** {reason}");
+        }
+        
+        /// <summary>
+        /// Проверяет, имеет ли пользователь роли из списка AdminRoles.
+        /// </summary>
+        /// <param name="member">Проверяемый участник</param>
+        /// <returns>Является ли участник модератором</returns>
+        private bool IsModerator(DiscordMember member)
+        {
+            foreach (var role in member.Roles)
+            {
+                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
