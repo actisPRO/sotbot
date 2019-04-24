@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings>
+    <Version>2.5.1</Version>
+    <Guild>406840993535492109</Guild>
+    <Token>YOUR TOKEN</Token>
+    <Prefix>!</Prefix>
+
+    <BotRole>435393449605464074</BotRole>
+
+    <OkEmoji>✅</OkEmoji>
+    <ErrorEmoji>⛔</ErrorEmoji>
+
+    <RolesChannel>474870448157491200</RolesChannel>
+
+    <AutocreateCategory>435427887621996548</AutocreateCategory>
+    <AutocreateChannel>533876650371186698</AutocreateChannel>
+    <AutocreateSymbol>⛵</AutocreateSymbol>
+    <Bitrate>48000</Bitrate>
+    <FastCooldown>30</FastCooldown>
+    <WaitingRoom>496614051728588804</WaitingRoom>
+
+    <ShipXML>ships.xml</ShipXML>
+    <PrivateCategory>435448014614822923</PrivateCategory>
+    <PrivateRequestsChannel>459986453972123658</PrivateRequestsChannel>
+
+    <DonatorXML>donators.xml</DonatorXML>
+    <DonatorRole>459649927732133888</DonatorRole>
+    <DonatorMessage>558231268773593098</DonatorMessage>
+
+    <WarningsXML>warnings.xml</WarningsXML>
+    <ModlogChannel>479674576369090560</ModlogChannel>
+    <FulllogChannel>479674700218499072</FulllogChannel>
+    <UserlogChannel>481316315215429672</UserlogChannel>
+
+    <IgnoredChannels>
+        479674576369090560,
+        479674700218499072,
+        481316315215429672,
+        480288816297672705,
+    </IgnoredChannels>
+
+    <AdminRoles>
+        406849001611067393,
+        406850194983092224,
+        435393449605464074,
+        514282258958385152,
+    </AdminRoles>
+</Settings>

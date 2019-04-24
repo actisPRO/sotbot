@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="changelog.md" />
+    <Content Include="settings.example.xml" />
     <Content Include="settings.xml" />
   </ItemGroup>
   <ItemGroup>
