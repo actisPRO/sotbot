@@ -19,34 +19,34 @@ using SeaOfThieves.Entities;
 namespace SeaOfThieves
 {
     /// <summary>
-    /// Основной класс бота
+    ///     Основной класс бота
     /// </summary>
     internal sealed class Bot
     {
         /// <summary>
-        /// DiscordClient бота.
-        /// </summary>
-        public DiscordClient Client { get; set; }
-        
-        /// <summary>
-        /// Модуль команд.
-        /// </summary>
-        public CommandsNextModule Commands { get; set; }
-        
-        /// <summary>
-        /// Структура с настройками бота.
-        /// </summary>
-        public static Settings BotSettings { get; private set; }
-        
-        /// <summary>
-        /// Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
+        ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
         /// </summary>
         public static Dictionary<DiscordUser, DateTime> ShipCooldowns = new Dictionary<DiscordUser, DateTime>();
-            
+
+        /// <summary>
+        ///     DiscordClient бота.
+        /// </summary>
+        public DiscordClient Client { get; set; }
+
+        /// <summary>
+        ///     Модуль команд.
+        /// </summary>
+        public CommandsNextModule Commands { get; set; }
+
+        /// <summary>
+        ///     Структура с настройками бота.
+        /// </summary>
+        public static Settings BotSettings { get; private set; }
+
         public static void Main(string[] args)
         {
             var bot = new Bot();
-            
+
             Console.WriteLine(@"
            ▄████████  ▄████████     ███      ▄█     ▄████████ 
           ███    ███ ███    ███ ▀█████████▄ ███    ███    ███ 
@@ -57,16 +57,16 @@ namespace SeaOfThieves
           ███    ███ ███    ███     ███     ███     ▄█    ███ 
           ███    █▀  ████████▀     ▄████▀   █▀    ▄████████▀  
                                                       "); //ЧСВ
-            
+
             ReloadSettings(); // Загрузим настройки
-            
+
             ShipList.ReadFromXML(BotSettings.ShipXML);
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
-            
+
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
-            
+
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
 
@@ -78,11 +78,11 @@ namespace SeaOfThieves
                 LogLevel = LogLevel.Info,
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
-                UseInternalLogHandler = true,
+                UseInternalLogHandler = true
             };
-            
+
             Client = new DiscordClient(cfg);
-            
+
             Client.SetWebSocketClient<WebSocketSharpClient>(); // Для использования с Mono.
 
             var ccfg = new CommandsNextConfiguration
@@ -94,143 +94,147 @@ namespace SeaOfThieves
             };
 
             Commands = Client.UseCommandsNext(ccfg);
-            
+
             Commands.RegisterCommands<CreationCommands>();
             Commands.RegisterCommands<UtilsCommands>();
             Commands.RegisterCommands<PrivateCommands>();
             Commands.RegisterCommands<DonatorCommands>();
             Commands.RegisterCommands<ModerationCommands>();
-            
+
             Client.Ready += ClientOnReady;
             Client.GuildMemberAdded += ClientOnGuildMemberAdded;
             Client.GuildMemberRemoved += ClientOnGuildMemberRemoved;
             Client.MessageDeleted += ClientOnMessageDeleted;
             Client.VoiceStateUpdated += ClientOnVoiceStateUpdated;
             Client.MessageCreated += ClientOnMessageCreated;
-            
+
             Commands.CommandExecuted += CommandsOnCommandExecuted;
             Commands.CommandErrored += CommandsOnCommandErrored;
 
             await Client.ConnectAsync();
-            
+
             await Task.Delay(-1);
         }
 
         /// <summary>
-        /// Обработка подозрительных сообщений.
+        ///     Обработка подозрительных сообщений.
         /// </summary>
         private Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
             var message = e.Message.Content.ToLower();
             // боремся со спамом от одной мошеннической группы
-            if (message.Contains("sea") && message.Contains("of") && message.Contains("cheat") && !e.Message.Author.IsBot)
+            if (message.Contains("sea") && message.Contains("of") && message.Contains("cheat") &&
+                !e.Message.Author.IsBot)
             {
                 e.Guild.BanMemberAsync(e.Author.Id, 7, "Autobanned for message, containing 'seaofcheat'");
                 e.Guild.GetChannel(BotSettings.ModlogChannel)
-                    .SendMessageAsync($"**Блокировка**\n\n" +
+                    .SendMessageAsync("**Блокировка**\n\n" +
                                       $"**Модератор:** {e.Client.CurrentUser.Mention} ({e.Client.CurrentUser.Id})\n" +
                                       $"**Получатель:** {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id})\n" +
                                       $"**Дата:** {DateTime.Now.ToUniversalTime()}\n" +
-                                      $"**Причина:** Автоматическая блокировка за сообщение, содержащее 'sea of cheats'");
+                                      "**Причина:** Автоматическая блокировка за сообщение, содержащее 'sea of cheats'");
             }
+
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Отлавливаем удаленные сообщения и отправляем в лог
+        ///     Отлавливаем удаленные сообщения и отправляем в лог
         /// </summary>
         private Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
         {
-            if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id)) // в лог не должны отправляться сообщения,
-                                                                                                   // удаленные из лога
-            {
+            if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id)
+                ) // в лог не должны отправляться сообщения,
+                // удаленные из лога
                 e.Guild.GetChannel(BotSettings.FulllogChannel)
-                    .SendMessageAsync($"**Удаление сообщения**\n" +
+                    .SendMessageAsync("**Удаление сообщения**\n" +
                                       $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
                                       $"**Канал:** {e.Channel}\n" +
                                       $"**Содержимое: ```{e.Message.Content}```**");
-            }
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Лог посещений
+        ///     Лог посещений
         /// </summary>
         private Task ClientOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
             e.Guild.GetChannel(BotSettings.UserlogChannel)
-                            .SendMessageAsync($"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
+                .SendMessageAsync(
+                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Приветственное сообщение + лог посещений
+        ///     Приветственное сообщение + лог посещений
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
             var ctx = e; // здесь я копипастил, а рефакторить мне лень.
-            
+
             await ctx.Member.SendMessageAsync($"**Привет, {ctx.Member.Mention}!\n**" +
-                                        $"Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
-                                        $"Прежде чем приступать к игре, прочитай, пожалуйста правила в канале " +
-                                        $"`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
-                                        $"Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
-                                        $"**Удачной игры!**");
-            
+                                              "Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
+                                              "Прежде чем приступать к игре, прочитай, пожалуйста правила в канале " +
+                                              "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
+                                              "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
+                                              "**Удачной игры!**");
+
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
-                .SendMessageAsync($"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
+                .SendMessageAsync(
+                    $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
         }
 
         /// <summary>
-        /// Отправляем в консоль сообщения об ошибках при выполнении команды.
+        ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
-        private Task CommandsOnCommandErrored(CommandErrorEventArgs e)
+        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
         {
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored with {e.Exception.Message}!",
-                DateTime.Now);
-            
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Exception.StackTrace}!",
-                DateTime.Now);   
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored.",
+                DateTime.Now.ToUniversalTime());
 
-            return Task.CompletedTask;
+            var developer = await e.Context.Guild.GetMemberAsync(BotSettings.Developer);
+
+            await e.Context.RespondAsync(
+                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз; если " +
+                $"ошибка повторяется - сообщите в ЛС {developer.Mention}. Информация об ошибке: {e.Exception.GetType()}:{e.Exception.Message}");
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", $"{e.Context.User.Username}#{e.Context.User.Discriminator} ran the command " +
-                                                                          $"({e.Command.Name}).", DateTime.Now.ToUniversalTime());
-            
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
+                $"{e.Context.User.Username}#{e.Context.User.Discriminator} ran the command " +
+                $"({e.Command.Name}).", DateTime.Now.ToUniversalTime());
+
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Система автосоздания кораблей
+        ///     Система автосоздания кораблей
         /// </summary>
         private async Task ClientOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
             try
             {
-                if (e.Channel.Id == BotSettings.AutocreateChannel) // мы создаем канал, если пользователь зашел в канал автосоздания
+                if (e.Channel.Id == BotSettings.AutocreateChannel
+                ) // мы создаем канал, если пользователь зашел в канал автосоздания
                 {
                     if (ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
-                    {
                         if ((ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
                         {
                             var m = await e.Guild.GetMemberAsync(e.User.Id);
                             await m.PlaceInAsync(e.Guild.GetChannel(BotSettings.WaitingRoom));
                             await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Вам нужно подождать " +
                                                      $"**{(ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
-                                                     $"создавать новый корабль!");
+                                                     "создавать новый корабль!");
                             return;
                         }
-                    }
-                    
+
                     // если проверка успешно пройдена, добавим пользователя
                     // в словарь кулдаунов
-                    ShipCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown); 
-                    
+                    ShipCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
+
                     var created = await e.Guild.CreateChannelAsync(
                         $"{BotSettings.AutocreateSymbol} Галеон {e.User.Username}", ChannelType.Voice,
                         e.Channel.Parent, BotSettings.Bitrate, 4);
@@ -248,47 +252,39 @@ namespace SeaOfThieves
             {
                 // нам здесь ничего не надо делать, просто пропускаем
             }
-            
+
             // удалим пустые каналы
 
             var autocreatedChannels = new List<DiscordChannel>(); // это все автосозданные каналы
             foreach (var channel in e.Guild.Channels)
-            {
                 if (channel.Name.StartsWith(BotSettings.AutocreateSymbol) && channel.Type == ChannelType.Voice
                                                                           && channel.ParentId ==
                                                                           BotSettings.AutocreateCategory)
-                {
                     autocreatedChannels.Add(channel);
-                } 
-            }
 
             var notEmptyChannels = new List<DiscordChannel>(); // это все НЕ пустые каналы
-            foreach (var voiceState in e.Guild.VoiceStates)
-            {
-                notEmptyChannels.Add(voiceState.Channel);
-            }
+            foreach (var voiceState in e.Guild.VoiceStates) notEmptyChannels.Add(voiceState.Channel);
 
             var forDeletionChannels = autocreatedChannels.Except(notEmptyChannels); // это пустые каналы
-            foreach (var channel in forDeletionChannels)
-            {
-                await channel.DeleteAsync(); // мы их удаляем
-            }
+            foreach (var channel in forDeletionChannels) await channel.DeleteAsync(); // мы их удаляем
         }
 
         /// <summary>
-        /// Сообщение в лог о готовности клиента
+        ///     Сообщение в лог о готовности клиента
         /// </summary>
         private async Task ClientOnReady(ReadyEventArgs e)
         {
-            e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", $"Sea Of Thieves Bot, version {BotSettings.Version}", DateTime.Now.ToUniversalTime());
-            e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", "Made by Actis", DateTime.Now.ToUniversalTime()); // и еще немного ЧСВ
+            e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", $"Sea Of Thieves Bot, version {BotSettings.Version}",
+                DateTime.Now.ToUniversalTime());
+            e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", "Made by Actis",
+                DateTime.Now.ToUniversalTime()); // и еще немного ЧСВ
 
             var member = await e.Client.Guilds[BotSettings.Guild].GetMemberAsync(e.Client.CurrentUser.Id);
             await member.ModifyAsync($"SeaOfThieves {BotSettings.Version}");
         }
 
         /// <summary>
-        /// Загрузка и перезагрузка настроек
+        ///     Загрузка и перезагрузка настроек
         /// </summary>
         public static void ReloadSettings()
         {
@@ -301,147 +297,165 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        /// Предназначено для разделения строки с настройками (например, IgnoredChannels)
+        ///     Предназначено для разделения строки с настройками (например, IgnoredChannels)
         /// </summary>
         /// <param name="notSeparatedStrings">Строка, считанная из XML</param>
         /// <returns></returns>
         public static List<ulong> GetMultiplySettingsSeparated(string notSeparatedStrings) //
         {
-            string[] separatedStrings = notSeparatedStrings.Split(',');
-            List<ulong> result = new List<ulong>();
+            var separatedStrings = notSeparatedStrings.Split(',');
+            var result = new List<ulong>();
             foreach (var separatedString in separatedStrings)
-            {
                 try
                 {
                     result.Add(Convert.ToUInt64(separatedString));
                 }
                 catch
                 {
-                    continue;
                 }
-            }
 
             return result;
         }
     }
 
     /// <summary>
-    /// Структура с настройками бота.
+    ///     Структура с настройками бота.
     /// </summary>
     public struct Settings
     {
         /// <summary>
-        /// Версия.
+        ///     Версия.
         /// </summary>
         public string Version;
+
         /// <summary>
-        /// ID основного сервера.
+        ///     ID основного сервера.
         /// </summary>
         public ulong Guild;
+
         /// <summary>
-        /// Токен Discord.
+        ///     Токен Discord.
         /// </summary>
         public string Token;
+
         /// <summary>
-        /// Префикс команд.
+        ///     Префикс команд.
         /// </summary>
         public string Prefix;
 
         /// <summary>
-        /// ID роли бота.
+        ///     ID роли бота.
         /// </summary>
         public ulong BotRole;
 
         /// <summary>
-        /// Текстовый код эмодзи, отправляемого при успешной операции.
+        ///     Текстовый код эмодзи, отправляемого при успешной операции.
         /// </summary>
         public string OkEmoji;
+
         /// <summary>
-        /// Текстовый код эмодзи, отправляемого при неудачной операции.
+        ///     Текстовый код эмодзи, отправляемого при неудачной операции.
         /// </summary>
         public string ErrorEmoji;
-        
+
         /// <summary>
-        /// ID канала в который отправляются роли (устарело).
+        ///     ID канала в который отправляются роли (устарело).
         /// </summary>
         public ulong RolesChannel;
 
         /// <summary>
-        /// ID категории быстрых кораблей
+        ///     ID категории быстрых кораблей
         /// </summary>
         public ulong AutocreateCategory;
+
         /// <summary>
-        /// ID канала автосоздания.
+        ///     ID канала автосоздания.
         /// </summary>
         public ulong AutocreateChannel;
+
         /// <summary>
-        /// Символ, с которого начинаеются названия автосозданных кораблей.
+        ///     Символ, с которого начинаеются названия автосозданных кораблей.
         /// </summary>
         public string AutocreateSymbol;
+
         /// <summary>
-        /// Битрейт создаваемых каналов.
+        ///     Битрейт создаваемых каналов.
         /// </summary>
         public int Bitrate;
+
         /// <summary>
-        /// Кулдаун на создание быстрых кораблей.
+        ///     Кулдаун на создание быстрых кораблей.
         /// </summary>
         public int FastCooldown;
+
         /// <summary>
-        /// ID канала в который переносятся пользователи, кулдаун которых не истек.
+        ///     ID канала в который переносятся пользователи, кулдаун которых не истек.
         /// </summary>
         public ulong WaitingRoom;
 
         /// <summary>
-        /// Путь до XML-файла с приватными кораблями.
+        ///     Путь до XML-файла с приватными кораблями.
         /// </summary>
         public string ShipXML;
+
         /// <summary>
-        /// ID категории с приватными кораблями.
+        ///     ID категории с приватными кораблями.
         /// </summary>
         public ulong PrivateCategory;
+
         /// <summary>
-        /// ID канала, в который отправляются уведомления о запросах приватных кораблей.
+        ///     ID канала, в который отправляются уведомления о запросах приватных кораблей.
         /// </summary>
         public ulong PrivateRequestsChannel;
 
         /// <summary>
-        /// Путь до XML-файлов с донатерами.
+        ///     Путь до XML-файлов с донатерами.
         /// </summary>
         public string DonatorXML;
+
         /// <summary>
-        /// ID роли донатеров.
+        ///     ID роли донатеров.
         /// </summary>
         public ulong DonatorRole;
+
         /// <summary>
-        /// ID сообщения с топом донатов.
+        ///     ID сообщения с топом донатов.
         /// </summary>
         public ulong DonatorMessage;
 
         /// <summary>
-        /// Путь до файла с предупреждениями.
+        ///     Путь до файла с предупреждениями.
         /// </summary>
         public string WarningsXML;
+
         /// <summary>
-        /// ID канала-лога с сообщениями о действиях модераторов.
+        ///     ID канала-лога с сообщениями о действиях модераторов.
         /// </summary>
         public ulong ModlogChannel;
+
         /// <summary>
-        /// ID канала-лога в который отправляются все остальные сообщения.
+        ///     ID канала-лога в который отправляются все остальные сообщения.
         /// </summary>
         public ulong FulllogChannel;
+
         /// <summary>
-        /// ID канала-лога в который отправляются сообщения о входящих и выходящих пользователях.
+        ///     ID канала-лога в который отправляются сообщения о входящих и выходящих пользователях.
         /// </summary>
         public ulong UserlogChannel;
 
         /// <summary>
-        /// Игнорируемые каналы (в логе удаленных сообщений)
+        ///     Игнорируемые каналы (в логе удаленных сообщений)
         /// </summary>
         public string IgnoredChannels;
 
         /// <summary>
-        /// Роли с правами администратора
+        ///     Роли с правами администратора
         /// </summary>
         public string AdminRoles;
+
+        /// <summary>
+        ///     Этому пользователю будут отправляться уведомление об ошибках.
+        /// </summary>
+        public ulong Developer;
     }
 }

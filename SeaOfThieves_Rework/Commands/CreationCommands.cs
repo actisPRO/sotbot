@@ -8,7 +8,8 @@ namespace SeaOfThieves.Commands
 {
     public class CreationCommands
     {
-        [Command("create"), Aliases("c")]
+        [Command("create")]
+        [Aliases("c")]
         [Description("Создаёт новый корабль. Вы должны быть в голосовом канале, чтобы использовать это.")]
         public async Task Create(CommandContext ctx, [Description("Количество членов экипажа (от 2 до 4)")]
             int slots = 4)
@@ -19,7 +20,7 @@ namespace SeaOfThieves.Commands
                     ctx.Member.VoiceState
                         .Channel; //если здесь возникнет NullReferenceException, значит пользователь не находится в голосовом канале
             }
-            catch (NullReferenceException)
+            catch (Exception)
             {
                 await ctx.RespondAsync(
                     $"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале, чтобы использовать это.");
@@ -27,17 +28,15 @@ namespace SeaOfThieves.Commands
             }
 
             if (Bot.ShipCooldowns.ContainsKey(ctx.User))
-            {
                 if ((Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds > 0)
                 {
                     var m = await ctx.Guild.GetMemberAsync(ctx.User.Id);
                     await m.PlaceInAsync(ctx.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
                                            $"**{(Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds}** секунд прежде чем " +
-                                           $"создавать новый корабль!");
+                                           "создавать новый корабль!");
                     return;
                 }
-            }
 
             Bot.ShipCooldowns[ctx.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
 
@@ -48,7 +47,7 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            string name = "";
+            var name = "";
             switch (slots)
             {
                 case 2:

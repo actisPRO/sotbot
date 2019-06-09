@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DSharpPlus;
@@ -15,6 +16,8 @@ namespace SeaOfThieves.Commands
 {
     public class UtilsCommands
     {
+        public bool keepRainbow;
+
         [Command("printroles")]
         [Description("Выводит список ролей на сервере")]
         [RequirePermissions(Permissions.Administrator)]
@@ -22,10 +25,8 @@ namespace SeaOfThieves.Commands
         public async Task PrintRoles(CommandContext ctx)
         {
             foreach (var role in ctx.Guild.Roles)
-            {
                 await ctx.Guild.GetChannel(Bot.BotSettings.RolesChannel)
                     .SendMessageAsync($"• **{role.Name}** `{role.Id}`");
-            }
         }
 
         [Command("roleid")]
@@ -74,20 +75,16 @@ namespace SeaOfThieves.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task UpdateDonatorMessage(CommandContext ctx)
         {
-            Dictionary<ulong, double> donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
+            var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
             foreach (var donator in DonatorList.Donators.Values)
-            {
                 if (!donator.Hidden)
-                {
                     donators.Add(donator.Member, donator.Balance);
-                }
-            }
 
             var ordered = donators.OrderBy(x => -x.Value);
-            var message = "**Топ донатов**\n\n";
+            var message = "**Топ донатов**\n\n```ruby\n";
 
-            int i = 0;
-            var prevValue = Double.MaxValue;
+            var i = 0;
+            var prevValue = double.MaxValue;
             foreach (var el in ordered)
             {
                 if (el.Value < prevValue)
@@ -96,22 +93,65 @@ namespace SeaOfThieves.Commands
                     i++;
                 }
 
-                string mention = "";
+                var mention = "";
                 try
                 {
                     var donatorMemberEntity = await ctx.Guild.GetMemberAsync(el.Key);
-                    mention = donatorMemberEntity.Mention;
+
+                    mention = donatorMemberEntity.Username + "#" + donatorMemberEntity.Discriminator;
                 }
                 catch (NotFoundException) //пользователь мог покинуть сервер 
                 {
-                    mention = "*Участник покинул сервер*";
+                    mention = "Участник покинул сервер";
                 }
-                message += $"**{i}.** {mention} — {el.Value}₽\n";
+
+                message += $"{i}. {mention} — {el.Value}₽\n";
             }
-            
+
+            message += "```";
             //TODO: settings.xml
-            var messageEntity = await ctx.Guild.GetChannel(459657130786422784).GetMessageAsync(Bot.BotSettings.DonatorMessage);
+            var messageEntity = await ctx.Guild.GetChannel(459657130786422784)
+                .GetMessageAsync(Bot.BotSettings.DonatorMessage);
             await messageEntity.ModifyAsync(message);
+        }
+
+        [Command("throw")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Throw(CommandContext ctx)
+        {
+            throw new IOException("Test exception.");
+        }
+
+        [Command("rainbow")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Rainbow(CommandContext ctx)
+        {
+            keepRainbow = true;
+            var role = ctx.Guild.GetRole(586522215046971393);
+            while (keepRainbow)
+            {
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Red);
+                Thread.Sleep(1000);
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Orange);
+                Thread.Sleep(1000);
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Yellow);
+                Thread.Sleep(1000);
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Green);
+                Thread.Sleep(1000);
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Blue);
+                Thread.Sleep(1000);
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Cyan);
+                Thread.Sleep(1000);
+                await ctx.Guild.UpdateRoleAsync(role, color: DiscordColor.Purple);
+                Thread.Sleep(1000);
+            }
+        }
+
+        [Command("stoprainbow")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task StopRainbow(CommandContext ctx)
+        {
+            keepRainbow = false;
         }
     }
 }
