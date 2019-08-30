@@ -73,6 +73,8 @@
     <Compile Include="Commands\ModerationCommands.cs" />
     <Compile Include="Commands\PrivateCommands.cs" />
     <Compile Include="Commands\UtilsCommands.cs" />
+    <Compile Include="Entities\BanList.cs" />
+    <Compile Include="Entities\BannedUser.cs" />
     <Compile Include="Entities\Donator.cs" />
     <Compile Include="Entities\DonatorList.cs" />
     <Compile Include="Entities\Exceptions.cs" />

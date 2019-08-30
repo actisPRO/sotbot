@@ -63,6 +63,7 @@ namespace SeaOfThieves
             ShipList.ReadFromXML(BotSettings.ShipXML);
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
+            BanList.ReadFromXML(BotSettings.BanXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -166,17 +167,28 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        ///     Приветственное сообщение + лог посещений
+        ///     Приветственное сообщение + лог посещений + проверка на бан
         /// </summary>
         /// <param name="e"></param>
         /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
+            if (BanList.BannedMembers.ContainsKey(e.Member.Id))
+            {
+                var date = DateTime.Now.ToUniversalTime();
+                var bannedUser = BanList.BannedMembers[e.Member.Id];
+                if (date < bannedUser.UnbanDateTime)
+                {
+                    await e.Member.SendMessageAsync("Ваша блокировка истекает " + bannedUser.UnbanDateTime);
+                    await e.Member.RemoveAsync("Banned user tried to join");
+                }
+            }
+            
             var ctx = e; // здесь я копипастил, а рефакторить мне лень.
 
             await ctx.Member.SendMessageAsync($"**Привет, {ctx.Member.Mention}!\n**" +
                                               "Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
-                                              "Прежде чем приступать к игре, прочитай, пожалуйста правила в канале " +
+                                              "Прежде чем приступать к игре, прочитай, пожалуйста, правила в канале " +
                                               "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
                                               "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
                                               "**Удачной игры!**");
@@ -198,7 +210,8 @@ namespace SeaOfThieves
 
             await e.Context.RespondAsync(
                 $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз; если " +
-                $"ошибка повторяется - сообщите в ЛС {developer.Mention}. Информация об ошибке: {e.Exception.GetType()}:{e.Exception.Message}");
+                $"ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`, если же проблема никак не решается - напишите разработчку бота: **{developer.Username}#{developer.Discriminator}.** " +
+                $"Информация об ошибке: {e.Exception.GetType()}:{e.Exception.Message}");
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -442,6 +455,11 @@ namespace SeaOfThieves
         ///     ID канала-лога в который отправляются сообщения о входящих и выходящих пользователях.
         /// </summary>
         public ulong UserlogChannel;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string BanXML;
 
         /// <summary>
         ///     Игнорируемые каналы (в логе удаленных сообщений)

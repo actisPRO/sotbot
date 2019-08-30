@@ -32,6 +32,8 @@
     <FulllogChannel>479674700218499072</FulllogChannel>
     <UserlogChannel>481316315215429672</UserlogChannel>
     
+    <BanXML>bans.xml</BanXML>
+    
     <IgnoredChannels>
         479674576369090560,
         479674700218499072,

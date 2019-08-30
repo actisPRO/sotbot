@@ -61,7 +61,7 @@ namespace SeaOfThieves.Commands
 
             if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
 
-            var id = RandomString.NextString(12);
+            var id = RandomString.NextString(6);
 
             UserList.Users[member.Id].AddWarning(ctx.Member.Id, DateTime.Now.ToUniversalTime(), reason, id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
@@ -69,7 +69,7 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
             await member.SendMessageAsync("Вы получили предупреждение от модератора " +
                                           $"**{ctx.Member.Username}#{ctx.Member.Discriminator}**. Причина: {reason}. " +
-                                          $"Количество предупреждений: **{UserList.Users[member.Id].Warns.Count}**. ID предупреждения: `{id}`");
+                                          $"ID предупреждения: `{id}`");
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Предупреждение**\n\n" +
              $"**От:** {ctx.Member}\n" +
@@ -78,6 +78,36 @@ namespace SeaOfThieves.Commands
              $"**ID предупреждения:** {id}\n" +
              $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
              $"**Причина:** {reason}");
+        }
+
+        [Command("wlist")]
+        [Aliases("wl")]
+        [Hidden]
+        public async Task WList(CommandContext ctx, DiscordUser member)
+        {
+            if (!IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var count = 0;
+            if (!UserList.Users.ContainsKey(member.Id)) count = 0; else count = UserList.Users[member.Id].Warns.Count;
+
+            if (count == 0)
+            {
+                await ctx.RespondAsync("*Предупреждения отсутствуют.*");
+                return;
+            }
+
+            string response = "*" + member + "*\n"; 
+            for (int i = 1; i <= count; ++i)
+            {
+                var warn = UserList.Users[member.Id].Warns[i - 1];
+                response += $"**{i}.** {warn.Reason}. **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date}. **ID:** {warn.Id}.\n";
+            }
+
+            await ctx.RespondAsync(response);
         }
 
         [Command("unwarn")]
@@ -143,6 +173,44 @@ namespace SeaOfThieves.Commands
 
             Kick(ctx.Member, ctx.Guild, member, reason);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно исключён участник!");
+        }
+
+        [Command("ban")]
+        public async Task Ban(CommandContext ctx, DiscordMember member, int mins, int hours = 0, int days = 0,
+            [RemainingText] string reason = "Не указана")
+        {
+            if (!IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var unbanDate = DateTime.Now.ToUniversalTime();
+            
+            unbanDate = unbanDate.AddMinutes(mins);
+            unbanDate = unbanDate.AddHours(hours);
+            unbanDate = unbanDate.AddDays(days);
+
+            var banId = RandomString.NextString(6);
+            
+            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
+            BanList.SaveToXML(Bot.BotSettings.BanXML);
+
+            await member.SendMessageAsync($"Вы были заблокированы на сервере **{member.Guild.Name}** до **{unbanDate} UTC**. " +
+                                          $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
+            
+            await member.RemoveAsync("Banned: " + reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
+
+            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                $"**Бан**\n\n" +
+                $"**Модератор:** {ctx.Member}\n" +
+                $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
+                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                $"**Разблокировка:** {unbanDate} UTC\n" +
+                $"**ID бана:** {banId}\n" +
+                $"**Причина:** {reason}\n");
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан!");
         }
 
         /// <summary>
