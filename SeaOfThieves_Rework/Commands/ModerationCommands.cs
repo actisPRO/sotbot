@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using SeaOfThieves.Entities;
 using SeaOfThieves.Misc;
 
@@ -176,7 +177,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("ban")]
-        public async Task Ban(CommandContext ctx, DiscordMember member, int mins, int hours = 0, int days = 0,
+        public async Task Ban(CommandContext ctx, DiscordUser member, int mins, int hours = 0, int days = 0,
             [RemainingText] string reason = "Не указана")
         {
             if (!IsModerator(ctx.Member))
@@ -196,10 +197,17 @@ namespace SeaOfThieves.Commands
             var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
             BanList.SaveToXML(Bot.BotSettings.BanXML);
 
-            await member.SendMessageAsync($"Вы были заблокированы на сервере **{member.Guild.Name}** до **{unbanDate} UTC**. " +
-                                          $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
-            
-            await member.RemoveAsync("Banned: " + reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
+            try
+            {
+                var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
+                await guildMember.SendMessageAsync($"Вы были заблокированы на сервере **{ctx.Guild.Name}** до **{unbanDate} UTC**. " +
+                                            $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
+                await guildMember.RemoveAsync("Banned: " + reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
+            }
+            catch (NotFoundException)
+            {
+                
+            }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 $"**Бан**\n\n" +

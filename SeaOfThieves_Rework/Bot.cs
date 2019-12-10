@@ -179,7 +179,8 @@ namespace SeaOfThieves
                 var bannedUser = BanList.BannedMembers[e.Member.Id];
                 if (date < bannedUser.UnbanDateTime)
                 {
-                    await e.Member.SendMessageAsync("Ваша блокировка истекает " + bannedUser.UnbanDateTime);
+                    await e.Member.SendMessageAsync($"Ваша блокировка истекает {bannedUser.UnbanDateTime}. Причина блокировки: " +
+                                                    $"{bannedUser.Reason}");
                     await e.Member.RemoveAsync("Banned user tried to join");
                 }
             }
