@@ -212,7 +212,7 @@ namespace SeaOfThieves
             await e.Context.RespondAsync(
                 $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз; если " +
                 $"ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`, если же проблема никак не решается - напишите разработчку бота: **{developer.Username}#{developer.Discriminator}.** " +
-                $"Информация об ошибке: {e.Exception.GetType()}:{e.Exception.Message}");
+                $"Информация об ошибке: {e.Exception.GetType()}:{e.Exception.Message} {e.Exception.StackTrace}");
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
