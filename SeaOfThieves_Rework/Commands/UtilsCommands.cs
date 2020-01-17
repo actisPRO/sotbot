@@ -106,6 +106,11 @@ namespace SeaOfThieves.Commands
                 }
 
                 message += $"{i}. {mention} — {el.Value}₽\n";
+
+                if (message.Length >= 1950)
+                {
+                    
+                }
             }
 
             message += "```";
@@ -113,6 +118,7 @@ namespace SeaOfThieves.Commands
             var messageEntity = await ctx.Guild.GetChannel(459657130786422784)
                 .GetMessageAsync(Bot.BotSettings.DonatorMessage);
             await messageEntity.ModifyAsync(message);
+            //Console.WriteLine("Message length: " + message.Length);
         }
 
         [Command("throw")]
@@ -152,6 +158,12 @@ namespace SeaOfThieves.Commands
         public async Task StopRainbow(CommandContext ctx)
         {
             keepRainbow = false;
+        }
+
+        [Command("time")]
+        public async Task Time(CommandContext ctx)
+        {
+            await ctx.RespondAsync($"Текущее время на сервере: **{DateTime.Now}**.");
         }
     }
 }
