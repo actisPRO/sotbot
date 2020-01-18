@@ -516,11 +516,25 @@ namespace SeaOfThieves.Commands
                 if (ownerEl.Attribute("status").Value != "True")
                 {
                     var ship = ShipList.GetOwnedShip(Convert.ToUInt64(ownerEl.Value));
-                    await ctx.Guild.DeleteRoleAsync(ctx.Guild.GetRole(ship.Role));
-                    await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
+                    try
+                    {
+                        await ctx.Guild.DeleteRoleAsync(ctx.Guild.GetRole(ship.Role));
+                    }
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+
+                    try
+                    {
+
+                    }
+                    catch (NotFoundException)
+                    {
+                        await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
+                    }
 
                     var owner = Convert.ToUInt64(ownerEl.Value);
-                    
                     var adoc = XDocument.Load("actions.xml");
                     foreach (var action in adoc.Element("actions").Elements("action"))
                     {
