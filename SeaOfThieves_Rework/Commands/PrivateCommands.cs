@@ -511,27 +511,37 @@ namespace SeaOfThieves.Commands
         {
             var doc = XDocument.Load("active.xml");
             var root = doc.Root;
+            var elsToDelete = new List<XElement>();
             foreach (var ownerEl in root.Elements())
             {
                 if (ownerEl.Attribute("status").Value != "True")
                 {
                     var ship = ShipList.GetOwnedShip(Convert.ToUInt64(ownerEl.Value));
+                    ctx.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot Purge", $"Ship deletion: {ship.Name}", DateTime.Now);
                     try
                     {
                         await ctx.Guild.DeleteRoleAsync(ctx.Guild.GetRole(ship.Role));
                     }
                     catch (NotFoundException)
                     {
+
+                    }
+                    catch (NullReferenceException)
+                    {
                         
                     }
 
                     try
                     {
-
+                        await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
                     }
                     catch (NotFoundException)
                     {
-                        await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
+                        
+                    }
+                    catch (NullReferenceException)
+                    {
+                        
                     }
 
                     var owner = Convert.ToUInt64(ownerEl.Value);
@@ -546,11 +556,17 @@ namespace SeaOfThieves.Commands
                     adoc.Save("actions.xml");
                     
                     ship.Delete();
-                    ShipList.SaveToXML(Bot.BotSettings.ShipXML);
                 }
-                ownerEl.Remove();
+                elsToDelete.Add(ownerEl);
             }
+
+            for (int i = 0; i < elsToDelete.Count; ++i)
+            {
+                elsToDelete[i].Remove();
+            }
+            
             doc.Save("active.xml");
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Неактивные корабли успешно удалены!");
         }
 
