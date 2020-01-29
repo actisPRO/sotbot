@@ -71,9 +71,9 @@ namespace SeaOfThieves.Commands
             }
         }
 
-        [Command("updateDonatorMessage")]
+        [Command("updateDonatorMessageLegacy")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task UpdateDonatorMessage(CommandContext ctx)
+        public async Task UpdateDonatorMessageLegacy(CommandContext ctx)
         {
             var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
             foreach (var donator in DonatorList.Donators.Values)
@@ -119,6 +119,77 @@ namespace SeaOfThieves.Commands
                 .GetMessageAsync(Bot.BotSettings.DonatorMessage);
             await messageEntity.ModifyAsync(message);
             //Console.WriteLine("Message length: " + message.Length);
+        }
+
+        [Command("dgenlist")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task GenerateDonatorMessage(CommandContext ctx)
+        {
+            var channel = ctx.Guild.GetChannel(Bot.BotSettings.DonatorChannel);
+
+            var fso = File.Open("donators_messages.txt", FileMode.OpenOrCreate);
+            var sr = new StreamReader(fso);
+
+            var messageId = sr.ReadLine();
+            while (messageId != null)
+            {
+                try
+                {
+                    await channel.DeleteMessageAsync(await channel.GetMessageAsync(Convert.ToUInt64(messageId)));
+                }
+                catch (NotFoundException) { }
+
+                messageId = sr.ReadLine();
+            }
+            
+            sr.Close();
+            fso.Close();
+            
+            var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
+            foreach (var donator in DonatorList.Donators.Values)
+                if (!donator.Hidden)
+                    donators.Add(donator.Member, donator.Balance);
+
+            var ordered = donators.OrderBy(x => -x.Value);
+
+            int messageCount = ordered.Count() / 10;
+            if (ordered.Count() % 10 != 0) ++messageCount;
+
+            int position = 0, balance = Int32.MaxValue, str = 1;
+            string message = "";
+
+            var fs = File.Create("donators_messages.txt");
+            var sw = new StreamWriter(fs);
+            
+            foreach (var el in ordered)
+            {
+                if (str % 10 == 0)
+                {
+                    var sendedMessage = await channel.SendMessageAsync(message);
+                    sw.WriteLine(sendedMessage.Id);
+                    message = "";
+                }
+
+                if ((int) Math.Floor(el.Value) < balance)
+                {
+                    ++position;
+                    balance = (int) Math.Floor(el.Value);
+                }
+
+                var user = await ctx.Client.GetUserAsync(el.Key);
+
+                message += $"**{position}.** {user.Username}#{user.Discriminator} - *{el.Value}₽*\n";
+                ++str;
+            }
+
+            if (str % 10 != 0)
+            {
+                var sendedMessage = await channel.SendMessageAsync(message);
+                sw.WriteLine(sendedMessage.Id);
+            }
+            
+            sw.Close();
+            fs.Close();
         }
 
         [Command("throw")]
