@@ -207,12 +207,20 @@ namespace SeaOfThieves
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored.",
                 DateTime.Now.ToUniversalTime());
 
-            var developer = await e.Context.Guild.GetMemberAsync(BotSettings.Developer);
-
             await e.Context.RespondAsync(
                 $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз; если " +
-                $"ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`, если же проблема никак не решается - напишите разработчку бота: **{developer.Username}#{developer.Discriminator}.** " +
-                $"Информация об ошибке: {e.Exception.GetType()}:{e.Exception.Message} {e.Exception.StackTrace}");
+                $"ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
+                $"**Информация об ошибке:** {e.Exception.Message}");
+
+            var errChannel = e.Context.Guild.GetChannel(BotSettings.ErrorLog);
+
+            var message = $"**Команда:** {e.Command.Name}\n" +
+                          $"**Канал:** {e.Context.Channel}\n" +
+                          $"**Пользователь:** {e.Context.Member}\n" +
+                          $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
+                          $"**Трассировка стека:** \n```{e.Exception.StackTrace}```";
+
+            await errChannel.SendMessageAsync(message);
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -433,6 +441,11 @@ namespace SeaOfThieves
         public ulong DonatorRole;
 
         /// <summary>
+        ///     ID канала с топом донатеров.
+        /// </summary>
+        public ulong DonatorChannel;
+
+        /// <summary>
         ///     ID сообщения с топом донатов.
         /// </summary>
         public ulong DonatorMessage;
@@ -456,6 +469,8 @@ namespace SeaOfThieves
         ///     ID канала-лога в который отправляются сообщения о входящих и выходящих пользователях.
         /// </summary>
         public ulong UserlogChannel;
+
+        public ulong ErrorLog;
 
         /// <summary>
         /// 
