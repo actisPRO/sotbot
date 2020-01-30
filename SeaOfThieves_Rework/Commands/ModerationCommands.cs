@@ -68,9 +68,18 @@ namespace SeaOfThieves.Commands
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
-            await member.SendMessageAsync("Вы получили предупреждение от модератора " +
-                                          $"**{ctx.Member.Username}#{ctx.Member.Discriminator}**. Причина: {reason}. " +
-                                          $"ID предупреждения: `{id}`");
+
+            try
+            {
+                await member.SendMessageAsync("Вы получили предупреждение от модератора " +
+                                              $"**{ctx.Member.Username}#{ctx.Member.Discriminator}**. Причина: {reason}. " +
+                                              $"ID предупреждения: `{id}`");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+            
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Предупреждение**\n\n" +
              $"**От:** {ctx.Member}\n" +
@@ -159,8 +168,16 @@ namespace SeaOfThieves.Commands
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                 $"**ID предупреждения:** {id}\n" +
                 $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n");
-            await member.SendMessageAsync(
-                $"Администратор **{ctx.Member.Username}** снял ваше предупреждение с ID `{id}`");
+
+            try
+            {
+                await member.SendMessageAsync(
+                    $"Администратор **{ctx.Member.Username}** снял ваше предупреждение с ID `{id}`");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
         }
 
         [Command("kick")]
@@ -200,13 +217,19 @@ namespace SeaOfThieves.Commands
             try
             {
                 var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
-                await guildMember.SendMessageAsync($"Вы были заблокированы на сервере **{ctx.Guild.Name}** до **{unbanDate} UTC**. " +
-                                            $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
-                await guildMember.RemoveAsync("Banned: " + reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
+                await guildMember.SendMessageAsync(
+                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** до **{unbanDate} UTC**. " +
+                    $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
+                await guildMember.RemoveAsync("Banned: " +
+                                              reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
             }
             catch (NotFoundException)
             {
                 
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
             }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
@@ -230,8 +253,16 @@ namespace SeaOfThieves.Commands
         /// <param name="reason">Причина исключения</param>
         public async void Kick(DiscordMember moderator, DiscordGuild guild, DiscordMember member, string reason)
         {
-            await member.SendMessageAsync(
-                $"Вы были кикнуты модератором **{moderator.Username}#{moderator.Discriminator}** по причине: {reason}.");
+            try
+            {
+                await member.SendMessageAsync(
+                    $"Вы были кикнуты модератором **{moderator.Username}#{moderator.Discriminator}** по причине: {reason}.");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+            
             await guild.RemoveMemberAsync(member, reason);
             await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Кик**\n\n" +
