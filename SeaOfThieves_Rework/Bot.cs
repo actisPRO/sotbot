@@ -109,6 +109,7 @@ namespace SeaOfThieves
             Client.VoiceStateUpdated += ClientOnVoiceStateUpdated;
             Client.MessageCreated += ClientOnMessageCreated;
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
+            Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
 
             Commands.CommandExecuted += CommandsOnCommandExecuted;
             Commands.CommandErrored += CommandsOnCommandErrored;
@@ -116,6 +117,27 @@ namespace SeaOfThieves
             await Client.ConnectAsync();
 
             await Task.Delay(-1);
+        }
+
+        private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
+        {
+            ulong messageId = 0;
+            try
+            {
+                using (var fs = File.OpenRead("codex_message"))
+                using (var sr = new StreamReader(fs))
+                    messageId = Convert.ToUInt64(sr.ReadLine());
+            }
+            catch (FileNotFoundException)
+            {
+                return;
+            }
+
+            if (e.Message.Id == messageId)
+            {
+                await e.Channel.Guild.RevokeRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
+                    e.Channel.Guild.GetRole(BotSettings.CodexRole), "");
+            }
         }
 
         private async Task ClientOnMessageReactionAdded(MessageReactionAddEventArgs e)
