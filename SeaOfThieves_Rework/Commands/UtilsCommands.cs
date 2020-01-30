@@ -192,6 +192,23 @@ namespace SeaOfThieves.Commands
             fs.Close();
         }
 
+        [Command("codexgen")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task CodexGenerateMessage(CommandContext ctx)
+        {
+            var channel = ctx.Guild.GetChannel(Bot.BotSettings.CodexChannel);
+            var message = $"**Я прочитал правила и обязуюсь их выполнять.**";
+            var messageEnt = await channel.SendMessageAsync(message);
+            
+            using (var fs = File.Create("codex_message"))
+                using (var sw = new StreamWriter(fs))
+                    sw.WriteLine(messageEnt.Id);
+
+            await messageEnt.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji}");
+        }
+
         [Command("throw")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task Throw(CommandContext ctx)

@@ -491,5 +491,7 @@ namespace SeaOfThieves
         ///     Этому пользователю будут отправляться уведомление об ошибках.
         /// </summary>
         public ulong Developer;
+
+        public ulong CodexChannel;
     }
 }
