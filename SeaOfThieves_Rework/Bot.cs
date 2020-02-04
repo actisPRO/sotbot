@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -118,9 +119,23 @@ namespace SeaOfThieves
 
             await Task.Delay(-1);
         }
-
+        
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
         {
+            var doc = XDocument.Load("users.xml");
+            var root = doc.Root;
+
+            foreach (var user in root.Elements())
+            {
+                if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
+                {
+                    if (user.Element("Status").Value == "False")
+                    {
+                        return;
+                    }
+                }
+            }
+            
             ulong messageId = 0;
             try
             {
@@ -138,10 +153,35 @@ namespace SeaOfThieves
                 await e.Channel.Guild.RevokeRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
                     e.Channel.Guild.GetRole(BotSettings.CodexRole), "");
             }
+            
+            foreach (var user in root.Elements())
+            {
+                if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
+                {
+                    user.Remove();
+                    break;
+                }
+            }
+            
+            doc.Save("users.xml");
         }
 
         private async Task ClientOnMessageReactionAdded(MessageReactionAddEventArgs e)
         {
+            var doc = XDocument.Load("users.xml");
+            var root = doc.Root;
+
+            foreach (var user in root.Elements())
+            {
+                if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
+                {
+                    if (user.Element("Status").Value == "False")
+                    {
+                        return;
+                    }
+                }
+            }
+            
             ulong messageId = 0;
             try
             {
@@ -159,6 +199,12 @@ namespace SeaOfThieves
                 await e.Channel.Guild.GrantRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
                     e.Channel.Guild.GetRole(BotSettings.CodexRole));
             }
+
+            var newEl = new XElement("Users", new XElement("Id", e.User.Id), new XElement("Date", DateTime.Now), 
+                new XElement("Status", true));
+            root.Add(newEl);
+            
+            doc.Save("users.xml");
         }
 
         /// <summary>
