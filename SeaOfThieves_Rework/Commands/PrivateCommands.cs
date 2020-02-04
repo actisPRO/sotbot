@@ -39,13 +39,15 @@ namespace SeaOfThieves.Commands
             doc.Element("actions").Add(new XElement("action", ctx.Member.Id, new XAttribute("type", "ship")));
             doc.Save("actions.xml");
 
-            await ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel)
+            var message = await ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel)
                 .SendMessageAsync($"**Запрос на создание корабля**\n\n" +
                                   $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
                                   $"**Название:** {name}\n" +
                                   $"**Время:** {DateTime.Now.ToUniversalTime()}\n\n" +
-                                  $"Отправьте `{Bot.BotSettings.Prefix}confirm {name}` для подтверждения, или " +
+                                  $"Используйте реакцию или отправьте `{Bot.BotSettings.Prefix}confirm {name}` для подтверждения, или " +
                                   $"`{Bot.BotSettings.Prefix}decline {name}` для отказа.");
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно отправлен запрос на создание корабля **{name}**!");
