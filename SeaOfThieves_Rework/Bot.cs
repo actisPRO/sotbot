@@ -214,7 +214,11 @@ namespace SeaOfThieves
             //then check if it is private ship confirmation message
             foreach (var ship in ShipList.Ships.Values)
             {
-                //TODO: add check if ship is activated already
+                if (ship.Status == true)
+                {
+                    continue;
+                }
+                
                 if (e.Message.Id == ship.CreationMessage)
                 {
                     if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":white_check_mark:"))
