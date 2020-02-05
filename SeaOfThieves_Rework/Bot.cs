@@ -168,20 +168,9 @@ namespace SeaOfThieves
 
         private async Task ClientOnMessageReactionAdded(MessageReactionAddEventArgs e)
         {
-            var doc = XDocument.Load("users.xml");
-            var root = doc.Root;
-
-            foreach (var user in root.Elements())
-            {
-                if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
-                {
-                    if (user.Element("Status").Value == "False")
-                    {
-                        return;
-                    }
-                }
-            }
+            if (e.User.IsBot) return;
             
+            //first check if message is codex confirmation
             ulong messageId = 0;
             try
             {
@@ -196,15 +185,97 @@ namespace SeaOfThieves
 
             if (e.Message.Id == messageId)
             {
+                var doc = XDocument.Load("users.xml");
+                var root = doc.Root;
+
+                foreach (var user in root.Elements())
+                {
+                    if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
+                    {
+                        if (user.Element("Status").Value == "False")
+                        {
+                            return;
+                        }
+                    }
+                }
+
                 await e.Channel.Guild.GrantRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
                     e.Channel.Guild.GetRole(BotSettings.CodexRole));
-            }
-
-            var newEl = new XElement("Users", new XElement("Id", e.User.Id), new XElement("Date", DateTime.Now), 
-                new XElement("Status", true));
-            root.Add(newEl);
+                
+                var newEl = new XElement("Users", new XElement("Id", e.User.Id), new XElement("Date", DateTime.Now), 
+                    new XElement("Status", true));
+                root.Add(newEl);
             
-            doc.Save("users.xml");
+                doc.Save("users.xml");
+
+                return;
+            }
+            
+            //then check if it is private ship confirmation message
+            foreach (var ship in ShipList.Ships.Values)
+            {
+                //TODO: add check if ship is activated already
+                if (e.Message.Id == ship.CreationMessage)
+                {
+                    if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":white_check_mark:"))
+                    {
+                        var name = ship.Name;
+                        var role = await e.Channel.Guild.CreateRoleAsync($"☠{name}☠", null, null, false, true);
+                        var channel = await e.Channel.Guild.CreateChannelAsync($"☠{name}☠", ChannelType.Voice,
+                            e.Channel.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
+
+                        await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                        await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None,
+                            Permissions.UseVoice);
+
+                        var member =
+                            await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
+                        
+                        await member.GrantRoleAsync(role);
+
+                        ShipList.Ships[name].SetChannel(channel.Id);
+                        ShipList.Ships[name].SetRole(role.Id);
+                        ShipList.Ships[name].SetStatus(true);
+                        ShipList.Ships[name].SetMemberStatus(member.Id, true);
+
+                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+                        await member.SendMessageAsync(
+                            $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был подтвержден администратором **{e.User.Username}#{e.User.Discriminator}**");
+                        await e.Channel.SendMessageAsync(
+                            $"{Bot.BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно подтвердил " +
+                            $"запрос на создание корабля **{name}**!");
+                    }
+                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client,":no_entry:"))
+                    {
+                        var name = ship.Name;
+                        var member = await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
+            
+                        ShipList.Ships[name].Delete();
+                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+                        var doc = XDocument.Load("actions.xml");
+                        foreach (var action in doc.Element("actions").Elements("action"))
+                        {
+                            if (Convert.ToUInt64(action.Value) == member.Id)
+                            {
+                                action.Remove();
+                            }
+                        }
+                        doc.Save("actions.xml");
+            
+                        await member.SendMessageAsync(
+                            $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был отклонен администратором **{e.User.Username}#{e.User.Discriminator}**");
+                        await e.Channel.SendMessageAsync(
+                            $"{Bot.BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно отклонил запрос на " +
+                            $"создание корабля **{name}**!");
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+            }
         }
 
         /// <summary>
