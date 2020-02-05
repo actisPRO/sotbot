@@ -13,18 +13,20 @@ namespace SeaOfThieves.Entities
         public bool Status { get; internal set; }
         public ulong Role { get; internal set; }
         public ulong Channel { get; internal set; }
+        public ulong CreationMessage { get; internal set; }
         public Dictionary<ulong, ShipMember> Members { get; private set; }
 
-        private Ship(string name, ulong role, ulong channel)
+        private Ship(string name, ulong role, ulong channel, ulong creationMessage)
         {
             Name = name;
             Status = false;
             Role = role;
             Channel = channel;
+            CreationMessage = creationMessage;
             Members = new Dictionary<ulong, ShipMember>();
         }
 
-        public static Ship Create(string name, ulong role, ulong channel)
+        public static Ship Create(string name, ulong role, ulong channel, ulong creationMessage)
         {
             if (ShipList.Ships.ContainsKey(name))
             {
@@ -32,7 +34,7 @@ namespace SeaOfThieves.Entities
             }
             else
             {
-                var created = new Ship(name, role, channel);
+                var created = new Ship(name, role, channel, creationMessage);
             
                 ShipList.Update(name, created);
                 return ShipList.Ships[name]; 

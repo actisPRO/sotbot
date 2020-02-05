@@ -63,6 +63,7 @@ namespace SeaOfThieves.Entities
                 
                 shipE.Add(new XElement("role", ship.Role));
                 shipE.Add(new XElement("channel", ship.Channel));
+                shipE.Add(new XElement("creationMessage", ship.CreationMessage));
 
                 foreach (var member in ship.Members.Values)
                 {
@@ -89,8 +90,18 @@ namespace SeaOfThieves.Entities
 
                 foreach (var shipE in doc.Element("ships").Elements("ship"))
                 {
+                    string creationMessage = "0";
+                    try
+                    {
+                        creationMessage = shipE.Element("creationMessage").Value;
+                    }
+                    catch (NullReferenceException)
+                    {
+                        
+                    }
+                    
                     var ship = Ship.Create(shipE.Attribute("name").Value, Convert.ToUInt64(shipE.Element("role").Value),
-                        Convert.ToUInt64(shipE.Element("channel").Value));
+                        Convert.ToUInt64(shipE.Element("channel").Value), Convert.ToUInt64(creationMessage));
 
                     ship.Status = Convert.ToBoolean(shipE.Attribute("status").Value);
 
@@ -116,7 +127,6 @@ namespace SeaOfThieves.Entities
                         ship.AddMember(Convert.ToUInt64(memberE.Value), type, Convert.ToBoolean(memberE.Attribute("status").Value));
                     }
                 }
-                
             }
             catch (NullReferenceException)
             {

@@ -31,14 +31,6 @@ namespace SeaOfThieves.Commands
                 }
             }
 
-            var ship = Ship.Create(name, 0, 0);
-            ship.AddMember(ctx.Member.Id, MemberType.Owner);
-                
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-            
-            doc.Element("actions").Add(new XElement("action", ctx.Member.Id, new XAttribute("type", "ship")));
-            doc.Save("actions.xml");
-
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel)
                 .SendMessageAsync($"**Запрос на создание корабля**\n\n" +
                                   $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
@@ -48,6 +40,14 @@ namespace SeaOfThieves.Commands
                                   $"`{Bot.BotSettings.Prefix}decline {name}` для отказа.");
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
+
+            var ship = Ship.Create(name, 0, 0, message.Id);
+            ship.AddMember(ctx.Member.Id, MemberType.Owner);
+                
+            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+            
+            doc.Element("actions").Add(new XElement("action", ctx.Member.Id, new XAttribute("type", "ship")));
+            doc.Save("actions.xml");
 
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно отправлен запрос на создание корабля **{name}**!");
