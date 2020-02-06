@@ -10,6 +10,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Exceptions;
 using DSharpPlus.Net.WebSocket;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
@@ -283,25 +284,38 @@ namespace SeaOfThieves
         /// <summary>
         ///     Обработка подозрительных сообщений.
         /// </summary>
-        private Task ClientOnMessageCreated(MessageCreateEventArgs e)
+        private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
-            var message = e.Message.Content.ToLower();
-            // боремся со спамом от одной мошеннической группы
-            if (message.Contains("sea") && message.Contains("of") && message.Contains("cheat") &&
-                !e.Message.Author.IsBot)
+            if (e.Message.Content.StartsWith(">"))
             {
-                e.Guild.BanMemberAsync(e.Author.Id, 7, "Autobanned for message, containing 'seaofcheat'");
-                e.Guild.GetChannel(BotSettings.ModlogChannel)
-                    .SendMessageAsync("**Блокировка**\n\n" +
-                                      $"**Модератор:** {e.Client.CurrentUser.Mention} ({e.Client.CurrentUser.Id})\n" +
-                                      $"**Получатель:** {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id})\n" +
-                                      $"**Дата:** {DateTime.Now.ToUniversalTime()}\n" +
-                                      "**Причина:** Автоматическая блокировка за сообщение, содержащее 'sea of cheats'");
+                if (IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
+                {
+                    var messageStrings = e.Message.Content.Split('\n');
+                    var command = "";
+                    foreach (var str in messageStrings)
+                    {
+                        if (str.StartsWith("<@"))
+                        {
+                            command = str;
+                            break;
+                        }
+                    }
+
+                    var args = command.Split(' ');
+                    var receiver = args[0];
+                    var action = args[1];
+
+                    switch (action)
+                    {
+                        case "warn":
+                            RunCommand(CommandType.Warn, args, e.Message);
+                            return;
+                        default:
+                            return;
+                    }
+                }
             }
-
-            return Task.CompletedTask;
         }
-
         /// <summary>
         ///     Отлавливаем удаленные сообщения и отправляем в лог
         /// </summary>
@@ -501,6 +515,70 @@ namespace SeaOfThieves
 
             return result;
         }
+
+        public static bool IsModerator(DiscordMember member)
+        {
+            foreach (var role in member.Roles)
+                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
+                    return true;
+
+            return false;
+        }
+
+        private static async void RunCommand(CommandType type, string[] args, DiscordMessage message)
+        {
+            switch (type)
+            {
+                case CommandType.Warn:
+                    if (args.Length < 2)
+                    {
+                        return;
+                    }
+
+                    var moderator = await message.Channel.Guild.GetMemberAsync(message.Author.Id);
+
+                    try
+                    {
+                        var messageId =
+                            Convert.ToUInt64(args[0].TrimStart('<').TrimStart('@').TrimStart('!').TrimEnd('>'));
+                        var member = await message.Channel.Guild.GetMemberAsync(messageId);
+
+                        var reason = "Не указана";
+                        if (args.Length > 2)
+                        {
+                            reason = "";
+                            if (args.Length == 3) reason = args[2];
+                            else
+                            {
+                                for (int i = 2; i < args.Length - 1; ++i)
+                                {
+                                    reason += args[i] + " ";
+                                }
+                            }
+
+                            reason += args[args.Length - 1];
+                        }
+
+                        ModerationCommands.Warn(moderator, message.Channel.Guild, member, reason);
+                    }
+                    catch (FormatException)
+                    {
+                        await moderator.SendMessageAsync(
+                            $"{BotSettings.ErrorEmoji} Не удалось отправить предупреждение!");
+                    }
+                    catch (NotFoundException)
+                    {
+                        await moderator.SendMessageAsync(
+                            $"{BotSettings.ErrorEmoji} Не удалось отправить предупреждение!");
+                    }
+                    catch (Exception e)
+                    {
+                        
+                    }
+
+                    return;
+            }
+        }
     }
 
     /// <summary>
@@ -658,5 +736,10 @@ namespace SeaOfThieves
         public ulong CodexChannel;
 
         public ulong CodexRole;
+    }
+
+    public enum CommandType
+    {
+        Warn
     }
 }

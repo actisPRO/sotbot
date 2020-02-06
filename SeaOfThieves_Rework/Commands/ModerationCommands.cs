@@ -16,7 +16,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task ClearChannel(CommandContext ctx, int messages)
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -35,7 +35,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task ClearChannelStartFrom(CommandContext ctx, ulong startFrom, int messages)
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -54,40 +54,14 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-
-            if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
-
-            var id = RandomString.NextString(6);
-
-            UserList.Users[member.Id].AddWarning(ctx.Member.Id, DateTime.Now.ToUniversalTime(), reason, id);
-            UserList.SaveToXML(Bot.BotSettings.WarningsXML);
-
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
-
-            try
-            {
-                await member.SendMessageAsync("Вы получили предупреждение от модератора " +
-                                              $"**{ctx.Member.Username}#{ctx.Member.Discriminator}**. Причина: {reason}. " +
-                                              $"ID предупреждения: `{id}`");
-            }
-            catch (UnauthorizedException)
-            {
-                //user can block the bot
-            }
             
-            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
-            ("**Предупреждение**\n\n" +
-             $"**От:** {ctx.Member}\n" +
-             $"**Кому:** {member}\n" +
-             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-             $"**ID предупреждения:** {id}\n" +
-             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
-             $"**Причина:** {reason}");
+            Warn(ctx.Member, ctx.Guild, member, reason);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
         }
 
         [Command("wlist")]
@@ -95,7 +69,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task WList(CommandContext ctx, DiscordUser member)
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -125,7 +99,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task Unwarn(CommandContext ctx, DiscordMember member, string id)
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -183,7 +157,7 @@ namespace SeaOfThieves.Commands
         [Command("kick")]
         public async Task Kick(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -197,7 +171,7 @@ namespace SeaOfThieves.Commands
         public async Task Ban(CommandContext ctx, DiscordUser member, int mins, int hours = 0, int days = 0,
             [RemainingText] string reason = "Не указана")
         {
-            if (!IsModerator(ctx.Member))
+            if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
@@ -272,18 +246,48 @@ namespace SeaOfThieves.Commands
              $"**Причина:** {reason}");
         }
 
+        public static async void Warn(DiscordMember moderator, DiscordGuild guild, DiscordMember member, string reason)
+        {
+            if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
+
+            var id = RandomString.NextString(6);
+
+            UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now.ToUniversalTime(), reason, id);
+            UserList.SaveToXML(Bot.BotSettings.WarningsXML);
+
+            try
+            {
+                await member.SendMessageAsync("Вы получили предупреждение от модератора " +
+                                              $"**{moderator.Username}#{moderator.Discriminator}**. Причина: {reason}. " +
+                                              $"ID предупреждения: `{id}`");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+            
+            await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
+            ("**Предупреждение**\n\n" +
+             $"**От:** {moderator}\n" +
+             $"**Кому:** {member}\n" +
+             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+             $"**ID предупреждения:** {id}\n" +
+             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
+             $"**Причина:** {reason}");
+        }
+
         /// <summary>
         ///     Проверяет, имеет ли пользователь роли из списка AdminRoles.
         /// </summary>
         /// <param name="member">Проверяемый участник</param>
         /// <returns>Является ли участник модератором</returns>
-        private bool IsModerator(DiscordMember member)
+        /*private bool IsModerator(DiscordMember member)
         {
             foreach (var role in member.Roles)
                 if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
                     return true;
 
             return false;
-        }
+        }*/
     }
 }
