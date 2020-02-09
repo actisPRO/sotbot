@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -60,7 +61,7 @@ namespace SeaOfThieves.Commands
                 return;
             }
             
-            Warn(ctx.Member, ctx.Guild, member, reason);
+            Warn(ctx.Client, ctx.Member, ctx.Guild, member, reason);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
         }
 
@@ -246,13 +247,25 @@ namespace SeaOfThieves.Commands
              $"**Причина:** {reason}");
         }
 
-        public static async void Warn(DiscordMember moderator, DiscordGuild guild, DiscordMember member, string reason)
+        public static async void Warn(DiscordClient client, DiscordMember moderator, DiscordGuild guild, DiscordMember member, string reason)
         {
             if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
 
             var id = RandomString.NextString(6);
 
-            UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now.ToUniversalTime(), reason, id);
+            var message = await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
+                ("**Предупреждение**\n\n" +
+                 $"**От:** {moderator}\n" +
+                 $"**Кому:** {member}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**ID предупреждения:** {id}\n" +
+                 $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
+                 $"**Причина:** {reason}");
+
+            await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
+            
+            UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now.ToUniversalTime(), reason, id, message.Id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
 
             try
@@ -265,15 +278,6 @@ namespace SeaOfThieves.Commands
             {
                 //user can block the bot
             }
-            
-            await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
-            ("**Предупреждение**\n\n" +
-             $"**От:** {moderator}\n" +
-             $"**Кому:** {member}\n" +
-             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-             $"**ID предупреждения:** {id}\n" +
-             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
-             $"**Причина:** {reason}");
         }
 
         /// <summary>

@@ -282,7 +282,7 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        ///     Обработка подозрительных сообщений.
+        ///     Новый обработчик команд.
         /// </summary>
         private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
@@ -308,7 +308,8 @@ namespace SeaOfThieves
                     switch (action)
                     {
                         case "warn":
-                            RunCommand(CommandType.Warn, args, e.Message);
+                            await e.Message.DeleteAsync();
+                            RunCommand((DiscordClient) e.Client, CommandType.Warn, args, e.Message);
                             return;
                         default:
                             return;
@@ -525,7 +526,7 @@ namespace SeaOfThieves
             return false;
         }
 
-        private static async void RunCommand(CommandType type, string[] args, DiscordMessage message)
+        private static async void RunCommand(DiscordClient client, CommandType type, string[] args, DiscordMessage message)
         {
             switch (type)
             {
@@ -555,11 +556,9 @@ namespace SeaOfThieves
                                     reason += args[i] + " ";
                                 }
                             }
-
-                            reason += args[args.Length - 1];
                         }
 
-                        ModerationCommands.Warn(moderator, message.Channel.Guild, member, reason);
+                        ModerationCommands.Warn(client, moderator, message.Channel.Guild, member, reason);
                     }
                     catch (FormatException)
                     {
@@ -573,7 +572,15 @@ namespace SeaOfThieves
                     }
                     catch (Exception e)
                     {
-                        
+                        var errChannel = message.Channel.Guild.GetChannel(BotSettings.ErrorLog);
+
+                        var msg = $"**Команда:** warn\n" +
+                                      $"**Канал:** {message.Channel}\n" +
+                                      $"**Пользователь:** {moderator}\n" +
+                                      $"**Исключение:** {e.GetType()}:{e.Message}\n" +
+                                      $"**Трассировка стека:** \n```{e.StackTrace}```";
+
+                        await errChannel.SendMessageAsync(msg);
                     }
 
                     return;

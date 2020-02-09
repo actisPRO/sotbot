@@ -20,9 +20,9 @@ namespace SeaOfThieves.Entities
             return new User(id);
         }
 
-        public void AddWarning(ulong moderator, DateTime date, string reason, string id)
+        public void AddWarning(ulong moderator, DateTime date, string reason, string id, ulong logMessage)
         {
-            Warns.Add(new Warn(moderator, date, reason, id));
+            Warns.Add(new Warn(moderator, date, reason, id, logMessage));
             UserList.Update(this);
         }
 

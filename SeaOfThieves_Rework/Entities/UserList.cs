@@ -36,7 +36,8 @@ namespace SeaOfThieves.Entities
                     userEl.Add(new XElement("warn", new XAttribute("moderator", warn.Moderator),
                         new XAttribute("date", warn.Date),
                         new XAttribute("reason", warn.Reason),
-                        new XAttribute("id", warn.Id)));
+                        new XAttribute("id", warn.Id),
+                        new XAttribute("logMessage", warn.LogMessage)));
                 }
                 root.Add(userEl);
             }
@@ -64,8 +65,20 @@ namespace SeaOfThieves.Entities
                     {
                         id = warnEl.Attribute("id").Value;
                     }
+
+                    string logMessage = "0";
+                    try
+                    {
+                        logMessage = warnEl.Attribute("logMessage").Value;
+                    }
+                    catch (NullReferenceException)
+                    {
+                        
+                    }
+                    
                     created.AddWarning(Convert.ToUInt64(warnEl.Attribute("moderator").Value),
-                        Convert.ToDateTime(warnEl.Attribute("date").Value), warnEl.Attribute("reason").Value, id);
+                        Convert.ToDateTime(warnEl.Attribute("date").Value), warnEl.Attribute("reason").Value, id,
+                        Convert.ToUInt64(logMessage));
                 }
             }
         }
