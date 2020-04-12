@@ -190,6 +190,8 @@ namespace SeaOfThieves.Commands
             
             sw.Close();
             fs.Close();
+
+            await ctx.Message.DeleteAsync();
         }
 
         [Command("codexgen")]

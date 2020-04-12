@@ -156,6 +156,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("kick")]
+        [Hidden]
         public async Task Kick(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -169,6 +170,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("ban")]
+        [Hidden]
         public async Task Ban(CommandContext ctx, DiscordUser member, int mins, int hours = 0, int days = 0,
             [RemainingText] string reason = "Не указана")
         {
@@ -219,6 +221,24 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан!");
         }
 
+        [Command("unban")]
+        [Hidden]
+        public async Task Unban(CommandContext ctx, DiscordUser member)
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            if (BanList.BannedMembers.ContainsKey(member.Id))
+            {
+                var bannedUser = BanList.BannedMembers[member.Id];
+                bannedUser.Unban();
+                BanList.SaveToXML(Bot.BotSettings.BanXML);
+            }
+        }
+
         /// <summary>
         ///     Исключает участника и отправляет уведомление в лог и в ЛС
         /// </summary>
@@ -262,8 +282,8 @@ namespace SeaOfThieves.Commands
                  $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
                  $"**Причина:** {reason}");
 
-            await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
-            await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
+            //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
+            //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
             
             UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now.ToUniversalTime(), reason, id, message.Id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);

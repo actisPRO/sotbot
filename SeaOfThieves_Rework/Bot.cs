@@ -307,7 +307,7 @@ namespace SeaOfThieves
 
                     switch (action)
                     {
-                        case "warn":
+                        case "w":
                             await e.Message.DeleteAsync();
                             RunCommand((DiscordClient) e.Client, CommandType.Warn, args, e.Message);
                             return;
@@ -360,7 +360,11 @@ namespace SeaOfThieves
                     await e.Member.SendMessageAsync($"Ваша блокировка истекает {bannedUser.UnbanDateTime}. Причина блокировки: " +
                                                     $"{bannedUser.Reason}");
                     await e.Member.RemoveAsync("Banned user tried to join");
+                    return;
                 }
+                
+                bannedUser.Unban();
+                BanList.SaveToXML(BotSettings.BanXML);
             }
             
             var ctx = e; // здесь я копипастил, а рефакторить мне лень.
