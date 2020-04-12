@@ -427,15 +427,15 @@ namespace SeaOfThieves
                     if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
                         created = await e.Guild.CreateChannelAsync(
                             $"{BotSettings.AutocreateSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
-                            e.Channel.Parent, BotSettings.Bitrate, 2);
+                            e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 2);
                     else if (e.Channel.Id == BotSettings.AutocreateBrigantine) // Бригантина
                         created = await e.Guild.CreateChannelAsync(
                             $"{BotSettings.AutocreateSymbol} Бриг {e.User.Username}", ChannelType.Voice,
-                            e.Channel.Parent, BotSettings.Bitrate, 3);
+                            e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 3);
                     else // Галеон
                         created = await e.Guild.CreateChannelAsync(
                             $"{BotSettings.AutocreateSymbol} Галеон {e.User.Username}", ChannelType.Voice,
-                            e.Channel.Parent, BotSettings.Bitrate, 4);
+                            e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 4);
 
                     var member = await e.Guild.GetMemberAsync(e.User.Id);
 
