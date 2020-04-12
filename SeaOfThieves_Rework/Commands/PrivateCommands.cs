@@ -448,7 +448,8 @@ namespace SeaOfThieves.Commands
         [Command("apurgereq")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task APurgeRequest(CommandContext ctx, int days = 3)
+        public async Task APurgeRequest(CommandContext ctx, int days = 3, bool force = false, 
+            [RemainingText] string forceReason = "Не указана")
         {
             var doc = XDocument.Load("active.xml");
             var root = doc.Root;
@@ -463,6 +464,23 @@ namespace SeaOfThieves.Commands
                         try
                         {
                             var owner = await ctx.Member.Guild.GetMemberAsync(member.Id);
+
+                            if (force)
+                            {
+                                try
+                                {
+                                    await owner.SendMessageAsync(
+                                        $"Ваш корабль **{ship.Name} будет автоматически удалён через {days} дня. " +
+                                        $"Причина: {forceReason}.");
+                                }
+                                catch (UnauthorizedException)
+                                {
+                                
+                                }
+                                root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), owner.Id));
+                                continue;   
+                            }
+                            
                             if (ship.Members.Count < 4)
                             {
                                 try
