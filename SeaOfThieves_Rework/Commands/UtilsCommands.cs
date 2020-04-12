@@ -95,7 +95,7 @@ namespace SeaOfThieves.Commands
                 doc.Element("Settings").Element("DonatorMessage").Value = Convert.ToString(message.Id);
                 Bot.ReloadSettings();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await ctx.RespondAsync("**ERRORED**");
             }
@@ -254,7 +254,7 @@ namespace SeaOfThieves.Commands
 
         [Command("throw")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task Throw(CommandContext ctx)
+        public Task Throw(CommandContext ctx)
         {
             throw new IOException("Test exception.");
         }
@@ -286,9 +286,10 @@ namespace SeaOfThieves.Commands
 
         [Command("stoprainbow")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task StopRainbow(CommandContext ctx)
+        public Task StopRainbow(CommandContext ctx)
         {
             keepRainbow = false;
+            return Task.CompletedTask;
         }
 
         [Command("time")]

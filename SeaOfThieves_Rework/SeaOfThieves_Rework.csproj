@@ -100,16 +100,6 @@
     <Content Include="ships.example.xml" />
     <Content Include="warnings.example.xml" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ModeratorAPI\ModeratorAPI.csproj">
-      <Project>{06f5f5b9-acaa-4466-ba31-d05bead9b25c}</Project>
-      <Name>ModeratorAPI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ShipAPI\ShipAPI.csproj">
-      <Project>{52d09d44-a43e-44b2-b250-2513f3f44d72}</Project>
-      <Name>ShipAPI</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

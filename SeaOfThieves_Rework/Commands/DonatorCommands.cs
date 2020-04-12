@@ -136,7 +136,7 @@ namespace SeaOfThieves.Commands
             {
                 discordColor = new DiscordColor(color);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Некорректный формат цвета!");
                 return;
