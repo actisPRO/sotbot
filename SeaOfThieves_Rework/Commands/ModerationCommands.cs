@@ -237,6 +237,14 @@ namespace SeaOfThieves.Commands
                 bannedUser.Unban();
                 BanList.SaveToXML(Bot.BotSettings.BanXML);
             }
+            
+            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                $"**Снятие бана**\n\n" +
+                $"**Модератор:** {ctx.Member}\n" +
+                $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
+                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снят бан!");
         }
 
         /// <summary>
