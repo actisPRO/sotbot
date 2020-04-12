@@ -40,12 +40,45 @@ namespace SeaOfThieves.Commands
         [Command("whois")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task WhoIs(CommandContext ctx, ulong id)
+        public async Task WhoIs(CommandContext ctx, DiscordMember member)
         {
             try
             {
-                var member = await ctx.Guild.GetMemberAsync(id);
-                await ctx.RespondAsync(member.Mention);
+                var embed = new DiscordEmbedBuilder();
+                embed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
+                embed.AddField("ID", member.Id.ToString(), true);
+                embed.WithColor(DiscordColor.Blurple);
+
+                embed.AddField("Имя на сервере", member.Username, false);
+                
+                int warnings = 0;
+                if (UserList.Users.ContainsKey(member.Id)) warnings = UserList.Users[member.Id].Warns.Count;
+                embed.AddField("Предупреждения", warnings.ToString(), true);
+
+                int donate = 0;
+                if (DonatorList.Donators.ContainsKey(member.Id)) donate = (int) DonatorList.Donators[member.Id].Balance;
+                embed.AddField("Донат", donate.ToString(), true);
+
+                string moderator = "Нет";
+                if (Bot.IsModerator(member)) moderator = "Да";
+                embed.AddField("Модератор", moderator, true);
+
+                string privateShip = "Нет";
+                foreach (var ship in ShipList.Ships.Values)
+                {
+                    foreach (var shipMember in ship.Members.Values)
+                    {
+                        if (shipMember.Type == MemberType.Owner && shipMember.Id == member.Id)
+                        {
+                            privateShip = ship.Name;
+                            break;;
+                        }
+                    }
+                }
+
+                embed.AddField("Владелец приватного корабля", privateShip, false);
+                
+                await ctx.RespondAsync(embed: embed.Build());
             }
             catch (NotFoundException)
             {
