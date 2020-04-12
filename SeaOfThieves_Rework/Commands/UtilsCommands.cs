@@ -160,6 +160,9 @@ namespace SeaOfThieves.Commands
         {
             var channel = ctx.Guild.GetChannel(Bot.BotSettings.DonatorChannel);
 
+            await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100, channel.LastMessageId));
+            await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
+            
             var fso = File.Open("donators_messages.txt", FileMode.OpenOrCreate);
             var sr = new StreamReader(fso);
 
@@ -209,10 +212,16 @@ namespace SeaOfThieves.Commands
                     balance = (int) Math.Floor(el.Value);
                 }
 
-                var user = await ctx.Client.GetUserAsync(el.Key);
-
-                message += $"**{position}.** {user.Username}#{user.Discriminator} - *{el.Value}₽*\n";
-                ++str;
+                try
+                {
+                    var user = await ctx.Client.GetUserAsync(el.Key);
+                    message += $"**{position}.** {user.Username}#{user.Discriminator} - *{el.Value}₽*\n";
+                    ++str;
+                }
+                catch (NotFoundException)
+                {
+                    
+                }
             }
 
             if (str % 10 != 0)

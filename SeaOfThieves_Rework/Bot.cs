@@ -386,6 +386,7 @@ namespace SeaOfThieves
         /// </summary>
         private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
         {
+            if (e.Command.Name == "dgenlist" && e.Exception.GetType() == typeof(NotFoundException)) return; //костыль
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored.",
                 DateTime.Now.ToUniversalTime());
 
