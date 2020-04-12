@@ -448,13 +448,14 @@ namespace SeaOfThieves.Commands
         [Command("apurgereq")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task APurgeRequest(CommandContext ctx, int days = 1)
+        public async Task APurgeRequest(CommandContext ctx, int days = 3)
         {
             var doc = XDocument.Load("active.xml");
             var root = doc.Root;
             
             foreach (var ship in ShipList.Ships.Values)
             {
+                //if (ship.Name != "test") continue;
                 foreach (var member in ship.Members.Values)
                 {
                     if (member.Type == MemberType.Owner)
@@ -475,7 +476,7 @@ namespace SeaOfThieves.Commands
                                 
                                 }
                                 root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), owner.Id));
-                                break;                            
+                                continue;                            
                             }
                             try
                             {
@@ -489,7 +490,6 @@ namespace SeaOfThieves.Commands
                             
                             }
                             root.Add(new XElement("Owner", new XAttribute("status", "False"), owner.Id));
-                            break;
                         }
                         catch (NotFoundException)
                         {
