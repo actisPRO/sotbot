@@ -229,6 +229,20 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
+            var shipCount = 0;
+            foreach (var _ship in ShipList.Ships.Values)
+            foreach (var _member in _ship.Members.Values)
+                if (_member.Id == ctx.Member.Id && _member.Status)
+                    ++shipCount;
+
+            if (shipCount >= Bot.BotSettings.MaxPrivateShips)
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} К сожалению, максимальное число приватных кораблей для вас - {Bot.BotSettings.MaxPrivateShips}");
+                return;
+            }
+
+
             ship.SetMemberStatus(ctx.Member.Id, true);
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 

@@ -681,6 +681,11 @@ namespace SeaOfThieves
         public ulong PrivateRequestsChannel;
 
         /// <summary>
+        ///     Максимальное число приватных кораблей для пользователя.
+        /// </summary>
+        public int MaxPrivateShips;
+
+        /// <summary>
         ///     Путь до XML-файлов с донатерами.
         /// </summary>
         public string DonatorXML;

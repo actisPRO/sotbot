@@ -24,6 +24,7 @@
     <ShipXML>ships.xml</ShipXML>
     <PrivateCategory>435448014614822923</PrivateCategory>
     <PrivateRequestsChannel>459986453972123658</PrivateRequestsChannel>
+    <MaxPrivateShips>3</MaxPrivateShips>
     
     <DonatorXML>donators.xml</DonatorXML>
     <DonatorRole>459649927732133888</DonatorRole>
