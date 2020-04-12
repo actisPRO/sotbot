@@ -1,18 +1,11 @@
 using System;
-using SeaOfThieves.Misc;
 
 namespace SeaOfThieves.Entities
 {
     public class BannedUser
     {
-        public ulong Id { get; }
-        public DateTime UnbanDateTime { get; }
-        public DateTime BanDateTime { get; }
-        public ulong Moderator { get; }
-        public string Reason { get; }
-        public string BanId { get; }
-
-        public BannedUser(ulong id, DateTime unbanDateTime, DateTime banDateTime, ulong moderator, string reason, string banId)
+        public BannedUser(ulong id, DateTime unbanDateTime, DateTime banDateTime, ulong moderator, string reason,
+            string banId)
         {
             Id = id;
             UnbanDateTime = unbanDateTime;
@@ -23,6 +16,13 @@ namespace SeaOfThieves.Entities
 
             BanList.BannedMembers[Id] = this;
         }
+
+        public ulong Id { get; }
+        public DateTime UnbanDateTime { get; }
+        public DateTime BanDateTime { get; }
+        public ulong Moderator { get; }
+        public string Reason { get; }
+        public string BanId { get; }
 
         public void Unban()
         {

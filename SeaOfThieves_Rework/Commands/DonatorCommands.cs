@@ -10,7 +10,8 @@ namespace SeaOfThieves.Commands
 {
     public class DonatorCommands
     {
-        [Command("donatoradd"), Aliases("dadd")]
+        [Command("donatoradd")]
+        [Aliases("dadd")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
         public async Task DonatorAdd(CommandContext ctx, DiscordMember member, int balance)
@@ -23,27 +24,22 @@ namespace SeaOfThieves.Commands
                 await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
                 await member.GrantRoleAsync(role);
             }
+
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
-            
+
             var over100Message = ".";
             if (balance >= 100)
-            {
                 over100Message = ", `!droleadd` для выдачи роли Wanted, `!drolerm` для снятия роли Wanted";
-            }
 
             var over250Message = ".";
             if (balance >= 250)
-            {
                 over250Message =
                     ", `!drename` для переименования своей роли, `!dfriend` для того чтобы выдать свой цвет другу.";
-            }
 
             var over50Message = "";
             if (balance >= 50)
-            {
                 over50Message = "Используйте команду " +
                                 $"`!dcolor код_цвета` для изменения цвета{over100Message}{over250Message}";
-            }
             await member.SendMessageAsync(
                 $"Администратор **{ctx.Member.Username}** добавил вас в качестве донатера. Ваш баланс: **{balance} рублей**. {over50Message}");
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
@@ -60,89 +56,61 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            double oldBalance = DonatorList.Donators[member.Id].Balance;
+            var oldBalance = DonatorList.Donators[member.Id].Balance;
             DonatorList.Donators[member.Id].SetBalance(newBalance);
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно изменили баланс.");
             await member.SendMessageAsync(
                 $"Администратор **{ctx.Member.Username}** изменил ваш баланс. Ваш новый баланс: **{newBalance}** рублей.");
-            
+
             if (oldBalance < 50)
             {
-                if (newBalance >= 50)
-                {
-                    await member.SendMessageAsync($"Используйте `!dcolor` для изменения цвета ника.");
-                }
+                if (newBalance >= 50) await member.SendMessageAsync("Используйте `!dcolor` для изменения цвета ника.");
 
                 if (newBalance >= 100)
-                {
                     await member.SendMessageAsync(
-                        $"Используйте `!droleadd` для выдачи роли Wanted. `!drolerm` для того чтобы убрать её.");
-                }
+                        "Используйте `!droleadd` для выдачи роли Wanted. `!drolerm` для того чтобы убрать её.");
 
                 if (newBalance >= 250)
-                {
                     await member.SendMessageAsync(
-                        $"Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
-                }
+                        "Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
             }
             else if (oldBalance < 100)
             {
-                if (newBalance < 50)
-                {
-                    await member.SendMessageAsync($"Вам стал недоступен функционал `!dcolor`.");
-                }
+                if (newBalance < 50) await member.SendMessageAsync("Вам стал недоступен функционал `!dcolor`.");
 
                 if (newBalance >= 100)
-                {
                     await member.SendMessageAsync(
-                        $"Используйте `!droleadd` для выдачи роли Wanted. `!drolerm` для того чтобы убрать её.");
-                }
+                        "Используйте `!droleadd` для выдачи роли Wanted. `!drolerm` для того чтобы убрать её.");
 
                 if (newBalance >= 250)
-                {
                     await member.SendMessageAsync(
-                        $"Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
-                }
+                        "Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
             }
             else if (oldBalance < 250)
             {
-                if (newBalance < 50)
-                {
-                    await member.SendMessageAsync($"Вам стал недоступен функционал `!dcolor`.");
-                }
+                if (newBalance < 50) await member.SendMessageAsync("Вам стал недоступен функционал `!dcolor`.");
 
                 if (newBalance < 100)
-                {
                     await member.SendMessageAsync(
-                        $"Вам стал недоступен функционал `!droleadd`, `!drolerm`.");
-                }
+                        "Вам стал недоступен функционал `!droleadd`, `!drolerm`.");
 
                 if (newBalance >= 250)
-                {
                     await member.SendMessageAsync(
-                        $"Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
-                }
+                        "Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
             }
             else
             {
-                if (newBalance < 50)
-                {
-                    await member.SendMessageAsync($"Вам стал недоступен функционал `!dcolor`.");
-                }
+                if (newBalance < 50) await member.SendMessageAsync("Вам стал недоступен функционал `!dcolor`.");
 
                 if (newBalance < 100)
-                {
                     await member.SendMessageAsync(
-                        $"Вам стал недоступен функционал `!droleadd`, `!drolerm`.");
-                }
+                        "Вам стал недоступен функционал `!droleadd`, `!drolerm`.");
 
                 if (newBalance < 250)
-                {
                     await member.SendMessageAsync(
-                        $"Вам стал недоступен функционал `!drename`, `!dfriend`.");
-                }
+                        "Вам стал недоступен функционал `!drename`, `!dfriend`.");
             }
         }
 
@@ -159,11 +127,11 @@ namespace SeaOfThieves.Commands
             if (DonatorList.Donators[ctx.Member.Id].Balance < 50)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 50 рублей. " +
-                                       $"Если вы донатили до *17.09.2018*, обратитесь к **Actis** для смены цвета.");
+                                       "Если вы донатили до *17.09.2018*, обратитесь к **Actis** для смены цвета.");
                 return;
             }
 
-            DiscordColor discordColor = new DiscordColor(000000);
+            var discordColor = new DiscordColor(000000);
             try
             {
                 discordColor = new DiscordColor(color);
@@ -177,7 +145,7 @@ namespace SeaOfThieves.Commands
             var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
             await ctx.Guild.UpdateRoleAsync(role, color: discordColor);
             await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
-            
+
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен цвет донатера!");
         }
 
@@ -199,7 +167,8 @@ namespace SeaOfThieves.Commands
 
             await ctx.Guild.UpdateRoleAsync
                 (ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole), newName);
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
+            await ctx.RespondAsync(
+                $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
         }
 
         [Command("dfriend")]
@@ -223,10 +192,11 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
                 return;
             }
+
             DonatorList.Donators[ctx.Member.Id].AddFriend(member.Id);
             await member.GrantRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
-            
+
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
         }
 
@@ -245,9 +215,9 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
                 return;
             }
-            
+
             await member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
-            
+
             DonatorList.Donators[ctx.Member.Id].RemoveFriend(member.Id);
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
@@ -273,7 +243,7 @@ namespace SeaOfThieves.Commands
             await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
         }
-        
+
         [Command("drolerm")]
         [Description("Убирает роль донатера.")]
         public async Task DRoleRm(CommandContext ctx)
@@ -304,7 +274,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Участник не является донатером!");
                 return;
             }
-            
+
             DonatorList.Donators[member.Id].UpdateHidden(hidden);
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
         }

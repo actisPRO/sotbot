@@ -5,14 +5,14 @@ namespace SeaOfThieves.Entities
 {
     public class User
     {
-        public ulong Id { get; }
-        public List<Warn> Warns { get; private set; }
-
         private User(ulong id)
         {
             Id = id;
             Warns = new List<Warn>();
         }
+
+        public ulong Id { get; }
+        public List<Warn> Warns { get; }
 
         public static User Create(ulong id)
         {
@@ -28,14 +28,13 @@ namespace SeaOfThieves.Entities
 
         public void RemoveWarning(string id)
         {
-            for (int i = 0; i < Warns.Count; i++)
-            {
+            for (var i = 0; i < Warns.Count; i++)
                 if (Warns[i].Id == id)
                 {
                     Warns.Remove(Warns[i]);
                     break;
                 }
-            }
+
             UserList.Update(this);
         }
     }

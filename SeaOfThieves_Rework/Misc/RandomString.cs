@@ -5,7 +5,7 @@ namespace SeaOfThieves.Misc
 {
     public static class RandomString
     {
-        private static Random _random = new Random();
+        private static readonly Random _random = new Random();
 
         public static string NextString(int length)
         {

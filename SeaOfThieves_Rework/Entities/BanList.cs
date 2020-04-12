@@ -7,12 +7,12 @@ namespace SeaOfThieves.Entities
     public static class BanList
     {
         public static Dictionary<ulong, BannedUser> BannedMembers = new Dictionary<ulong, BannedUser>();
-        
+
         public static void SaveToXML(string fileName)
         {
             var doc = new XDocument();
             var root = new XElement("Bans");
-            
+
             foreach (var banned in BannedMembers.Values)
             {
                 var dElement = new XElement("Ban");
@@ -22,20 +22,20 @@ namespace SeaOfThieves.Entities
                 dElement.Add(new XElement("Moderator", banned.Moderator));
                 dElement.Add(new XElement("Reason", banned.Reason));
                 dElement.Add(new XElement("BanId", banned.BanId));
-              
+
                 root.Add(dElement);
             }
-            
+
             doc.Add(root);
             doc.Save(fileName);
         }
-        
+
         public static void ReadFromXML(string fileName)
         {
             var doc = XDocument.Load(fileName);
             foreach (var banned in doc.Element("Bans").Elements("Ban"))
             {
-                var created = 
+                var created =
                     new BannedUser(
                         Convert.ToUInt64(banned.Element("Id").Value),
                         Convert.ToDateTime(banned.Element("UnbanDateTime").Value),

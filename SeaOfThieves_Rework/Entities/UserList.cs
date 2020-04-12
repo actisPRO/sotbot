@@ -17,11 +17,8 @@ namespace SeaOfThieves.Entities
 
         public static void SaveToXML(string xml)
         {
-            if (File.Exists(xml))
-            {
-                File.Delete(xml);
-            }
-            
+            if (File.Exists(xml)) File.Delete(xml);
+
             var fs = File.Create(xml);
             fs.Close();
 
@@ -32,16 +29,14 @@ namespace SeaOfThieves.Entities
             {
                 var userEl = new XElement("user", new XAttribute("id", user.Id));
                 foreach (var warn in user.Warns)
-                {
                     userEl.Add(new XElement("warn", new XAttribute("moderator", warn.Moderator),
                         new XAttribute("date", warn.Date),
                         new XAttribute("reason", warn.Reason),
                         new XAttribute("id", warn.Id),
                         new XAttribute("logMessage", warn.LogMessage)));
-                }
                 root.Add(userEl);
             }
-            
+
             doc.Add(root);
             doc.Save(xml);
         }
@@ -49,7 +44,7 @@ namespace SeaOfThieves.Entities
         public static void ReadFromXML(string xml)
         {
             Users = new Dictionary<ulong, User>();
-            
+
             var doc = XDocument.Load(xml);
             foreach (var user in doc.Element("users").Elements("user"))
             {
@@ -58,24 +53,19 @@ namespace SeaOfThieves.Entities
                 {
                     var id = "";
                     if (warnEl.Attribute("id") == null)
-                    {
                         id = RandomString.NextString(12);
-                    }
                     else
-                    {
                         id = warnEl.Attribute("id").Value;
-                    }
 
-                    string logMessage = "0";
+                    var logMessage = "0";
                     try
                     {
                         logMessage = warnEl.Attribute("logMessage").Value;
                     }
                     catch (NullReferenceException)
                     {
-                        
                     }
-                    
+
                     created.AddWarning(Convert.ToUInt64(warnEl.Attribute("moderator").Value),
                         Convert.ToDateTime(warnEl.Attribute("date").Value), warnEl.Attribute("reason").Value, id,
                         Convert.ToUInt64(logMessage));

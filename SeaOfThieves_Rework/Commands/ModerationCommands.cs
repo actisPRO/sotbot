@@ -60,7 +60,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-            
+
             Warn(ctx.Client, ctx.Member, ctx.Guild, member, reason);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
         }
@@ -77,7 +77,8 @@ namespace SeaOfThieves.Commands
             }
 
             var count = 0;
-            if (!UserList.Users.ContainsKey(member.Id)) count = 0; else count = UserList.Users[member.Id].Warns.Count;
+            if (!UserList.Users.ContainsKey(member.Id)) count = 0;
+            else count = UserList.Users[member.Id].Warns.Count;
 
             if (count == 0)
             {
@@ -85,11 +86,12 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            string response = "*" + member + "*\n"; 
-            for (int i = 1; i <= count; ++i)
+            var response = "*" + member + "*\n";
+            for (var i = 1; i <= count; ++i)
             {
                 var warn = UserList.Users[member.Id].Warns[i - 1];
-                response += $"**{i}.** {warn.Reason}. **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date}. **ID:** {warn.Id}.\n";
+                response +=
+                    $"**{i}.** {warn.Reason}. **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date}. **ID:** {warn.Id}.\n";
             }
 
             await ctx.RespondAsync(response);
@@ -181,13 +183,13 @@ namespace SeaOfThieves.Commands
             }
 
             var unbanDate = DateTime.Now.ToUniversalTime();
-            
+
             unbanDate = unbanDate.AddMinutes(mins);
             unbanDate = unbanDate.AddHours(hours);
             unbanDate = unbanDate.AddDays(days);
 
             var banId = RandomString.NextString(6);
-            
+
             var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
             BanList.SaveToXML(Bot.BotSettings.BanXML);
 
@@ -202,7 +204,6 @@ namespace SeaOfThieves.Commands
             }
             catch (NotFoundException)
             {
-                
             }
             catch (UnauthorizedException)
             {
@@ -210,7 +211,7 @@ namespace SeaOfThieves.Commands
             }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                $"**Бан**\n\n" +
+                "**Бан**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
@@ -237,9 +238,9 @@ namespace SeaOfThieves.Commands
                 bannedUser.Unban();
                 BanList.SaveToXML(Bot.BotSettings.BanXML);
             }
-            
+
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                $"**Снятие бана**\n\n" +
+                "**Снятие бана**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
@@ -265,7 +266,7 @@ namespace SeaOfThieves.Commands
             {
                 //user can block the bot
             }
-            
+
             await guild.RemoveMemberAsync(member, reason);
             await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Кик**\n\n" +
@@ -275,24 +276,25 @@ namespace SeaOfThieves.Commands
              $"**Причина:** {reason}");
         }
 
-        public static async void Warn(DiscordClient client, DiscordMember moderator, DiscordGuild guild, DiscordMember member, string reason)
+        public static async void Warn(DiscordClient client, DiscordMember moderator, DiscordGuild guild,
+            DiscordMember member, string reason)
         {
             if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
 
             var id = RandomString.NextString(6);
 
             var message = await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
-                ("**Предупреждение**\n\n" +
-                 $"**От:** {moderator}\n" +
-                 $"**Кому:** {member}\n" +
-                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-                 $"**ID предупреждения:** {id}\n" +
-                 $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
-                 $"**Причина:** {reason}");
+            ("**Предупреждение**\n\n" +
+             $"**От:** {moderator}\n" +
+             $"**Кому:** {member}\n" +
+             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+             $"**ID предупреждения:** {id}\n" +
+             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
+             $"**Причина:** {reason}");
 
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
-            
+
             UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now.ToUniversalTime(), reason, id, message.Id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
 

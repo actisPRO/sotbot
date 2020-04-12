@@ -118,29 +118,25 @@ namespace SeaOfThieves
 
             await Task.Delay(-1);
         }
-        
+
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
         {
             var doc = XDocument.Load("users.xml");
             var root = doc.Root;
 
             foreach (var user in root.Elements())
-            {
                 if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
-                {
                     if (user.Element("Status").Value == "False")
-                    {
                         return;
-                    }
-                }
-            }
-            
+
             ulong messageId = 0;
             try
             {
                 using (var fs = File.OpenRead("codex_message"))
                 using (var sr = new StreamReader(fs))
+                {
                     messageId = Convert.ToUInt64(sr.ReadLine());
+                }
             }
             catch (FileNotFoundException)
             {
@@ -148,34 +144,32 @@ namespace SeaOfThieves
             }
 
             if (e.Message.Id == messageId)
-            {
                 await e.Channel.Guild.RevokeRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
                     e.Channel.Guild.GetRole(BotSettings.CodexRole), "");
-            }
-            
+
             foreach (var user in root.Elements())
-            {
                 if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
                 {
                     user.Remove();
                     break;
                 }
-            }
-            
+
             doc.Save("users.xml");
         }
 
         private async Task ClientOnMessageReactionAdded(MessageReactionAddEventArgs e)
         {
             if (e.User.IsBot) return;
-            
+
             //first check if message is codex confirmation
             ulong messageId = 0;
             try
             {
                 using (var fs = File.OpenRead("codex_message"))
                 using (var sr = new StreamReader(fs))
+                {
                     messageId = Convert.ToUInt64(sr.ReadLine());
+                }
             }
             catch (FileNotFoundException)
             {
@@ -188,36 +182,27 @@ namespace SeaOfThieves
                 var root = doc.Root;
 
                 foreach (var user in root.Elements())
-                {
                     if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
-                    {
                         if (user.Element("Status").Value == "False")
-                        {
                             return;
-                        }
-                    }
-                }
 
                 await e.Channel.Guild.GrantRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
                     e.Channel.Guild.GetRole(BotSettings.CodexRole));
-                
-                var newEl = new XElement("Users", new XElement("Id", e.User.Id), new XElement("Date", DateTime.Now), 
+
+                var newEl = new XElement("Users", new XElement("Id", e.User.Id), new XElement("Date", DateTime.Now),
                     new XElement("Status", true));
                 root.Add(newEl);
-            
+
                 doc.Save("users.xml");
 
                 return;
             }
-            
+
             //then check if it is private ship confirmation message
             foreach (var ship in ShipList.Ships.Values)
             {
-                if (ship.Status == true)
-                {
-                    continue;
-                }
-                
+                if (ship.Status) continue;
+
                 if (e.Message.Id == ship.CreationMessage)
                 {
                     if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":white_check_mark:"))
@@ -225,7 +210,7 @@ namespace SeaOfThieves
                         var name = ship.Name;
                         var role = await e.Channel.Guild.CreateRoleAsync($"☠{name}☠", null, null, false, true);
                         var channel = await e.Channel.Guild.CreateChannelAsync($"☠{name}☠", ChannelType.Voice,
-                            e.Channel.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
+                            e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), BotSettings.Bitrate);
 
                         await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
                         await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None,
@@ -233,7 +218,7 @@ namespace SeaOfThieves
 
                         var member =
                             await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
-                        
+
                         await member.GrantRoleAsync(role);
 
                         ShipList.Ships[name].SetChannel(channel.Id);
@@ -241,36 +226,33 @@ namespace SeaOfThieves
                         ShipList.Ships[name].SetStatus(true);
                         ShipList.Ships[name].SetMemberStatus(member.Id, true);
 
-                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+                        ShipList.SaveToXML(BotSettings.ShipXML);
 
                         await member.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был подтвержден администратором **{e.User.Username}#{e.User.Discriminator}**");
+                            $"{BotSettings.OkEmoji} Запрос на создание корабля **{name}** был подтвержден администратором **{e.User.Username}#{e.User.Discriminator}**");
                         await e.Channel.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно подтвердил " +
+                            $"{BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно подтвердил " +
                             $"запрос на создание корабля **{name}**!");
                     }
-                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client,":no_entry:"))
+                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":no_entry:"))
                     {
                         var name = ship.Name;
-                        var member = await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
-            
+                        var member =
+                            await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
+
                         ShipList.Ships[name].Delete();
-                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+                        ShipList.SaveToXML(BotSettings.ShipXML);
 
                         var doc = XDocument.Load("actions.xml");
                         foreach (var action in doc.Element("actions").Elements("action"))
-                        {
                             if (Convert.ToUInt64(action.Value) == member.Id)
-                            {
                                 action.Remove();
-                            }
-                        }
                         doc.Save("actions.xml");
-            
+
                         await member.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был отклонен администратором **{e.User.Username}#{e.User.Discriminator}**");
+                            $"{BotSettings.OkEmoji} Запрос на создание корабля **{name}** был отклонен администратором **{e.User.Username}#{e.User.Discriminator}**");
                         await e.Channel.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно отклонил запрос на " +
+                            $"{BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно отклонил запрос на " +
                             $"создание корабля **{name}**!");
                     }
                     else
@@ -287,19 +269,16 @@ namespace SeaOfThieves
         private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
             if (e.Message.Content.StartsWith(">"))
-            {
                 if (IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
                 {
                     var messageStrings = e.Message.Content.Split('\n');
                     var command = "";
                     foreach (var str in messageStrings)
-                    {
                         if (str.StartsWith("<@"))
                         {
                             command = str;
                             break;
                         }
-                    }
 
                     var args = command.Split(' ');
                     var receiver = args[0];
@@ -315,8 +294,8 @@ namespace SeaOfThieves
                             return;
                     }
                 }
-            }
         }
+
         /// <summary>
         ///     Отлавливаем удаленные сообщения и отправляем в лог
         /// </summary>
@@ -357,16 +336,17 @@ namespace SeaOfThieves
                 var bannedUser = BanList.BannedMembers[e.Member.Id];
                 if (date < bannedUser.UnbanDateTime)
                 {
-                    await e.Member.SendMessageAsync($"Ваша блокировка истекает {bannedUser.UnbanDateTime}. Причина блокировки: " +
-                                                    $"{bannedUser.Reason}");
+                    await e.Member.SendMessageAsync(
+                        $"Ваша блокировка истекает {bannedUser.UnbanDateTime}. Причина блокировки: " +
+                        $"{bannedUser.Reason}");
                     await e.Member.RemoveAsync("Banned user tried to join");
                     return;
                 }
-                
+
                 bannedUser.Unban();
                 BanList.SaveToXML(BotSettings.BanXML);
             }
-            
+
             var ctx = e; // здесь я копипастил, а рефакторить мне лень.
 
             await ctx.Member.SendMessageAsync($"**Привет, {ctx.Member.Mention}!\n**" +
@@ -392,7 +372,7 @@ namespace SeaOfThieves
 
             await e.Context.RespondAsync(
                 $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз; если " +
-                $"ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
+                "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
             var errChannel = e.Context.Guild.GetChannel(BotSettings.ErrorLog);
@@ -424,7 +404,8 @@ namespace SeaOfThieves
             {
                 if (e.Channel.Id == BotSettings.AutocreateGalleon ||
                     e.Channel.Id == BotSettings.AutocreateBrigantine ||
-                    e.Channel.Id == BotSettings.AutocreateSloop) // мы создаем канал, если пользователь зашел в один из каналов автосоздания
+                    e.Channel.Id == BotSettings.AutocreateSloop
+                ) // мы создаем канал, если пользователь зашел в один из каналов автосоздания
                 {
                     if (ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
                         if ((ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
@@ -444,21 +425,17 @@ namespace SeaOfThieves
                     DiscordChannel created = null;
                     // Проверяем канал в котором находится пользователь
                     if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
-                    {
                         created = await e.Guild.CreateChannelAsync(
-                        $"{BotSettings.AutocreateSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
-                        e.Channel.Parent, BotSettings.Bitrate, 2);
-                    } else if (e.Channel.Id == BotSettings.AutocreateBrigantine) // Бригантина
-                    {
+                            $"{BotSettings.AutocreateSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
+                            e.Channel.Parent, BotSettings.Bitrate, 2);
+                    else if (e.Channel.Id == BotSettings.AutocreateBrigantine) // Бригантина
                         created = await e.Guild.CreateChannelAsync(
-                        $"{BotSettings.AutocreateSymbol} Бриг {e.User.Username}", ChannelType.Voice,
-                        e.Channel.Parent, BotSettings.Bitrate, 3);
-                    } else // Галеон
-                    {
+                            $"{BotSettings.AutocreateSymbol} Бриг {e.User.Username}", ChannelType.Voice,
+                            e.Channel.Parent, BotSettings.Bitrate, 3);
+                    else // Галеон
                         created = await e.Guild.CreateChannelAsync(
-                        $"{BotSettings.AutocreateSymbol} Галеон {e.User.Username}", ChannelType.Voice,
-                        e.Channel.Parent, BotSettings.Bitrate, 4);
-                    }
+                            $"{BotSettings.AutocreateSymbol} Галеон {e.User.Username}", ChannelType.Voice,
+                            e.Channel.Parent, BotSettings.Bitrate, 4);
 
                     var member = await e.Guild.GetMemberAsync(e.User.Id);
 
@@ -541,21 +518,19 @@ namespace SeaOfThieves
         public static bool IsModerator(DiscordMember member)
         {
             foreach (var role in member.Roles)
-                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles).Contains(role.Id))
+                if (GetMultiplySettingsSeparated(BotSettings.AdminRoles).Contains(role.Id))
                     return true;
 
             return false;
         }
 
-        private static async void RunCommand(DiscordClient client, CommandType type, string[] args, DiscordMessage message)
+        private static async void RunCommand(DiscordClient client, CommandType type, string[] args,
+            DiscordMessage message)
         {
             switch (type)
             {
                 case CommandType.Warn:
-                    if (args.Length < 2)
-                    {
-                        return;
-                    }
+                    if (args.Length < 2) return;
 
                     var moderator = await message.Channel.Guild.GetMemberAsync(message.Author.Id);
 
@@ -571,12 +546,8 @@ namespace SeaOfThieves
                             reason = "";
                             if (args.Length == 3) reason = args[2];
                             else
-                            {
-                                for (int i = 2; i < args.Length - 1; ++i)
-                                {
+                                for (var i = 2; i < args.Length - 1; ++i)
                                     reason += args[i] + " ";
-                                }
-                            }
                         }
 
                         ModerationCommands.Warn(client, moderator, message.Channel.Guild, member, reason);
@@ -595,11 +566,11 @@ namespace SeaOfThieves
                     {
                         var errChannel = message.Channel.Guild.GetChannel(BotSettings.ErrorLog);
 
-                        var msg = $"**Команда:** warn\n" +
-                                      $"**Канал:** {message.Channel}\n" +
-                                      $"**Пользователь:** {moderator}\n" +
-                                      $"**Исключение:** {e.GetType()}:{e.Message}\n" +
-                                      $"**Трассировка стека:** \n```{e.StackTrace}```";
+                        var msg = "**Команда:** warn\n" +
+                                  $"**Канал:** {message.Channel}\n" +
+                                  $"**Пользователь:** {moderator}\n" +
+                                  $"**Исключение:** {e.GetType()}:{e.Message}\n" +
+                                  $"**Трассировка стека:** \n```{e.StackTrace}```";
 
                         await errChannel.SendMessageAsync(msg);
                     }
@@ -752,7 +723,6 @@ namespace SeaOfThieves
         public ulong ErrorLog;
 
         /// <summary>
-        /// 
         /// </summary>
         public string BanXML;
 

@@ -25,81 +25,67 @@ namespace SeaOfThieves.Entities
         public static Ship GetOwnedShip(ulong id)
         {
             foreach (var ship in Ships.Values)
-            {
-                foreach (var member in ship.Members.Values)
-                {
-                    if (member.Id == id && member.Type == MemberType.Owner)
-                    {
-                        return ship;
-                    }   
-                }
-            }
+            foreach (var member in ship.Members.Values)
+                if (member.Id == id && member.Type == MemberType.Owner)
+                    return ship;
 
             return null;
         }
 
         public static void SaveToXML(string fileName)
         {
-            if (File.Exists(fileName))
-            {
-                File.Delete(fileName);
-            }
+            if (File.Exists(fileName)) File.Delete(fileName);
 
             var fs = File.Create(fileName);
             fs.Close();
-            
+
             var doc = new XDocument();
 
             var root = new XElement("ships");
-            
+
             foreach (var ship in Ships.Values)
             {
-                if (ship == null)
-                {
-                    continue;
-                }
-                
-                XElement shipE = new XElement("ship", new XAttribute("name", ship.Name), new XAttribute("status", ship.Status));
-                
+                if (ship == null) continue;
+
+                var shipE = new XElement("ship", new XAttribute("name", ship.Name),
+                    new XAttribute("status", ship.Status));
+
                 shipE.Add(new XElement("role", ship.Role));
                 shipE.Add(new XElement("channel", ship.Channel));
                 shipE.Add(new XElement("creationMessage", ship.CreationMessage));
 
                 foreach (var member in ship.Members.Values)
-                {
-                    shipE.Add(new XElement("member", member.Id, new XAttribute("type", 
+                    shipE.Add(new XElement("member", member.Id, new XAttribute("type",
                         member.Type.ToString().ToLower()), new XAttribute("status", member.Status)));
-                }
 
                 root.Add(shipE);
             }
-            
+
             doc.Add(root);
             doc.Save(fileName);
         }
-        
+
         public static void ReadFromXML(string filename)
         {
             var tempShip = Ships;
-            
+
             try
             {
                 var doc = XDocument.Load(filename);
-                
+
                 Ships = new Dictionary<string, Ship>();
 
                 foreach (var shipE in doc.Element("ships").Elements("ship"))
                 {
-                    string creationMessage = "0";
+                    var creationMessage = "0";
                     try
                     {
                         creationMessage = shipE.Element("creationMessage").Value;
                     }
                     catch (NullReferenceException)
                     {
-                        
                     }
-                    
+
                     var ship = Ship.Create(shipE.Attribute("name").Value, Convert.ToUInt64(shipE.Element("role").Value),
                         Convert.ToUInt64(shipE.Element("channel").Value), Convert.ToUInt64(creationMessage));
 
@@ -123,8 +109,9 @@ namespace SeaOfThieves.Entities
                                 type = MemberType.Member;
                                 break;
                         }
-                        
-                        ship.AddMember(Convert.ToUInt64(memberE.Value), type, Convert.ToBoolean(memberE.Attribute("status").Value));
+
+                        ship.AddMember(Convert.ToUInt64(memberE.Value), type,
+                            Convert.ToBoolean(memberE.Attribute("status").Value));
                     }
                 }
             }

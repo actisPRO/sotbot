@@ -49,35 +49,32 @@ namespace SeaOfThieves.Commands
                 embed.AddField("ID", member.Id.ToString(), true);
                 embed.WithColor(DiscordColor.Blurple);
 
-                embed.AddField("Имя на сервере", member.Username, false);
-                
-                int warnings = 0;
+                embed.AddField("Имя на сервере", member.Username);
+
+                var warnings = 0;
                 if (UserList.Users.ContainsKey(member.Id)) warnings = UserList.Users[member.Id].Warns.Count;
                 embed.AddField("Предупреждения", warnings.ToString(), true);
 
-                int donate = 0;
+                var donate = 0;
                 if (DonatorList.Donators.ContainsKey(member.Id)) donate = (int) DonatorList.Donators[member.Id].Balance;
                 embed.AddField("Донат", donate.ToString(), true);
 
-                string moderator = "Нет";
+                var moderator = "Нет";
                 if (Bot.IsModerator(member)) moderator = "Да";
                 embed.AddField("Модератор", moderator, true);
 
-                string privateShip = "Нет";
+                var privateShip = "Нет";
                 foreach (var ship in ShipList.Ships.Values)
-                {
-                    foreach (var shipMember in ship.Members.Values)
+                foreach (var shipMember in ship.Members.Values)
+                    if (shipMember.Type == MemberType.Owner && shipMember.Id == member.Id)
                     {
-                        if (shipMember.Type == MemberType.Owner && shipMember.Id == member.Id)
-                        {
-                            privateShip = ship.Name;
-                            break;;
-                        }
+                        privateShip = ship.Name;
+                        break;
+                        ;
                     }
-                }
 
-                embed.AddField("Владелец приватного корабля", privateShip, false);
-                
+                embed.AddField("Владелец приватного корабля", privateShip);
+
                 await ctx.RespondAsync(embed: embed.Build());
             }
             catch (NotFoundException)
@@ -142,7 +139,6 @@ namespace SeaOfThieves.Commands
 
                 if (message.Length >= 1950)
                 {
-                    
                 }
             }
 
@@ -162,7 +158,7 @@ namespace SeaOfThieves.Commands
 
             await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100, channel.LastMessageId));
             await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
-            
+
             var fso = File.Open("donators_messages.txt", FileMode.OpenOrCreate);
             var sr = new StreamReader(fso);
 
@@ -173,14 +169,16 @@ namespace SeaOfThieves.Commands
                 {
                     await channel.DeleteMessageAsync(await channel.GetMessageAsync(Convert.ToUInt64(messageId)));
                 }
-                catch (NotFoundException) { }
+                catch (NotFoundException)
+                {
+                }
 
                 messageId = sr.ReadLine();
             }
-            
+
             sr.Close();
             fso.Close();
-            
+
             var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
             foreach (var donator in DonatorList.Donators.Values)
                 if (!donator.Hidden)
@@ -188,15 +186,15 @@ namespace SeaOfThieves.Commands
 
             var ordered = donators.OrderBy(x => -x.Value);
 
-            int messageCount = ordered.Count() / 10;
+            var messageCount = ordered.Count() / 10;
             if (ordered.Count() % 10 != 0) ++messageCount;
 
-            int position = 0, balance = Int32.MaxValue, str = 1;
-            string message = "";
+            int position = 0, balance = int.MaxValue, str = 1;
+            var message = "";
 
             var fs = File.Create("donators_messages.txt");
             var sw = new StreamWriter(fs);
-            
+
             foreach (var el in ordered)
             {
                 if (str % 10 == 0)
@@ -220,7 +218,6 @@ namespace SeaOfThieves.Commands
                 }
                 catch (NotFoundException)
                 {
-                    
                 }
             }
 
@@ -229,7 +226,7 @@ namespace SeaOfThieves.Commands
                 var sendedMessage = await channel.SendMessageAsync(message);
                 sw.WriteLine(sendedMessage.Id);
             }
-            
+
             sw.Close();
             fs.Close();
 
@@ -241,12 +238,14 @@ namespace SeaOfThieves.Commands
         public async Task CodexGenerateMessage(CommandContext ctx)
         {
             var channel = ctx.Guild.GetChannel(Bot.BotSettings.CodexChannel);
-            var message = $"**Я прочитал правила и обязуюсь их выполнять.**";
+            var message = "**Я прочитал правила и обязуюсь их выполнять.**";
             var messageEnt = await channel.SendMessageAsync(message);
-            
+
             using (var fs = File.Create("codex_message"))
-                using (var sw = new StreamWriter(fs))
-                    sw.WriteLine(messageEnt.Id);
+            using (var sw = new StreamWriter(fs))
+            {
+                sw.WriteLine(messageEnt.Id);
+            }
 
             await messageEnt.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
 
