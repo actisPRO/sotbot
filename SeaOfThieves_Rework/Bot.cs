@@ -421,8 +421,9 @@ namespace SeaOfThieves
         {
             try
             {
-                if (e.Channel.Id == BotSettings.AutocreateChannel
-                ) // мы создаем канал, если пользователь зашел в канал автосоздания
+                if (e.Channel.Id == BotSettings.AutocreateGalleon ||
+                    e.Channel.Id == BotSettings.AutocreateBrigantine ||
+                    e.Channel.Id == BotSettings.AutocreateSloop) // мы создаем канал, если пользователь зашел в один из каналов автосоздания
                 {
                     if (ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
                         if ((ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
@@ -439,9 +440,24 @@ namespace SeaOfThieves
                     // в словарь кулдаунов
                     ShipCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
-                    var created = await e.Guild.CreateChannelAsync(
+                    DiscordChannel created = null;
+                    // Проверяем канал в котором находится пользователь
+                    if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
+                    {
+                        created = await e.Guild.CreateChannelAsync(
+                        $"{BotSettings.AutocreateSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
+                        e.Channel.Parent, BotSettings.Bitrate, 2);
+                    } else if (e.Channel.Id == BotSettings.AutocreateBrigantine) // Бригантина
+                    {
+                        created = await e.Guild.CreateChannelAsync(
+                        $"{BotSettings.AutocreateSymbol} Бриг {e.User.Username}", ChannelType.Voice,
+                        e.Channel.Parent, BotSettings.Bitrate, 3);
+                    } else // Галеон
+                    {
+                        created = await e.Guild.CreateChannelAsync(
                         $"{BotSettings.AutocreateSymbol} Галеон {e.User.Username}", ChannelType.Voice,
                         e.Channel.Parent, BotSettings.Bitrate, 4);
+                    }
 
                     var member = await e.Guild.GetMemberAsync(e.User.Id);
 
@@ -643,9 +659,19 @@ namespace SeaOfThieves
         public ulong AutocreateCategory;
 
         /// <summary>
-        ///     ID канала автосоздания.
+        ///     ID канала автосоздания для галеона.
         /// </summary>
-        public ulong AutocreateChannel;
+        public ulong AutocreateGalleon;
+
+        /// <summary>
+        ///     ID канала автосоздания для бригантины.
+        /// </summary>
+        public ulong AutocreateBrigantine;
+
+        /// <summary>
+        ///     ID канала автосоздания для шлюпа.
+        /// </summary>
+        public ulong AutocreateSloop;
 
         /// <summary>
         ///     Символ, с которого начинаеются названия автосозданных кораблей.

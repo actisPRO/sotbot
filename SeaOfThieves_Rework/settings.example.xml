@@ -13,7 +13,9 @@
     <RolesChannel>474870448157491200</RolesChannel>
     
     <AutocreateCategory>435427887621996548</AutocreateCategory>
-    <AutocreateChannel>533876650371186698</AutocreateChannel>
+    <AutocreateGalleon>533876650371186698</AutocreateGalleon>
+    <AutocreateBrigantine>000000000000000000</AutocreateBrigantine>
+    <AutocreateSloop>111111111111111111</AutocreateSloop>
     <AutocreateSymbol>⛵</AutocreateSymbol>
     <Bitrate>48000</Bitrate>
     <FastCooldown>30</FastCooldown>
