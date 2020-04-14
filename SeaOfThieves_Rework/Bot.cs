@@ -665,6 +665,32 @@ namespace SeaOfThieves
         /// </summary>
         public ulong WaitingRoom;
 
+       
+        /// <summary>
+        ///     ID категории рейдов.
+        /// </summary>
+        public ulong FleetCategory;
+
+        /// <summary>
+        ///     ID канала Chill в категории рейдов.
+        /// </summary>
+        public ulong FleetChillChannel;
+
+        /// <summary>
+        ///     ID канала лобби в категории рейдов.
+        /// </summary>
+        public ulong FleetLobby;
+
+        /// <summary>
+        ///     Начальное количество пользователей в канале лобби рейдов.
+        /// </summary>
+        public int FleetLobbyLimiter;
+
+        /// <summary>
+        ///     Начальное количество пользователей в канале рейда.
+        /// </summary>
+        public int FleetUserLimiter;
+
         /// <summary>
         ///     Путь до XML-файла с приватными кораблями.
         /// </summary>

@@ -20,6 +20,12 @@
     <Bitrate>48000</Bitrate>
     <FastCooldown>30</FastCooldown>
     <WaitingRoom>496614051728588804</WaitingRoom>
+
+    <FleetCategory>699687487743721503</FleetCategory>
+    <FleetChillChannel>699688642238611531</FleetChillChannel>
+    <FleetLobby>699688711226392657</FleetLobby>
+    <FleetLobbyLimiter>99</FleetLobbyLimiter>
+    <FleetUserLimiter>5</FleetUserLimiter>
     
     <ShipXML>ships.xml</ShipXML>
     <PrivateCategory>435448014614822923</PrivateCategory>
