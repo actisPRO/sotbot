@@ -245,15 +245,14 @@ namespace SeaOfThieves.Commands
             
             int i = 1;
             foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
-                if (fleetChannel.Type == ChannelType.Voice)
-                    if (fleetChannel.Id != Bot.BotSettings.FleetChillChannel) //Учитываем присутствие канала Chill
-                        if (fleetChannel.Id != Bot.BotSettings.FleetLobby) //Лобби рейда
-                        {
-                            await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
-                            i++;
-                        }
-                        else
-                            await fleetChannel.ModifyAsync(name: "Общий", user_limit: Bot.BotSettings.FleetLobbyLimiter);
+                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel) //Убираем из списка очистки текстовые каналы и голосовой канал Chill
+                    if (fleetChannel.Id != Bot.BotSettings.FleetLobby) //Учитываем присутствие канала лобби
+                    {
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                        i++;
+                    }
+                    else
+                        await fleetChannel.ModifyAsync(name: "Общий", user_limit: 0);
         }
 
         [Command("codexgen")]
