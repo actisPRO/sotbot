@@ -682,11 +682,6 @@ namespace SeaOfThieves
         public ulong FleetLobby;
 
         /// <summary>
-        ///     Начальное количество пользователей в канале лобби рейдов.
-        /// </summary>
-        public int FleetLobbyLimiter;
-
-        /// <summary>
         ///     Начальное количество пользователей в канале рейда.
         /// </summary>
         public int FleetUserLimiter;

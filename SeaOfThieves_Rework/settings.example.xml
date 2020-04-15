@@ -24,7 +24,6 @@
     <FleetCategory>699687487743721503</FleetCategory>
     <FleetChillChannel>699688642238611531</FleetChillChannel>
     <FleetLobby>699688711226392657</FleetLobby>
-    <FleetLobbyLimiter>99</FleetLobbyLimiter>
     <FleetUserLimiter>5</FleetUserLimiter>
     
     <ShipXML>ships.xml</ShipXML>
