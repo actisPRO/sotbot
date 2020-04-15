@@ -253,6 +253,7 @@ namespace SeaOfThieves.Commands
                     }
                     else
                         await fleetChannel.ModifyAsync(name: "Общий", user_limit: 0);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
 
         [Command("codexgen")]
