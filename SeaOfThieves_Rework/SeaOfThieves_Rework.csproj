@@ -96,7 +96,6 @@
     <Content Include="changelog.md" />
     <Content Include="donators.example.xml" />
     <Content Include="settings.example.xml" />
-    <Content Include="settings.xml" />
     <Content Include="ships.example.xml" />
     <Content Include="warnings.example.xml" />
   </ItemGroup>
