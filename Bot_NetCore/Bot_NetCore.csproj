@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Company>Denis Karev</Company>
+        <Product>Sea of Thieves Bot</Product>
+        <AssemblyVersion>2.9.0</AssemblyVersion>
+        <NeutralLanguage>ru-RU</NeutralLanguage>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DSharpPlus" Version="3.2.3" />
+      <PackageReference Include="DSharpPlus.CommandsNext" Version="3.2.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Examples\actions.example.xml" />
+      <Content Include="Examples\donators.example.xml" />
+      <Content Include="Examples\settings.example.xml" />
+      <Content Include="Examples\ships.example.xml" />
+      <Content Include="Examples\warnings.example.xml" />
+    </ItemGroup>
+
+</Project>

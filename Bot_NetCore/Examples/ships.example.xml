@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ships>
+  <ship name="Example ship" status="true">
+    <role>460543912923234319</role>
+    <channel>460543918195474443</channel>
+    <member type="owner" status="true">241872194068545538</member>
+    <member type="member" status="true">230100107817648128</member>
+    <member type="member" status="true">152137522703499276</member>
+    <member type="member" status="true">431466442580426753</member>
+    <member type="member" status="true">430638053103763456</member>
+    <member type="member" status="true">240895450134085632</member>
+  </ship>
+</ships>

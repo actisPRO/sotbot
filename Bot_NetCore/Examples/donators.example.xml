@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<donators>
+  <donator>
+    <id>336047830189735947</id>
+    <balance>1000</balance>
+    <colorRole>491468935640776725</colorRole>
+  </donator>
+  <donator>
+    <id>215056423451623425</id>
+    <balance>510</balance>
+    <colorRole>491470434039234570</colorRole>
+    <friend>277112974311686144</friend>
+    <friend>277112974311686144</friend>
+    <friend>438663457005502465</friend>
+    <friend>279208791340482560</friend>
+  </donator>
+  <donator>
+    <id>261137595965243393</id>
+    <balance>1000</balance>
+    <colorRole>491472114310840330</colorRole>
+    <hidden>True</hidden>
+  </donator>
+</donators>
