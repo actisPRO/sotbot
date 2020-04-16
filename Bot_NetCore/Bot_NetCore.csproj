@@ -13,6 +13,7 @@
     <ItemGroup>
       <PackageReference Include="DSharpPlus" Version="3.2.3" />
       <PackageReference Include="DSharpPlus.CommandsNext" Version="3.2.3" />
+      <PackageReference Include="NLua" Version="1.4.30" />
     </ItemGroup>
 
     <ItemGroup>

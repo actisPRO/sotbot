@@ -10,6 +10,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using NLua;
 using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
@@ -319,6 +320,35 @@ namespace SeaOfThieves.Commands
         public async Task Time(CommandContext ctx)
         {
             await ctx.RespondAsync($"Текущее время на сервере: **{DateTime.Now}**.");
+        }
+
+        [Command("runscript"), Aliases("rs")]
+        [RequireOwner]
+        [Hidden]
+        public async Task RunScript(CommandContext ctx, [RemainingText] string script)
+        {
+            if (script.ToLower().StartsWith("```lua"))
+            {
+                script = script.Replace("```lua", "").Replace("```", "");
+            }
+            
+            Lua state = new Lua();
+            state["ctx"] = ctx; 
+            var ret = state.DoString(script);
+
+            if (ret == null)
+            {
+                await ctx.RespondAsync("**Скрипт был выполнен, но ничего не вернул**");
+                return;
+            }
+
+            string response = "**Результат выполнения скрипта:** \n";
+            foreach (var obj in ret)
+            {
+                response += obj.ToString() + "\n";
+            }
+
+            await ctx.RespondAsync(response);
         }
     }
 }
