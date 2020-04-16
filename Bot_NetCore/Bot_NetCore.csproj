@@ -7,6 +7,7 @@
         <Product>Sea of Thieves Bot</Product>
         <AssemblyVersion>2.9.0</AssemblyVersion>
         <NeutralLanguage>ru-RU</NeutralLanguage>
+        <AssemblyName>Bot</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="changelog.md" />
       <Content Include="Examples\actions.example.xml" />
       <Content Include="Examples\donators.example.xml" />
       <Content Include="Examples\settings.example.xml" />

@@ -11,6 +11,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Net.WebSocket;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
 
@@ -82,8 +83,6 @@ namespace SeaOfThieves
             };
 
             Client = new DiscordClient(cfg);
-
-            //Client.SetWebSocketClient<WebSocketSharpClient>(); // Для использования с Mono. Legacy
 
             var ccfg = new CommandsNextConfiguration
             {
@@ -663,6 +662,27 @@ namespace SeaOfThieves
         ///     ID канала в который переносятся пользователи, кулдаун которых не истек.
         /// </summary>
         public ulong WaitingRoom;
+
+       
+        /// <summary>
+        ///     ID категории рейдов.
+        /// </summary>
+        public ulong FleetCategory;
+
+        /// <summary>
+        ///     ID канала Chill в категории рейдов.
+        /// </summary>
+        public ulong FleetChillChannel;
+
+        /// <summary>
+        ///     ID канала лобби в категории рейдов.
+        /// </summary>
+        public ulong FleetLobby;
+
+        /// <summary>
+        ///     Начальное количество пользователей в канале рейда.
+        /// </summary>
+        public int FleetUserLimiter;
 
         /// <summary>
         ///     Путь до XML-файла с приватными кораблями.
