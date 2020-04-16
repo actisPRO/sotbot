@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="changelog.md" />
       <Content Include="Examples\actions.example.xml" />
       <Content Include="Examples\donators.example.xml" />
       <Content Include="Examples\settings.example.xml" />
