@@ -256,6 +256,45 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
 
+        [Command("invitesLeaderboard")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task InvitesLeaderboard(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
+        {
+            //var channel = ctx.Guild.GetChannel(Bot.BotSettings.invitersLeaderboardChannel); [TODO]
+            var channel = ctx.Guild.GetChannel(700403915186896947);
+
+            await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(10, channel.LastMessageId));
+            await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
+
+            var inviters = InviterList.Inviters.ToList().OrderByDescending(x => x.Value.Referrals.Count).ToList().Take(10).ToList();
+
+            var embed = new DiscordEmbedBuilder
+            {
+                Color = new DiscordColor("#CC00CC"),
+                Title = "Топ Рефералов",
+            };
+
+            int i = 0;
+            foreach(var el in inviters)
+            {
+                try
+                {
+                    var user = await ctx.Guild.GetMemberAsync(el.Key);
+                    i++;
+                    embed.AddField($"{i}. {user.Username}#{user.Discriminator}", 
+                        $"пригласил {el.Value.Referrals.Count} пользователей");
+                }
+                catch (NotFoundException)
+                {
+                }
+            }
+
+            embed.WithFooter("Чтобы попасть в топ создайте собственную сслыку приглашения");
+            await ctx.RespondAsync(embed: embed.Build());
+        }
+
+
         [Command("codexgen")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task CodexGenerateMessage(CommandContext ctx)
