@@ -289,7 +289,7 @@ namespace SeaOfThieves.Commands
              $"**Кому:** {member}\n" +
              $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
              $"**ID предупреждения:** {id}\n" +
-             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n" +
+             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count + 1}\n" +
              $"**Причина:** {reason}");
 
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
