@@ -69,6 +69,7 @@ namespace SeaOfThieves
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
+            InviterList.ReadFromXML(BotSettings.InviterXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -325,6 +326,12 @@ namespace SeaOfThieves
             e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
+
+            InviterList.Inviters.ToList().ForEach(i =>
+            {
+                i.Value.Referrals.RemoveAll(r => r == e.Member.Id);
+            });
+            InviterList.SaveToXML(BotSettings.InviterXML);
             return Task.CompletedTask;
         }
 
@@ -385,6 +392,10 @@ namespace SeaOfThieves
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя приглашение {invite.Code} - {invite.Inviter.Username}#{invite.Inviter.Discriminator}");
+
+                if (!InviterList.Inviters.ContainsKey(invite.Inviter.Id)) Inviter.Create(invite.Inviter.Id);
+                InviterList.Inviters[invite.Inviter.Id].AddReferral(e.Member.Id);
+                InviterList.SaveToXML(BotSettings.InviterXML);
             }
             catch (Exception ex)
             {
@@ -764,6 +775,11 @@ namespace SeaOfThieves
         ///     Путь до файла с предупреждениями.
         /// </summary>
         public string WarningsXML;
+
+        /// <summary>
+        ///     Путь до файла с приглашениями.
+        /// </summary>
+        public string InviterXML;
 
         /// <summary>
         ///     ID канала-лога с сообщениями о действиях модераторов.
