@@ -333,6 +333,9 @@ namespace SeaOfThieves.Commands
             }
             
             Lua state = new Lua();
+            state.LoadCLRPackage();
+            state.DoString(@" import ('DSharpPlus')
+                                     import ('DSharpPlus.Entities')");
             state["ctx"] = ctx; 
             var ret = state.DoString(script);
 
