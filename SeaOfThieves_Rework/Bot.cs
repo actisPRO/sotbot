@@ -45,6 +45,11 @@ namespace SeaOfThieves
         /// </summary>
         public static Settings BotSettings { get; private set; }
 
+        /// <summary>
+        ///     Invites список приглашений
+        /// </summary>
+        public List<DiscordInvite> Invites;
+
         public static void Main(string[] args)
         {
             var bot = new Bot();
@@ -355,10 +360,37 @@ namespace SeaOfThieves
                                               "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
                                               "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
                                               "**Удачной игры!**");
+            try
+            {
+                var invite = await e.Guild.GetInvitesAsync().ContinueWith(guildInvitesTask =>
+               {
+                   var guildInvites = guildInvitesTask.Result.ToList();
 
-            await e.Guild.GetChannel(BotSettings.UserlogChannel)
-                .SendMessageAsync(
-                    $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
+                   //(ивенты InviteCreated и InviteRemoved только в 4.0)
+                   //Удаляем все удалившиеся инвайты
+                   Invites.Where(x => !guildInvites.Any(z => z.Code == x.Code)).ToList().ForEach(x => Invites.Remove(x));
+
+                   DiscordInvite inv;
+                   // Костыль с помощью которого понимаю если инвайт был создан после запуска бота.
+                   if (guildInvites.Count != Invites.Count)
+                       //В данном случае веду поиск по новым инвайтам с использованием 1, таким образом можно найти приглашение после запуска бота и понять что именно через него зашел пользолватель
+                       inv = guildInvites.Where(x => !Invites.Any(z => z.Code == x.Code)).ToList().Where(x => x.Uses == 1).ToList().First();
+                   else
+                       //Находит обновившийся инвайт по количеству приглашений
+                       inv = guildInvites.Find(i => Invites.Find(x => x.Code.Contains(i.Code)).Uses < i.Uses);
+                   Invites = guildInvites; //Обновляю список инвайтов
+                   return inv;
+               });
+
+                await e.Guild.GetChannel(BotSettings.UserlogChannel)
+                    .SendMessageAsync(
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя приглашение {invite.Code} - {invite.Inviter.Username}#{invite.Inviter.Discriminator}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
         }
 
         /// <summary>
@@ -479,6 +511,8 @@ namespace SeaOfThieves
 
             var member = await e.Client.Guilds[BotSettings.Guild].GetMemberAsync(e.Client.CurrentUser.Id);
             await member.ModifyAsync($"SeaOfThieves {BotSettings.Version}");
+
+            await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync().ContinueWith(i => Invites = i.Result.ToList()); //Загружаем список приглашений с сервера
         }
 
         /// <summary>
