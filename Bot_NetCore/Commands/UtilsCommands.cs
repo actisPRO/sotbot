@@ -233,6 +233,29 @@ namespace SeaOfThieves.Commands
             await ctx.Message.DeleteAsync();
         }
 
+        [Command("resetfleet")] //TODO: Проверить если работает корректно, так как не знаю какими правами обладают рейдеры и какие настройки каналов на сервере
+        [Hidden]
+        public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
+        {
+            if (!Bot.IsModerator(ctx.Member)) //Проверка на права модератора. (копипаст с команды clearchannel)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+            
+            int i = 1;
+            foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
+                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel) //Убираем из списка очистки текстовые каналы и голосовой канал Chill
+                    if (fleetChannel.Id != Bot.BotSettings.FleetLobby) //Учитываем присутствие канала лобби
+                    {
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                        i++;
+                    }
+                    else
+                        await fleetChannel.ModifyAsync(name: "Общий", user_limit: 0);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
+        }
+
         [Command("codexgen")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task CodexGenerateMessage(CommandContext ctx)
