@@ -7,6 +7,7 @@
         <Product>Sea of Thieves Bot</Product>
         <AssemblyVersion>2.9.0</AssemblyVersion>
         <NeutralLanguage>ru-RU</NeutralLanguage>
+        <AssemblyName>Bot</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
