@@ -378,7 +378,7 @@ namespace SeaOfThieves.Commands
             var embed = new DiscordEmbedBuilder
             {
                 Color = new DiscordColor("#CC00CC"),
-                Title = "Топ 10 Рефералов",
+                Title = "Топ рефералов",
             };
 
             int i = 0;
@@ -398,7 +398,7 @@ namespace SeaOfThieves.Commands
                 }
             }
 
-            embed.WithFooter("Чтобы попасть в топ создайте собственную сслыку приглашения");
+            embed.WithFooter("Чтобы попасть в топ, создайте собственную ссылку приглашения");
 
             //Проверка на уже существующую таблицу топ 10
             var messages = await channel.GetMessagesAsync();
