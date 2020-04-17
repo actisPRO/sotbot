@@ -831,6 +831,6 @@ namespace SeaOfThieves
 
     public enum CommandType
     {
-        Warn, InvitesLeaderboard
+        Warn
     }
 }
