@@ -35,6 +35,8 @@
     <DonatorRole>459649927732133888</DonatorRole>
     <DonatorChannel>648832699200569345</DonatorChannel>
     <DonatorMessage>558231268773593098</DonatorMessage>
+
+	<InvitesLeaderboardChannel>111111111111111111</InvitesLeaderboardChannel>
     
     <WarningsXML>warnings.xml</WarningsXML>
     <ModlogChannel>479674576369090560</ModlogChannel>

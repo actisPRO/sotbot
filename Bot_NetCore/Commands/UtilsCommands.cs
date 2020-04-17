@@ -269,7 +269,7 @@ namespace SeaOfThieves.Commands
         [Command("updateLeaderboardMember")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member) //Обновляет статус отображения пользователя в leaderboard
         {
             try
             {
@@ -354,8 +354,7 @@ namespace SeaOfThieves.Commands
 
         public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
         {
-            //var channel = ctx.Guild.GetChannel(Bot.BotSettings.invitersLeaderboardChannel); [TODO]
-            var channel = guild.GetChannel(700403915186896947);
+            var channel = guild.GetChannel(Bot.BotSettings.InvitesLeaderboardChannel);
 
             var inviters = InviterList.Inviters.ToList()
                 .OrderByDescending(x => x.Value.Referrals.Count).ToList()
@@ -388,7 +387,7 @@ namespace SeaOfThieves.Commands
                     var user = await guild.GetMemberAsync(el.Key);
                     i++;
                     embed.AddField(
-                        $"{i}. {user.Username}#{user.Discriminator}",
+                        $"{i}. {user.DisplayName}#{user.Discriminator}",
                         $"пригласил {el.Value.Referrals.Count} пользователей");
                 }
                 catch (NotFoundException)

@@ -774,6 +774,11 @@ namespace SeaOfThieves
         public ulong DonatorMessage;
 
         /// <summary>
+        ///     Id канала с топом приглашений.
+        /// </summary>
+        public ulong InvitesLeaderboardChannel;
+
+        /// <summary>
         ///     Путь до файла с предупреждениями.
         /// </summary>
         public string WarningsXML;
