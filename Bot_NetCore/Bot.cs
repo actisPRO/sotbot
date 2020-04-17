@@ -373,15 +373,28 @@ namespace SeaOfThieves
                    var guildInvites = guildInvitesTask.Result.ToList();
 
                    //(ивенты InviteCreated и InviteRemoved только в 4.0)
-                   //Удаляем все удалившиеся инвайты
-                   Invites.Where(x => !guildInvites.Any(z => z.Code == x.Code)).ToList().ForEach(x => Invites.Remove(x));
+                   //Удаляем все удалившиеся инвайты из памяти
+                   Invites.Where(x => !guildInvites.Any(z => z.Code == x.Code)).ToList()
+                          .ForEach(x => Invites.Remove(x));
 
                    DiscordInvite inv;
-                   // Костыль с помощью которого понимаю если инвайт был создан после запуска бота.
-                   if (guildInvites.Count != Invites.Count)
+                   /* Есть 3 варианта захода пользователя на сервер
+                    * 1 - По ссылке которая есть в памяти бота переменная Invites и не было создано новых в это время
+                    * 2 - По новой ссылке которой нет в Invites но есть в guildInvites
+                    * 3 - По ссылке которая есть в памяти бота и при этом были созданы новые 
+                    * */
+                   // Костыль с помощью которого понимаю если инвайт был создан после запуска бота и если был использован один из таких инвайтов.
+                   if (guildInvites.Count != Invites.Count && 
+                       guildInvites.Where(x => !Invites.Any(z => z.Code == x.Code)).ToList()
+                                   .Where(x => x.Uses == 1).ToList()
+                                   .Count > 0)
+                       //Вариант 2 из описанных выше
                        //В данном случае веду поиск по новым инвайтам с использованием 1, таким образом можно найти приглашение после запуска бота и понять что именно через него зашел пользолватель
-                       inv = guildInvites.Where(x => !Invites.Any(z => z.Code == x.Code)).ToList().Where(x => x.Uses == 1).ToList().First();
+                       inv = guildInvites.Where(x => !Invites.Any(z => z.Code == x.Code)).ToList()
+                                         .Where(x => x.Uses == 1).ToList()
+                                         .First();
                    else
+                       //Вариант 1 и 2 из описанных выше
                        //Находит обновившийся инвайт по количеству приглашений
                        inv = guildInvites.Find(i => Invites.Find(x => x.Code.Contains(i.Code)).Uses < i.Uses);
                    Invites = guildInvites; //Обновляю список инвайтов
