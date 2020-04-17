@@ -259,7 +259,7 @@ namespace SeaOfThieves.Commands
         [Command("invitesLeaderboard")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task InvitesLeaderboard(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
+        public async Task InvitesLeaderboard(CommandContext ctx) //Команда для создания/обновления лидерборда
         {
             await InvitesLeaderboard(ctx.Guild);
         }
