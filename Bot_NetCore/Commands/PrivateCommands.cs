@@ -147,7 +147,16 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            ship.AddMember(member.Id);
+            try
+            {
+                ship.AddMember(member.Id);
+            }
+            catch (MemberAccessException)
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Участник уже был приглашен или является членом корабля!");
+                return;
+            }
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
             await member.SendMessageAsync(
