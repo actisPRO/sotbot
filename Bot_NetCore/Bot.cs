@@ -400,7 +400,9 @@ namespace SeaOfThieves
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                await e.Guild.GetChannel(BotSettings.UserlogChannel)
+                    .SendMessageAsync(
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) и произошла ошибка {ex.Message}");
             }
         }
 

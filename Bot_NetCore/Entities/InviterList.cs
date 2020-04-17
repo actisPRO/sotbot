@@ -22,6 +22,7 @@ namespace SeaOfThieves.Entities
             {
                 var dElement = new XElement("inviter");
                 dElement.Add(new XElement("inviterId", inviter.InviterId));
+                dElement.Add(new XElement("active", inviter.Active));
                 foreach (var friend in inviter.Referrals) dElement.Add(new XElement("referral", friend));
                 root.Add(dElement);
             }
@@ -35,7 +36,8 @@ namespace SeaOfThieves.Entities
             var doc = XDocument.Load(fileName);
             foreach (var inviter in doc.Element("inviters").Elements("inviter"))
             {
-                var created = new Inviter(Convert.ToUInt64(inviter.Element("inviterId").Value));
+                var created = new Inviter(Convert.ToUInt64(inviter.Element("inviterId").Value),
+                                          Convert.ToBoolean(inviter.Element("active").Value));
                 foreach (var friend in inviter.Elements("referral")) created.AddReferral(Convert.ToUInt64(friend.Value));
             }
         }

@@ -261,7 +261,29 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task InvitesLeaderboard(CommandContext ctx) //Команда для создания/обновления лидерборда
         {
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+
             await InvitesLeaderboard(ctx.Guild);
+        }
+
+        [Command("updateLeaderboardMember")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        {
+            try
+            {
+                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+
+                InviterList.Inviters.Where(x => x.Key == member.Id).ToList().ForEach(x => x.Value.UpdateState(!x.Value.Active));
+                InviterList.SaveToXML(Bot.BotSettings.InviterXML);
+
+                await InvitesLeaderboard(ctx.Guild);
+            } catch
+            {
+
+            }
+            
         }
 
 
@@ -335,21 +357,14 @@ namespace SeaOfThieves.Commands
             //var channel = ctx.Guild.GetChannel(Bot.BotSettings.invitersLeaderboardChannel); [TODO]
             var channel = guild.GetChannel(700403915186896947);
 
-            try
-            {
-                if (channel.GetMessageAsync(channel.LastMessageId).Result.Content.Contains("!invitesLeaderboard"))
-                    await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
-            } catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-
             var inviters = InviterList.Inviters.ToList()
                 .OrderByDescending(x => x.Value.Referrals.Count).ToList()
                 .FindAll(x =>
                 {
                     try
                     {
+                        if (!x.Value.Active)
+                            return false;
                         guild.GetMemberAsync(x.Key);
                         return true;
                     } catch (NotFoundException)
