@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -352,6 +353,21 @@ namespace SeaOfThieves.Commands
         public async Task Time(CommandContext ctx)
         {
             await ctx.RespondAsync($"Текущее время на сервере: **{DateTime.Now}**.");
+        }
+
+        [Command("showsettings")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task ShowSettings(CommandContext ctx)
+        {
+            var message = "**Текущие настройки бота:**\n";
+            foreach (var field in typeof(Settings).GetFields())
+            {
+                if (field.Name == "Token") continue;
+                message += $"**{field.Name}** = {field.GetValue(Bot.BotSettings)}\n";
+            }
+
+            await ctx.RespondAsync(message);
         }
 
         public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
