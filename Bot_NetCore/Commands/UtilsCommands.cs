@@ -235,7 +235,7 @@ namespace SeaOfThieves.Commands
 
         [Command("resetfleet")] //TODO: Проверить если работает корректно, так как не знаю какими правами обладают рейдеры и какие настройки каналов на сервере
         [Hidden]
-        public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после активности пользователей в них
+        public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
         {
             if (!Bot.IsModerator(ctx.Member)) //Проверка на права модератора. (копипаст с команды clearchannel)
             {
