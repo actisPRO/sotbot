@@ -258,6 +258,37 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
 
+        [Command("invitesLeaderboard")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task InvitesLeaderboard(CommandContext ctx) //Команда для создания/обновления лидерборда
+        {
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+
+            await InvitesLeaderboard(ctx.Guild);
+        }
+
+        [Command("updateLeaderboardMember")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member) //Обновляет статус отображения пользователя в leaderboard
+        {
+            try
+            {
+                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+
+                InviterList.Inviters.Where(x => x.Key == member.Id).ToList().ForEach(x => x.Value.UpdateState(!x.Value.Active));
+                InviterList.SaveToXML(Bot.BotSettings.InviterXML);
+
+                await InvitesLeaderboard(ctx.Guild);
+            } catch
+            {
+
+            }
+            
+        }
+
+
         [Command("codexgen")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task CodexGenerateMessage(CommandContext ctx)
@@ -321,6 +352,66 @@ namespace SeaOfThieves.Commands
         public async Task Time(CommandContext ctx)
         {
             await ctx.RespondAsync($"Текущее время на сервере: **{DateTime.Now}**.");
+        }
+
+        public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
+        {
+            var channel = guild.GetChannel(Bot.BotSettings.InvitesLeaderboardChannel);
+
+            var inviters = InviterList.Inviters.ToList()
+                .OrderByDescending(x => x.Value.Referrals.Count).ToList()
+                .FindAll(x =>
+                {
+                    try
+                    {
+                        if (!x.Value.Active)
+                            return false;
+                        guild.GetMemberAsync(x.Key);
+                        return true;
+                    } catch (NotFoundException)
+                    {
+                        return false;
+                    }
+                })
+                .Take(10).ToList();
+
+            var embed = new DiscordEmbedBuilder
+            {
+                Color = new DiscordColor("#CC00CC"),
+                Title = "Топ 10 Рефералов",
+            };
+
+            int i = 0;
+            foreach (var el in inviters)
+            {
+                try
+                {
+                    var user = await guild.GetMemberAsync(el.Key);
+                    i++;
+                    embed.AddField(
+                        $"{i}. {user.DisplayName}#{user.Discriminator}",
+                        $"пригласил {el.Value.Referrals.Count} пользователей");
+                }
+                catch (NotFoundException)
+                {
+
+                }
+            }
+
+            embed.WithFooter("Чтобы попасть в топ создайте собственную сслыку приглашения");
+
+            //Проверка на уже существующую таблицу топ 10
+            var messages = await channel.GetMessagesAsync();
+            ulong msgId = 0;
+            if (messages.Count > 0)
+                msgId = messages.ToList().Where(x => (x.Author.Id == guild.CurrentMember.Id)).First().Id;
+
+            if (msgId == 0)
+                await channel.SendMessageAsync(embed: embed.Build());
+            else
+                await channel.GetMessageAsync(msgId).Result.ModifyAsync(embed: embed.Build());
+
+            return Task.CompletedTask;
         }
     }
 }
