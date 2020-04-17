@@ -319,9 +319,9 @@ namespace SeaOfThieves
         /// <summary>
         ///     Лог посещений
         /// </summary>
-        private Task ClientOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
+        private async Task ClientOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
-            e.Guild.GetChannel(BotSettings.UserlogChannel)
+            await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
 
@@ -330,7 +330,8 @@ namespace SeaOfThieves
                 i.Value.Referrals.RemoveAll(r => r == e.Member.Id);
             });
             InviterList.SaveToXML(BotSettings.InviterXML);
-            return Task.CompletedTask;
+
+            await UtilsCommands.InvitesLeaderboard(guild: e.Guild);
         }
 
         /// <summary>
@@ -394,6 +395,8 @@ namespace SeaOfThieves
                 if (!InviterList.Inviters.ContainsKey(invite.Inviter.Id)) Inviter.Create(invite.Inviter.Id);
                 InviterList.Inviters[invite.Inviter.Id].AddReferral(e.Member.Id);
                 InviterList.SaveToXML(BotSettings.InviterXML);
+
+                await UtilsCommands.InvitesLeaderboard(e.Guild);
             }
             catch (Exception ex)
             {
@@ -431,7 +434,6 @@ namespace SeaOfThieves
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
                 $"{e.Context.User.Username}#{e.Context.User.Discriminator} ran the command " +
                 $"({e.Command.Name}).", DateTime.Now.ToUniversalTime());
-
             return Task.CompletedTask;
         }
 
@@ -522,6 +524,7 @@ namespace SeaOfThieves
 
             await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync().ContinueWith(i => Invites = i.Result.ToList()); //Загружаем список приглашений с сервера
         }
+
 
         /// <summary>
         ///     Загрузка и перезагрузка настроек
@@ -821,6 +824,6 @@ namespace SeaOfThieves
 
     public enum CommandType
     {
-        Warn
+        Warn, InvitesLeaderboard
     }
 }
