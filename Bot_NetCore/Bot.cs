@@ -530,8 +530,6 @@ namespace SeaOfThieves
             {
                 var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
                 Invites = guildInvites.ToList();
-
-                Invites.ForEach(x => Console.WriteLine($"{x.Code} | {x.Inviter}"));
             }
         }
 
@@ -550,8 +548,6 @@ namespace SeaOfThieves
 
             var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
             Invites = guildInvites.ToList();
-
-            Invites.ForEach(x => Console.WriteLine($"{x.Code} | {x.Inviter}"));
         }
 
 
