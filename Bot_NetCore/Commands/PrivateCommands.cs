@@ -230,7 +230,18 @@ namespace SeaOfThieves.Commands
         public async Task Yes(CommandContext ctx, [Description("Корабль")] [RemainingText]
             string name)
         {
-            var ship = ShipList.Ships[name];
+            Ship ship = null;
+            try
+            {
+                ship = ShipList.Ships[name];
+            }
+            catch (KeyNotFoundException)
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Корабль **{name}** не был найден! Проверьте правильность названия и попробуйте снова!");
+                return;
+            }
+            
             if (!ship.IsInvited(ctx.Member.Id))
             {
                 await ctx.RespondAsync(
