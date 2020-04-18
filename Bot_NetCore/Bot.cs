@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using System.Timers;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
-using DSharpPlus.Net.WebSocket;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
 
@@ -119,8 +119,38 @@ namespace SeaOfThieves
             Commands.CommandErrored += CommandsOnCommandErrored;
 
             await Client.ConnectAsync();
+            
+            //Таймер, который каждую минуту проверяет все баны и удаляет истёкшие.
+            Timer unbanCheck = new Timer(60000);
+            unbanCheck.Elapsed += UnbanCheckOnElapsed;
+            unbanCheck.AutoReset = true;
+            unbanCheck.Enabled = true;
 
             await Task.Delay(-1);
+        }
+
+        private async void UnbanCheckOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            var toUnban = from ban in BanList.BannedMembers.Values
+                where ban.UnbanDateTime <= DateTime.Now
+                select ban;
+
+            var guild = await Client.GetGuildAsync(BotSettings.Guild);
+            foreach (var ban in toUnban)
+            {
+                try
+                {
+                    await guild.UnbanMemberAsync(ban.Id);
+                }
+                catch (NotFoundException)
+                {
+                    //пользователь мог и не быть заблокирован через Discord
+                }
+                
+                ban.Unban();
+            }
+            
+            BanList.SaveToXML(BotSettings.BanXML);
         }
 
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
@@ -177,7 +207,7 @@ namespace SeaOfThieves
             }
             catch (FileNotFoundException)
             {
-                return;
+                File.Create("codex_message");
             }
 
             if (e.Message.Id == messageId)
@@ -341,31 +371,12 @@ namespace SeaOfThieves
         /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
-            if (BanList.BannedMembers.ContainsKey(e.Member.Id))
-            {
-                var date = DateTime.Now.ToUniversalTime();
-                var bannedUser = BanList.BannedMembers[e.Member.Id];
-                if (date < bannedUser.UnbanDateTime)
-                {
-                    await e.Member.SendMessageAsync(
-                        $"Ваша блокировка истекает {bannedUser.UnbanDateTime}. Причина блокировки: " +
-                        $"{bannedUser.Reason}");
-                    await e.Member.RemoveAsync("Banned user tried to join");
-                    return;
-                }
-
-                bannedUser.Unban();
-                BanList.SaveToXML(BotSettings.BanXML);
-            }
-
-            var ctx = e; // здесь я копипастил, а рефакторить мне лень.
-
-            await ctx.Member.SendMessageAsync($"**Привет, {ctx.Member.Mention}!\n**" +
-                                              "Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
-                                              "Прежде чем приступать к игре, прочитай, пожалуйста, правила в канале " +
-                                              "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
-                                              "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
-                                              "**Удачной игры!**");
+            await e.Member.SendMessageAsync($"**Привет, {e.Member.Mention}!\n**" +
+                                            "Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
+                                            "Прежде чем приступать к игре, прочитай, пожалуйста, правила в канале " +
+                                            "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
+                                            "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
+                                            "**Удачной игры!**");
             try
             {
                 var invite = await e.Guild.GetInvitesAsync().ContinueWith(guildInvitesTask =>
