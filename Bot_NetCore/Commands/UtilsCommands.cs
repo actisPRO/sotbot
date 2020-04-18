@@ -402,11 +402,14 @@ namespace SeaOfThieves.Commands
             {
                 try
                 {
-                    var user = await guild.GetMemberAsync(el.Key);
-                    i++;
-                    embed.AddField(
-                        $"{i}. {user.DisplayName}#{user.Discriminator}",
-                        $"пригласил {el.Value.Referrals.Count} пользователей");
+                    if (el.Value.Referrals.Count > 0)
+                    {
+                        var user = await guild.GetMemberAsync(el.Key);
+                        i++;
+                        embed.AddField(
+                            $"{i}. {user.DisplayName}#{user.Discriminator}",
+                            $"пригласил {el.Value.Referrals.Count} пользователей");
+                    }
                 }
                 catch (NotFoundException)
                 {
