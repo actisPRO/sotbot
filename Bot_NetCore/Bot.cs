@@ -405,9 +405,9 @@ namespace SeaOfThieves
                                          .Where(x => x.Uses == 1).ToList()
                                          .First();
                    else
-                       //Вариант 1 и 2 из описанных выше
+                       //Вариант 1 и 3 из описанных выше
                        //Находит обновившийся инвайт по количеству приглашений
-                       inv = guildInvites.Find(i => Invites.Find(x => x.Code.Contains(i.Code)).Uses < i.Uses);
+                       inv = Invites.Find(i => guildInvites.Find(x => x.Code.Contains(i.Code)).Uses > i.Uses);
                    Invites = guildInvites; //Обновляю список инвайтов
                    return inv;
                });
@@ -426,7 +426,7 @@ namespace SeaOfThieves
             {
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
-                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт проищошла ошибка.");
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт произошла ошибка.");
                 
                 e.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"Invite logging errored.",
                     DateTime.Now.ToUniversalTime());
