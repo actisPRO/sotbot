@@ -408,6 +408,7 @@ namespace SeaOfThieves
                        //Вариант 1 и 3 из описанных выше
                        //Находит обновившийся инвайт по количеству приглашений
                        inv = Invites.Find(i => guildInvites.Find(x => x.Code.Contains(i.Code)).Uses > i.Uses);
+
                    Invites = guildInvites; //Обновляю список инвайтов
                    return inv;
                });
