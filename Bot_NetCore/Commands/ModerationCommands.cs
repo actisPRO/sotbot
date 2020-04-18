@@ -199,8 +199,7 @@ namespace SeaOfThieves.Commands
                 await guildMember.SendMessageAsync(
                     $"Вы были заблокированы на сервере **{ctx.Guild.Name}** до **{unbanDate} UTC**. " +
                     $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
-                await guildMember.RemoveAsync("Banned: " +
-                                              reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
+                await guildMember.BanAsync(0, reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
             }
             catch (NotFoundException)
             {
@@ -232,12 +231,15 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (BanList.BannedMembers.ContainsKey(member.Id))
+            if (!BanList.BannedMembers.ContainsKey(member.Id))
             {
-                var bannedUser = BanList.BannedMembers[member.Id];
-                bannedUser.Unban();
-                BanList.SaveToXML(Bot.BotSettings.BanXML);
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не был забанен!");
             }
+            
+            var bannedUser = BanList.BannedMembers[member.Id];
+            bannedUser.Unban();
+            BanList.SaveToXML(Bot.BotSettings.BanXML);
+            await ctx.Guild.UnbanMemberAsync(member);
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Снятие бана**\n\n" +
