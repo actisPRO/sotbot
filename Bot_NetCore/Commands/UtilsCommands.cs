@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Net;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -352,6 +353,37 @@ namespace SeaOfThieves.Commands
             }
 
             await ctx.RespondAsync(response);
+        }
+
+        [Command("uploadscript"), Aliases("us")]
+        [RequireOwner]
+        [Hidden]
+        public async Task UploadScript(CommandContext ctx, string name = "__default")
+        {
+            try
+            {
+                var attachment = ctx.Message.Attachments.First();
+
+                if (!attachment.FileName.EndsWith(".lua"))
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Файл скрипта должен иметь расширение .lua.");
+                    return;
+                }
+            
+                if (!Directory.Exists("scripts"))
+                {
+                    Directory.CreateDirectory("scripts");
+                }
+            
+                var client = new WebClient();
+                client.DownloadFile(attachment.Url, "scripts/" + (name == "__default" ? attachment.FileName : name + ".lua"));
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Файл скрипта успешно загружен на сервер.");
+            }
+            catch (InvalidOperationException)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны вложить файл скрипта.");
+            }
         }
     }
 }
