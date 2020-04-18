@@ -426,7 +426,19 @@ namespace SeaOfThieves
             {
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
-                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) и произошла ошибка {ex.Message}");
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт проищошла ошибка.");
+                
+                e.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"Invite logging errored.",
+                    DateTime.Now.ToUniversalTime());
+
+                var errChannel = e.Guild.GetChannel(BotSettings.ErrorLog);
+
+                var message = $"**Ошибка при логгинге инвайта**\n" +
+                              $"**Пользователь:** {e.Member}\n" +
+                              $"**Исключение:** {ex.GetType()}:{ex.Message}\n" +
+                              $"**Трассировка стека:** \n```{ex.StackTrace}```";
+
+                await errChannel.SendMessageAsync(message);
             }
         }
 
