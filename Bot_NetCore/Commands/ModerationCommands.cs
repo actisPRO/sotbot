@@ -23,9 +23,14 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var messagesToDelete = await ctx.Channel.GetMessagesAsync(messages, ctx.Message.Id);
-            foreach (var message in messagesToDelete) await ctx.Channel.DeleteMessageAsync(message);
+            if (messages > 100 || messages < 1)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Допустимое количество сообщений: 1-100.");
+                return;
+            }
 
+            var messagesToDelete = await ctx.Channel.GetMessagesAsync(messages, ctx.Message.Id);
+            await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
