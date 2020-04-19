@@ -422,12 +422,20 @@ namespace SeaOfThieves
         private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
         {
             if (e.Command.Name == "dgenlist" && e.Exception.GetType() == typeof(NotFoundException)) return; //костыль
+            
             if (e.Exception.GetType() == typeof(ArgumentException) &&
-                e.Exception.Message.Contains(("Parameter name: value")))
+                e.Exception.Message.Contains("Parameter name: value"))
             {
                 await e.Context.RespondAsync(
-                    $"{BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных аргументов.");
+                    $"{BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных параметров.");
                 return;
+            }
+
+            if (e.Exception.GetType() == typeof(ArgumentException) &&
+                e.Exception.Message == "Not enough arguments supplied to the command.")
+            {
+                await e.Context.RespondAsync(
+                    $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели не все параметры.");
             }
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored.",
                 DateTime.Now.ToUniversalTime());
