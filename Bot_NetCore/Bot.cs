@@ -436,6 +436,13 @@ namespace SeaOfThieves
         private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
         {
             if (e.Command.Name == "dgenlist" && e.Exception.GetType() == typeof(NotFoundException)) return; //костыль
+            if (e.Exception.GetType() == typeof(ArgumentException) &&
+                e.Exception.Message.Contains(("Parameter name: value")))
+            {
+                await e.Context.RespondAsync(
+                    $"{BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных аргументов.");
+                return;
+            }
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored.",
                 DateTime.Now.ToUniversalTime());
 
