@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Exceptions;
 
 namespace SeaOfThieves.Commands
 {
@@ -14,24 +15,20 @@ namespace SeaOfThieves.Commands
         public async Task Create(CommandContext ctx, [Description("Количество членов экипажа (от 2 до 4)")]
             int slots = 4)
         {
-            try
-            {
-                var channel =
-                    ctx.Member.VoiceState
-                        .Channel; //если здесь возникнет NullReferenceException, значит пользователь не находится в голосовом канале
-            }
-            catch (Exception)
-            {
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале, чтобы использовать это.");
-                return;
-            }
-
             if (Bot.ShipCooldowns.ContainsKey(ctx.User))
                 if ((Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds > 0)
                 {
                     var m = await ctx.Guild.GetMemberAsync(ctx.User.Id);
-                    await m.PlaceInAsync(ctx.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
+                    try
+                    {
+                        await m.PlaceInAsync(ctx.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
+                    }
+                    catch (BadRequestException)
+                    {
+                        await ctx.RespondAsync(
+                            $"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале, чтобы использовать эту команду.");
+                        return;
+                    }
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
                                            $"**{(Bot.ShipCooldowns[ctx.User] - DateTime.Now).Seconds}** секунд прежде чем " +
                                            "создавать новый корабль!");
@@ -66,13 +63,19 @@ namespace SeaOfThieves.Commands
                 ChannelType.Voice, ctx.Guild.GetChannel(Bot.BotSettings.AutocreateCategory),
                 Bot.BotSettings.Bitrate, slots);
 
-            await ctx.Member.PlaceInAsync(created);
+            try
+            {
+                await ctx.Member.PlaceInAsync(created);
+            }
+            catch (BadRequestException)
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале, чтобы использовать эту команду.");
+                await created.DeleteAsync();
+                return;
+            }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно создан канал **{created.Name}**!");
-
-            ctx.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
-                $"{ctx.User.Username}#{ctx.User.Discriminator} created channel via command",
-                DateTime.Now);
         }
     }
 }
