@@ -151,7 +151,7 @@ namespace SeaOfThieves.Commands
             {
                 ship.AddMember(member.Id);
             }
-            catch (MemberAccessException)
+            catch (MemberExistsException)
             {
                 await ctx.RespondAsync(
                     $"{Bot.BotSettings.ErrorEmoji} Участник уже был приглашен или является членом корабля!");
