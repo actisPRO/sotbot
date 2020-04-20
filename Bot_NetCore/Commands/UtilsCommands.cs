@@ -370,6 +370,41 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync(message);
         }
 
+        [Command("listinvites")]
+        [Hidden]
+        public async Task ListInvites(CommandContext ctx, DiscordMember member)
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            try
+            {
+                var inviter = InviterList.Inviters[member.Id];
+                var message = "";
+                foreach (var referral in inviter.Referrals)
+                {
+                    try
+                    {
+                        var referralMember = await ctx.Guild.GetMemberAsync(referral);
+                        message += $"{referralMember.Mention}\n";
+                    }
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+                }
+
+                await ctx.RespondAsync(message);
+            }
+            catch (KeyNotFoundException)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден указанный участник!");
+            }
+        }
+
         public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
         {
             var channel = guild.GetChannel(Bot.BotSettings.InvitesLeaderboardChannel);
