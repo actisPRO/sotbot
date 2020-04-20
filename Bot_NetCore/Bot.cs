@@ -372,6 +372,10 @@ namespace SeaOfThieves
         /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
+            var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
+            var guildInvites = await e.Guild.GetInvitesAsync(); //Запрашиваем новый список инвайтов
+            Invites = guildInvites.ToList(); //Обновляю список инвайтов
+
             await e.Member.SendMessageAsync($"**Привет, {e.Member.Mention}!\n**" +
                                             "Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
                                             "Прежде чем приступать к игре, прочитай, пожалуйста, правила в канале " +
@@ -380,18 +384,16 @@ namespace SeaOfThieves
                                             "**Удачной игры!**");
             try
             {
-                var guildInvites = await e.Guild.GetInvitesAsync();
                 //Находит обновившийся инвайт по количеству приглашений
-                var invite = Invites.Find(i => guildInvites.ToList().Find(x => x.Code.Contains(i.Code)).Uses > i.Uses);
-
-                Invites = guildInvites.ToList(); //Обновляю список инвайтов
+                var updatedInvite = invites.Find(i => guildInvites.ToList().Find(x => x.Code.Contains(i.Code)).Uses > i.Uses);
 
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
-                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя приглашение {invite.Code} - {invite.Inviter.Username}#{invite.Inviter.Discriminator}");
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
+                        $"приглашение {updatedInvite.Code} - {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
 
-                if (!InviterList.Inviters.ContainsKey(invite.Inviter.Id)) Inviter.Create(invite.Inviter.Id);
-                InviterList.Inviters[invite.Inviter.Id].AddReferral(e.Member.Id);
+                if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) Inviter.Create(updatedInvite.Inviter.Id);
+                InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
                 InviterList.SaveToXML(BotSettings.InviterXML);
 
                 await UtilsCommands.InvitesLeaderboard(e.Guild);
@@ -401,7 +403,7 @@ namespace SeaOfThieves
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт произошла ошибка.");
-                
+
                 e.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"Invite logging errored.",
                     DateTime.Now.ToUniversalTime());
 
