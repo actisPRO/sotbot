@@ -385,7 +385,7 @@ namespace SeaOfThieves
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
-                var updatedInvite = invites.Find(i => guildInvites.ToList().Find(x => x.Code.Contains(i.Code)).Uses > i.Uses);
+                var updatedInvite = guildInvites.ToList().Find(g => invites.Find(i => i.Code == g.Code).Uses < g.Uses);
 
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
