@@ -633,7 +633,7 @@ namespace SeaOfThieves
                             reason = "";
                             if (args.Length == 3) reason = args[2];
                             else
-                                for (var i = 2; i < args.Length - 1; ++i)
+                                for (var i = 2; i < args.Length; ++i)
                                     reason += args[i] + " ";
                         }
 
