@@ -372,7 +372,7 @@ namespace SeaOfThieves.Commands
 
         [Command("listinvites")]
         [Hidden]
-        public async Task ListInvites(CommandContext ctx, DiscordMember member)
+        public async Task ListInvites(CommandContext ctx, DiscordMember member, int from, int to)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -384,17 +384,19 @@ namespace SeaOfThieves.Commands
             {
                 var inviter = InviterList.Inviters[member.Id];
                 var message = "";
-                foreach (var referral in inviter.Referrals)
+                if (from <= 0) from = 1;
+                if (to >= inviter.Referrals.Count) to = inviter.Referrals.Count;
+                if (to <= from)
                 {
-                    try
-                    {
-                        var referralMember = await ctx.Guild.GetMemberAsync(referral);
-                        message += $"{referralMember.Mention}\n";
-                    }
-                    catch (NotFoundException)
-                    {
-                        
-                    }
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Некорректно введены параметры **'от'** и **'до'**.");
+                    return;
+                }
+
+                for (int i = from - 1; i <= to; ++i)
+                {
+                    var referral = await ctx.Guild.GetMemberAsync(inviter.Referrals[i]);
+                    message += $"{referral.Mention} - **{referral}**\n";
                 }
 
                 await ctx.RespondAsync(message);
