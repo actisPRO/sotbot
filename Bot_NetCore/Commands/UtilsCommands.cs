@@ -395,7 +395,7 @@ namespace SeaOfThieves.Commands
                     try
                     {
                         var referral = await ctx.Guild.GetMemberAsync(referralId);
-                        referrals.Add($"{referral.Mention} - (**{referral.Id}**)");
+                        referrals.Add($"{referral.Id} - {referral.Username}#{referral.Discriminator} ({referral.Nickname})");
                     }
                     catch (NotFoundException)
                     {
@@ -478,7 +478,7 @@ namespace SeaOfThieves.Commands
             return Task.CompletedTask;
         }
 
-        public IEnumerable<Page> GeneratePagesInEmbeds(List<string> input, int groupBy = 20)
+        public IEnumerable<Page> GeneratePagesInEmbeds(List<string> input)
         {
             if (input.Count == 0)
                 throw new InvalidOperationException("You must provide a list of strings that is not null or empty!");
@@ -490,13 +490,20 @@ namespace SeaOfThieves.Commands
             string msg = "";
             foreach (string s in input)
             {
-                msg += $"{row}. {s} \n";
-                if (row % groupBy == 0 || row >= input.Count)
+                if (msg.Length + s.Length >= 2000)
                 {
                     split.Add(msg);
                     msg = "";
                 }
+                msg += $"{row}. {s} \n";
+                if (row >= input.Count)
+                    split.Add(msg);
                 row++;
+                /*if (row % groupBy == 0 || row >= input.Count)
+                {
+                    split.Add(msg);
+                    msg = "";
+                }*/
             }
 
             int page = 1;
