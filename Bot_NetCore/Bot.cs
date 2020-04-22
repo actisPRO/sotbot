@@ -12,6 +12,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
 
@@ -39,6 +40,11 @@ namespace SeaOfThieves
         ///     Модуль команд.
         /// </summary>
         public CommandsNextModule Commands { get; set; }
+
+        /// <summary>
+        ///     Модуль взаимодействия.
+        /// </summary>
+        public InteractivityModule Interactivity { get; set; }
 
         /// <summary>
         ///     Структура с настройками бота.
@@ -99,6 +105,14 @@ namespace SeaOfThieves
             };
 
             Commands = Client.UseCommandsNext(ccfg);
+
+            var icfg = new InteractivityConfiguration
+            {
+                PaginationBehaviour = TimeoutBehaviour.Ignore,
+                PaginationTimeout = TimeSpan.FromMinutes(2)
+            };
+
+            Interactivity = Client.UseInteractivity(icfg);
 
             Commands.RegisterCommands<CreationCommands>();
             Commands.RegisterCommands<UtilsCommands>();
@@ -392,8 +406,11 @@ namespace SeaOfThieves
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
                         $"приглашение {updatedInvite.Code} - {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
 
-                if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) Inviter.Create(updatedInvite.Inviter.Id);
-                InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
+                if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
+                    Inviter.Create(updatedInvite.Inviter.Id);
+                //Проверяет на уже существующие
+                if (!InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.Contains(e.Member.Id)))
+                    InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
                 InviterList.SaveToXML(BotSettings.InviterXML);
 
                 await UtilsCommands.InvitesLeaderboard(e.Guild);
