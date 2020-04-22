@@ -251,14 +251,17 @@ namespace SeaOfThieves.Commands
             int chillPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position;
             foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
                 if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel) //Убираем из списка очистки текстовые каналы и голосовой канал Chill
-                    if (fleetChannel.Id != Bot.BotSettings.FleetLobby) //Учитываем присутствие канала лобби
+                    if (fleetChannel.Id == Bot.BotSettings.FleetLobby) //Учитываем присутствие канала лобби
                     {
-                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
-                        await fleetChannel.ModifyPositionAsync(chillPosition + i);
-                        i++;
+                        await fleetChannel.ModifyAsync(name: "Общий", user_limit: 0);
+                        await fleetChannel.ModifyPositionAsync(chillPosition + 1);
                     }
                     else
-                        await fleetChannel.ModifyAsync(name: "Общий", user_limit: 0);
+                    {
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                        await fleetChannel.ModifyPositionAsync(chillPosition + i + 1);
+                        i++;
+                    }
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
 
