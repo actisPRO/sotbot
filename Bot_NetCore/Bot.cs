@@ -134,8 +134,7 @@ namespace SeaOfThieves
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
             Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
             Client.UnknownEvent += ClientOnUnknownEvent;
-
-            Commands.CommandExecuted += CommandsOnCommandExecuted;
+            
             Commands.CommandErrored += CommandsOnCommandErrored;
 
             await Client.ConnectAsync();
@@ -171,6 +170,8 @@ namespace SeaOfThieves
             }
             
             BanList.SaveToXML(BotSettings.BanXML);
+            
+            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Бан-лист был обновлён.", DateTime.Now);
         }
 
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
@@ -268,6 +269,10 @@ namespace SeaOfThieves
                     $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
                     DateTime.Now.ToUniversalTime());
 
+                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                    $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
+                    DateTime.Now);
+
                 return;
             }
 
@@ -306,6 +311,10 @@ namespace SeaOfThieves
                         await e.Channel.SendMessageAsync(
                             $"{BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно подтвердил " +
                             $"запрос на создание корабля **{name}**!");
+                        
+                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                            $"Администратор {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил создание приватного корабля {name}.",
+                            DateTime.Now);
                     }
                     else if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":no_entry:"))
                     {
@@ -327,6 +336,10 @@ namespace SeaOfThieves
                         await e.Channel.SendMessageAsync(
                             $"{BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** успешно отклонил запрос на " +
                             $"создание корабля **{name}**!");
+                        
+                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                            $"Администратор {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) отклонил создание приватного корабля {name}.",
+                            DateTime.Now);
                     }
                     else
                     {
@@ -401,6 +414,10 @@ namespace SeaOfThieves
             InviterList.SaveToXML(BotSettings.InviterXML);
 
             await UtilsCommands.InvitesLeaderboard(guild: e.Guild);
+
+            e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) покинул сервер.",
+                DateTime.Now);
         }
 
         /// <summary>
@@ -437,7 +454,11 @@ namespace SeaOfThieves
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
-                        $"приглашение {updatedInvite.Code} - {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
+                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
+                
+                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}",
+                    DateTime.Now);
 
                 //Проверяем если пригласивший уже существует, если нет то создаем
                 if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
@@ -457,8 +478,13 @@ namespace SeaOfThieves
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт произошла ошибка.");
 
-                e.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"Invite logging errored.",
-                    DateTime.Now.ToUniversalTime());
+                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
+                    DateTime.Now);
+                
+                e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
+                    "Не удалось определить приглашение.",
+                    DateTime.Now);
 
                 var errChannel = e.Guild.GetChannel(BotSettings.ErrorLog);
 
@@ -479,7 +505,7 @@ namespace SeaOfThieves
             if (e.Command.Name == "dgenlist" && e.Exception.GetType() == typeof(NotFoundException)) return; //костыль
             
             if (e.Exception.GetType() == typeof(ArgumentException) &&
-                e.Exception.Message.Contains("Parameter name: value"))
+                e.Exception.Message.Contains("Could not convert specified value to given type."))
             {
                 await e.Context.RespondAsync(
                     $"{BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных параметров.");
@@ -491,12 +517,15 @@ namespace SeaOfThieves
             {
                 await e.Context.RespondAsync(
                     $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели не все параметры.");
+                return;
             }
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"{e.Command.Name} errored.",
-                DateTime.Now.ToUniversalTime());
+            
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT", $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
+                                                                             $"({e.Context.Member.Id}) пытался запустить команду {e.Command.Name}, но произошла ошибка.",
+                DateTime.Now);
 
             await e.Context.RespondAsync(
-                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз; если " +
+                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз, если " +
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
@@ -509,14 +538,6 @@ namespace SeaOfThieves
                           $"**Трассировка стека:** \n```{e.Exception.StackTrace}```";
 
             await errChannel.SendMessageAsync(message);
-        }
-
-        private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
-        {
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
-                $"{e.Context.User.Username}#{e.Context.User.Discriminator} ran the command " +
-                $"({e.Command.Name}).", DateTime.Now.ToUniversalTime());
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -539,6 +560,9 @@ namespace SeaOfThieves
                             await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Вам нужно подождать " +
                                                      $"**{(ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
                                                      "создавать новый корабль!");
+                            e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                                $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Discriminator}) был перемещён в комнату ожидания.",
+                                DateTime.Now);
                             return;
                         }
 
@@ -564,6 +588,7 @@ namespace SeaOfThieves
 
                     DiscordChannel created = null;
                     // Проверяем канал в котором находится пользователь
+                    
                     if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
                         created = await e.Guild.CreateChannelAsync(
                             $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
@@ -581,8 +606,8 @@ namespace SeaOfThieves
 
                     await member.PlaceInAsync(created);
 
-                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
-                        $"{e.User.Username}#{e.User.Discriminator} created channel via autocreation.",
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
                         DateTime.Now.ToUniversalTime());
                 }
             }
