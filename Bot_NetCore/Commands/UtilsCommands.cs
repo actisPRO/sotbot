@@ -11,6 +11,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity;
+using Newtonsoft.Json.Serialization;
 using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
@@ -57,7 +59,7 @@ namespace SeaOfThieves.Commands
                 embed.AddField("Предупреждения", warnings.ToString(), true);
 
                 var donate = 0;
-                if (DonatorList.Donators.ContainsKey(member.Id)) donate = (int) DonatorList.Donators[member.Id].Balance;
+                if (DonatorList.Donators.ContainsKey(member.Id)) donate = (int)DonatorList.Donators[member.Id].Balance;
                 embed.AddField("Донат", donate.ToString(), true);
 
                 var moderator = "Нет";
@@ -66,13 +68,13 @@ namespace SeaOfThieves.Commands
 
                 var privateShip = "Нет";
                 foreach (var ship in ShipList.Ships.Values)
-                foreach (var shipMember in ship.Members.Values)
-                    if (shipMember.Type == MemberType.Owner && shipMember.Id == member.Id)
-                    {
-                        privateShip = ship.Name;
-                        break;
-                        ;
-                    }
+                    foreach (var shipMember in ship.Members.Values)
+                        if (shipMember.Type == MemberType.Owner && shipMember.Id == member.Id)
+                        {
+                            privateShip = ship.Name;
+                            break;
+                            ;
+                        }
 
                 embed.AddField("Владелец приватного корабля", privateShip);
 
@@ -205,10 +207,10 @@ namespace SeaOfThieves.Commands
                     message = "";
                 }
 
-                if ((int) Math.Floor(el.Value) < balance)
+                if ((int)Math.Floor(el.Value) < balance)
                 {
                     ++position;
-                    balance = (int) Math.Floor(el.Value);
+                    balance = (int)Math.Floor(el.Value);
                 }
 
                 try
@@ -243,7 +245,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-            
+
             int i = 1;
             int chillPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position;
             foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
@@ -282,11 +284,12 @@ namespace SeaOfThieves.Commands
                 InviterList.SaveToXML(Bot.BotSettings.InviterXML);
 
                 await InvitesLeaderboard(ctx.Guild);
-            } catch
+            }
+            catch
             {
 
             }
-            
+
         }
 
 
@@ -372,7 +375,7 @@ namespace SeaOfThieves.Commands
 
         [Command("listinvites")]
         [Hidden]
-        public async Task ListInvites(CommandContext ctx, DiscordMember member, int from, int to)
+        public async Task ListInvites(CommandContext ctx, DiscordMember member)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -382,24 +385,28 @@ namespace SeaOfThieves.Commands
 
             try
             {
+                var interactivity = ctx.Client.GetInteractivityModule();
+
                 var inviter = InviterList.Inviters[member.Id];
-                var message = "";
-                if (from <= 0) from = 1;
-                if (to >= inviter.Referrals.Count) to = inviter.Referrals.Count;
-                if (to <= from)
+                List<string> referrals = new List<string>();
+
+                foreach (ulong referralId in inviter.Referrals)
                 {
-                    await ctx.RespondAsync(
-                        $"{Bot.BotSettings.ErrorEmoji} Некорректно введены параметры **'от'** и **'до'**.");
-                    return;
+                    try
+                    {
+                        var referral = await ctx.Guild.GetMemberAsync(referralId);
+                        referrals.Add($"{referral.Mention} - (**{referral.Id}**)");
+                    }
+                    catch (NotFoundException)
+                    {
+                        referrals.Add($"Пользователь не найден");
+                    }
+
                 }
 
-                for (int i = from - 1; i <= to; ++i)
-                {
-                    var referral = await ctx.Guild.GetMemberAsync(inviter.Referrals[i]);
-                    message += $"{referral.Mention} - **{referral}**\n";
-                }
+                var referrals_pagination = GeneratePagesInEmbeds(referrals);
 
-                await ctx.RespondAsync(message);
+                await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
             }
             catch (KeyNotFoundException)
             {
@@ -421,7 +428,8 @@ namespace SeaOfThieves.Commands
                             return false;
                         guild.GetMemberAsync(x.Key);
                         return true;
-                    } catch (NotFoundException)
+                    }
+                    catch (NotFoundException)
                     {
                         return false;
                     }
@@ -469,5 +477,43 @@ namespace SeaOfThieves.Commands
 
             return Task.CompletedTask;
         }
+
+        public IEnumerable<Page> GeneratePagesInEmbeds(List<string> input, int groupBy = 20)
+        {
+            if (input.Count == 0)
+                throw new InvalidOperationException("You must provide a list of strings that is not null or empty!");
+
+            List<Page> result = new List<Page>();
+            List<string> split = new List<string>();
+
+            int row = 1;
+            string msg = "";
+            foreach (string s in input)
+            {
+                msg += $"{row}. {s} \n";
+                if (row % groupBy == 0 || row >= input.Count)
+                {
+                    split.Add(msg);
+                    msg = "";
+                }
+                row++;
+            }
+
+            int page = 1;
+            foreach (string s in split)
+            {
+                result.Add(new Page()
+                {
+                    Embed = new DiscordEmbedBuilder()
+                    {
+                        Title = $"Страница {page} / {split.Count}. Всего {input.Count}",
+                        Description = s
+                    }
+                });
+                page++;
+            }
+            return result;
+        }
+
     }
 }
