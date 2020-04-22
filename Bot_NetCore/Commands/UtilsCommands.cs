@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -271,6 +272,36 @@ namespace SeaOfThieves.Commands
             await InvitesLeaderboard(ctx.Guild);
         }
 
+        [Command("invitesLeaderboardAll")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task InvitesLeaderboardAll(CommandContext ctx)
+        {
+            var interactivity = ctx.Client.GetInteractivityModule();
+
+            List<string> inviters = new List<string>();
+
+            InviterList.Inviters.ToList()
+            .OrderByDescending(x => x.Value.Referrals.Count).ToList()
+            .ForEach(async x =>
+            {
+                try
+                {
+                    var inviter = await ctx.Guild.GetMemberAsync(x.Key);
+                    string state = x.Value.Active == true ? "Активен" : "Отключен";
+                    inviters.Add($"{inviter.DisplayName}#{inviter.Discriminator} пригласил {x.Value.Referrals.Count} Отображение: {state}");
+                }
+                catch (NotFoundException)
+                {
+                    inviters.Add("Пользователь не найден");
+                }
+            });
+
+            var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters);
+
+            await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+        }
+
         [Command("updateLeaderboardMember")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
@@ -291,7 +322,6 @@ namespace SeaOfThieves.Commands
             }
 
         }
-
 
         [Command("codexgen")]
         [RequirePermissions(Permissions.Administrator)]
@@ -404,7 +434,7 @@ namespace SeaOfThieves.Commands
 
                 }
 
-                var referrals_pagination = GeneratePagesInEmbeds(referrals);
+                var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals);
 
                 await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
             }
@@ -477,50 +507,5 @@ namespace SeaOfThieves.Commands
 
             return Task.CompletedTask;
         }
-
-        public IEnumerable<Page> GeneratePagesInEmbeds(List<string> input)
-        {
-            if (input.Count == 0)
-                throw new InvalidOperationException("You must provide a list of strings that is not null or empty!");
-
-            List<Page> result = new List<Page>();
-            List<string> split = new List<string>();
-
-            int row = 1;
-            string msg = "";
-            foreach (string s in input)
-            {
-                if (msg.Length + s.Length >= 2000)
-                {
-                    split.Add(msg);
-                    msg = "";
-                }
-                msg += $"{row}. {s} \n";
-                if (row >= input.Count)
-                    split.Add(msg);
-                row++;
-                /*if (row % groupBy == 0 || row >= input.Count)
-                {
-                    split.Add(msg);
-                    msg = "";
-                }*/
-            }
-
-            int page = 1;
-            foreach (string s in split)
-            {
-                result.Add(new Page()
-                {
-                    Embed = new DiscordEmbedBuilder()
-                    {
-                        Title = $"Страница {page} / {split.Count}. Всего {input.Count}",
-                        Description = s
-                    }
-                });
-                page++;
-            }
-            return result;
-        }
-
     }
 }
