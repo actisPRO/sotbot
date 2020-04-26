@@ -15,6 +15,7 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
+using DSharpPlus.CommandsNext.Attributes;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -170,6 +171,11 @@ namespace SeaOfThieves
 
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
         {
+            if (e.User.IsBot) return;
+
+            //Emissary Message
+            if (e.Message.Id == BotSettings.EmissaryMessageId) return;
+
             var doc = XDocument.Load("users.xml");
             var root = doc.Root;
 
@@ -245,6 +251,51 @@ namespace SeaOfThieves
                 doc.Save("users.xml");
 
                 return;
+            }
+
+            //emissary message check
+            if (e.Message.Id == BotSettings.EmissaryMessageId)
+            {
+                await e.Message.DeleteReactionAsync(e.Emoji, e.User);
+                var user = (DiscordMember)e.User;
+                //remove emissary roles if exists
+                /*
+                * Gold Role - :moneybag:
+                * Merch Role - :pig:
+                * Order Role - :skull:
+                * Athena Role - :diamond:
+                * Reaper Role - :skull_crossbones:
+                */
+                user.Roles.Where(x => x.Id == BotSettings.EmissaryGoldhoadersRole ||
+                                x.Id == BotSettings.EmissaryTradingCompanyRole ||
+                                x.Id == BotSettings.EmissaryOrderOfSoulsRole ||
+                                x.Id == BotSettings.EmissaryAthenaRole ||
+                                x.Id == BotSettings.EmissaryReaperBonesRole).ToList()
+                         .ForEach(async x =>
+                        {
+                            await user.RevokeRoleAsync(x);
+                        });
+                switch (e.Emoji.GetDiscordName())
+                {
+                    case ":moneybag:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryGoldhoadersRole));
+                        return;
+                    case ":pig:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryTradingCompanyRole));
+                        return;
+                    case ":skull:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryOrderOfSoulsRole));
+                        return;
+                    case ":gem:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryAthenaRole));
+                        return;
+                    case ":skull_crossbones:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryReaperBonesRole));
+                        return;
+                    default:
+                        return;
+                }
+
             }
 
             //then check if it is private ship confirmation message
@@ -510,19 +561,36 @@ namespace SeaOfThieves
                     // в словарь кулдаунов
                     ShipCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
+                    //Проверка на эмиссарство
+                    var user = (DiscordMember)e.User;
+                    var channelSymbol = BotSettings.AutocreateSymbol;
+                    user.Roles.ToList().ForEach(x =>
+                         {
+                             if (x.Id == BotSettings.EmissaryGoldhoadersRole)
+                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
+                             else if (x.Id == BotSettings.EmissaryTradingCompanyRole)
+                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":pig:");
+                             else if (x.Id == BotSettings.EmissaryOrderOfSoulsRole)
+                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull:");
+                             else if (x.Id == BotSettings.EmissaryAthenaRole)
+                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
+                             else if (x.Id == BotSettings.EmissaryReaperBonesRole)
+                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+
+                         });
                     DiscordChannel created = null;
                     // Проверяем канал в котором находится пользователь
                     if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
                         created = await e.Guild.CreateChannelAsync(
-                            $"{BotSettings.AutocreateSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
+                            $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
                             e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 2);
                     else if (e.Channel.Id == BotSettings.AutocreateBrigantine) // Бригантина
                         created = await e.Guild.CreateChannelAsync(
-                            $"{BotSettings.AutocreateSymbol} Бриг {e.User.Username}", ChannelType.Voice,
+                            $"{channelSymbol} Бриг {e.User.Username}", ChannelType.Voice,
                             e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 3);
                     else // Галеон
                         created = await e.Guild.CreateChannelAsync(
-                            $"{BotSettings.AutocreateSymbol} Галеон {e.User.Username}", ChannelType.Voice,
+                            $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
                             e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 4);
 
                     var member = await e.Guild.GetMemberAsync(e.User.Id);
@@ -539,20 +607,27 @@ namespace SeaOfThieves
                 // нам здесь ничего не надо делать, просто пропускаем
             }
 
-            // удалим пустые каналы
+            try
+            {
+                // удалим пустые каналы
 
-            var autocreatedChannels = new List<DiscordChannel>(); // это все автосозданные каналы
-            foreach (var channel in e.Guild.Channels)
-                if (channel.Name.StartsWith(BotSettings.AutocreateSymbol) && channel.Type == ChannelType.Voice
-                                                                          && channel.ParentId ==
-                                                                          BotSettings.AutocreateCategory)
-                    autocreatedChannels.Add(channel);
+                var autocreatedChannels = new List<DiscordChannel>(); // это все автосозданные каналы
+                foreach (var channel in e.Guild.Channels)
+                    if (channel.Type == ChannelType.Voice
+                        && channel.ParentId == BotSettings.AutocreateCategory)
+                        autocreatedChannels.Add(channel);
 
-            var notEmptyChannels = new List<DiscordChannel>(); // это все НЕ пустые каналы
-            foreach (var voiceState in e.Guild.VoiceStates) notEmptyChannels.Add(voiceState.Channel);
+                var notEmptyChannels = new List<DiscordChannel>(); // это все НЕ пустые каналы
+                foreach (var voiceState in e.Guild.VoiceStates) notEmptyChannels.Add(voiceState.Channel);
 
-            var forDeletionChannels = autocreatedChannels.Except(notEmptyChannels); // это пустые каналы
-            foreach (var channel in forDeletionChannels) await channel.DeleteAsync(); // мы их удаляем
+                var forDeletionChannels = autocreatedChannels.Except(notEmptyChannels); // это пустые каналы
+                foreach (var channel in forDeletionChannels) await channel.DeleteAsync(); // мы их удаляем
+            }
+            catch (NotFoundException) // Если пользователь пересоздает канал перейдя с уже автосозданного канала
+            {
+                // пропускаем
+            }
+
         }
 
         /// <summary>
@@ -884,6 +959,36 @@ namespace SeaOfThieves
         public ulong CodexChannel;
 
         public ulong CodexRole;
+
+        /// <summary>
+        /// Id сообщения эмиссарства
+        /// </summary>
+        public ulong EmissaryMessageId;
+
+        /// <summary>
+        ///     Id роли эмиссарства
+        /// </summary>
+        public ulong EmissaryGoldhoadersRole;
+
+        /// <summary>
+        ///     Id роли эмиссарства
+        /// </summary>
+        public ulong EmissaryTradingCompanyRole;
+
+        /// <summary>
+        ///     Id роли эмиссарства
+        /// </summary>
+        public ulong EmissaryOrderOfSoulsRole;
+
+        /// <summary>
+        ///     Id роли эмиссарства
+        /// </summary>
+        public ulong EmissaryAthenaRole;
+
+        /// <summary>
+        ///     Id роли эмиссарства
+        /// </summary>
+        public ulong EmissaryReaperBonesRole;
     }
 
     public enum CommandType

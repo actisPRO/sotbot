@@ -65,4 +65,11 @@
     
     <CodexChannel>672056183774773268</CodexChannel>
     <CodexRole>672418978563620865</CodexRole>
+
+	<EmissaryMessageId>703926358182592553</EmissaryMessageId>
+	<EmissaryGoldhoadersRole>703929000711553074</EmissaryGoldhoadersRole>
+	<EmissaryTradingCompanyRole>703929010190811157</EmissaryTradingCompanyRole>
+	<EmissaryOrderOfSoulsRole>703929012036304948</EmissaryOrderOfSoulsRole>
+	<EmissaryAthenaRole>703929013625815123</EmissaryAthenaRole>
+	<EmissaryReaperBonesRole>703929015181901885</EmissaryReaperBonesRole>
 </Settings>
