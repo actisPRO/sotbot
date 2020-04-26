@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -13,7 +12,6 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using Newtonsoft.Json.Serialization;
 using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
@@ -447,7 +445,41 @@ namespace SeaOfThieves.Commands
             }
         }
 
-        public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
+        [Command("generateEmissaryReactions")]
+        [Hidden]
+        public async Task generateEmissaryReactions(CommandContext ctx, DiscordMessage message)
+        {
+            try
+            {
+                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+
+                /*string msg = 
+                    ":moneybag:  - Златодержцы \n" +
+                    ":pig: - Торговый Союз \n" +
+                    ":skull: - Орден Душ \n" +
+                    ":gem: - Сокровища Афины \n" +
+                    ":skull_crossbones: - Жнецы \n" +
+                    ":x: - Убрать Роль";*/
+
+                //var message = await ctx.Channel.SendMessageAsync(msg);
+
+                //var message = await ctx.Channel.GetMessageAsync(messageId);
+
+                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
+                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
+                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
+                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
+                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:"));
+                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+        }
+
+            public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
         {
             var channel = guild.GetChannel(Bot.BotSettings.InvitesLeaderboardChannel);
 
