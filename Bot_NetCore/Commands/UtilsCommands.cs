@@ -452,19 +452,7 @@ namespace SeaOfThieves.Commands
             try
             {
                 await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
-
-                /*string msg = 
-                    ":moneybag:  - Златодержцы \n" +
-                    ":pig: - Торговый Союз \n" +
-                    ":skull: - Орден Душ \n" +
-                    ":gem: - Сокровища Афины \n" +
-                    ":skull_crossbones: - Жнецы \n" +
-                    ":x: - Убрать Роль";*/
-
-                //var message = await ctx.Channel.SendMessageAsync(msg);
-
-                //var message = await ctx.Channel.GetMessageAsync(messageId);
-
+                await message.DeleteAllReactionsAsync();
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
@@ -474,7 +462,7 @@ namespace SeaOfThieves.Commands
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Произошла ошибка при выполнении команды! {ex.Message}");
             }
 
         }
