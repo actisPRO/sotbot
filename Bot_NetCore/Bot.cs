@@ -445,6 +445,7 @@ namespace SeaOfThieves
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
+                //Вызывает NullReferenceException в случае если ссылка только для одного использования
                 var updatedInvite = guildInvites.ToList().Find(g => invites.Find(i => i.Code == g.Code).Uses < g.Uses);
 
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
@@ -454,11 +455,13 @@ namespace SeaOfThieves
 
                 if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
                     Inviter.Create(updatedInvite.Inviter.Id);
+
                 //Проверяет на уже существующие
                 if (!InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.Contains(e.Member.Id)))
                     InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
                 InviterList.SaveToXML(BotSettings.InviterXML);
 
+                //Обновление статистики приглашений
                 await UtilsCommands.InvitesLeaderboard(e.Guild);
             }
             catch (Exception ex)

@@ -28,11 +28,6 @@ namespace Bot_NetCore.Misc
                 if (row >= input.Count)
                     split.Add(msg);
                 row++;
-                /*if (row % groupBy == 0 || row >= input.Count)
-                {
-                    split.Add(msg);
-                    msg = "";
-                }*/
             }
 
             int page = 1;
