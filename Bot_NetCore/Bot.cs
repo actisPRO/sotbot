@@ -258,44 +258,39 @@ namespace SeaOfThieves
             {
                 await e.Message.DeleteReactionAsync(e.Emoji, e.User);
                 var user = (DiscordMember)e.User;
-                //remove emissary roles if exists
-                /*
-                * Gold Role - :moneybag:
-                * Merch Role - :pig:
-                * Order Role - :skull:
-                * Athena Role - :diamond:
-                * Reaper Role - :skull_crossbones:
-                */
+
+                //Проверка у пользователя уже существующих ролей эмисарства и их удаление
                 user.Roles.Where(x => x.Id == BotSettings.EmissaryGoldhoadersRole ||
                                 x.Id == BotSettings.EmissaryTradingCompanyRole ||
                                 x.Id == BotSettings.EmissaryOrderOfSoulsRole ||
                                 x.Id == BotSettings.EmissaryAthenaRole ||
                                 x.Id == BotSettings.EmissaryReaperBonesRole).ToList()
-                         .ForEach(async x =>
-                        {
-                            await user.RevokeRoleAsync(x);
-                        });
+                         .ForEach(async x => await user.RevokeRoleAsync(x));
+
+                //Возможно нужно добавить кулдаун как при создании кораблей, но бот должен справится без проблем
                 switch (e.Emoji.GetDiscordName())
                 {
                     case ":moneybag:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryGoldhoadersRole));
-                        return;
+                        break;
                     case ":pig:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryTradingCompanyRole));
-                        return;
+                        break;
                     case ":skull:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryOrderOfSoulsRole));
-                        return;
+                        break;
                     case ":gem:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryAthenaRole));
-                        return;
+                        break;
                     case ":skull_crossbones:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryReaperBonesRole));
-                        return;
+                        break;
                     default:
-                        return;
+                        break;
                 }
-
+                e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
+                    $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
+                    DateTime.Now.ToUniversalTime());
             }
 
             //then check if it is private ship confirmation message
@@ -562,22 +557,21 @@ namespace SeaOfThieves
                     ShipCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
                     //Проверка на эмиссарство
-                    var user = (DiscordMember)e.User;
                     var channelSymbol = BotSettings.AutocreateSymbol;
-                    user.Roles.ToList().ForEach(x =>
-                         {
-                             if (x.Id == BotSettings.EmissaryGoldhoadersRole)
-                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
-                             else if (x.Id == BotSettings.EmissaryTradingCompanyRole)
-                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":pig:");
-                             else if (x.Id == BotSettings.EmissaryOrderOfSoulsRole)
-                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull:");
-                             else if (x.Id == BotSettings.EmissaryAthenaRole)
-                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
-                             else if (x.Id == BotSettings.EmissaryReaperBonesRole)
-                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                    ((DiscordMember)e.User).Roles.ToList().ForEach(x =>
+                    {
+                        if (x.Id == BotSettings.EmissaryGoldhoadersRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
+                        else if (x.Id == BotSettings.EmissaryTradingCompanyRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":pig:");
+                        else if (x.Id == BotSettings.EmissaryOrderOfSoulsRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull:");
+                        else if (x.Id == BotSettings.EmissaryAthenaRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
+                        else if (x.Id == BotSettings.EmissaryReaperBonesRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                    });
 
-                         });
                     DiscordChannel created = null;
                     // Проверяем канал в котором находится пользователь
                     if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
