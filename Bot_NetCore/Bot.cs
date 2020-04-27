@@ -15,7 +15,6 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
-using DSharpPlus.CommandsNext.Attributes;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global

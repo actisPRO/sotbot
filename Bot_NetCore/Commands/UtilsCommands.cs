@@ -469,7 +469,7 @@ namespace SeaOfThieves.Commands
         [Command("emissarymessage")]
         [Description("Обновляет привязку к сообщению эмиссаров (вводится в канале с сообщением)")]
         [Hidden]
-        public async Task generateEmissaryReactions(CommandContext ctx, DiscordMessage message)
+        public async Task UpdateEmissaryMessage(CommandContext ctx, DiscordMessage message)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
