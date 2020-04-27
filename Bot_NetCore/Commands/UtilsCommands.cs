@@ -20,6 +20,24 @@ namespace SeaOfThieves.Commands
     {
         public bool keepRainbow;
 
+        [Command("config")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task GenerateDonatorMessage(CommandContext ctx, string param, string value)
+        {
+            try
+            {
+                Bot.EditSettings(param, value);
+                Bot.ReloadSettings();
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен параметр `{param}:{value}`");
+            }
+            catch (Exception ex)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось изменить параметр `{param}: {value}` | `{ex.Message}`");
+            }
+        }
+
         [Command("printroles")]
         [Description("Выводит список ролей на сервере")]
         [RequirePermissions(Permissions.Administrator)]
@@ -448,7 +466,8 @@ namespace SeaOfThieves.Commands
             }
         }
 
-        [Command("generateEmissaryReactions")]
+        [Command("emissarymessage")]
+        [Description("Обновляет привязку к сообщению эмиссаров (вводится в канале с сообщением)")]
         [Hidden]
         public async Task generateEmissaryReactions(CommandContext ctx, DiscordMessage message)
         {
@@ -461,7 +480,15 @@ namespace SeaOfThieves.Commands
             try
             {
                 await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+
+                //Обновляем настроки бота
+                if(Bot.BotSettings.EmissaryMessageId != message.Id)
+                    Bot.EditSettings("EmissaryMessageId", message.Id.ToString());
+
+                //Убираем все реакции с сообщения
                 await message.DeleteAllReactionsAsync();
+
+                //Добавляем реакции к сообщению
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
                 await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
