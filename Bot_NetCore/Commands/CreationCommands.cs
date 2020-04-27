@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 
 namespace SeaOfThieves.Commands
@@ -58,8 +60,24 @@ namespace SeaOfThieves.Commands
                     break;
             }
 
+            //Проверка на эмиссарство
+            var channelSymbol = Bot.BotSettings.AutocreateSymbol;
+            ((DiscordMember)ctx.User).Roles.ToList().ForEach(x =>
+            {
+                if (x.Id == Bot.BotSettings.EmissaryGoldhoadersRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":moneybag:");
+                else if (x.Id == Bot.BotSettings.EmissaryTradingCompanyRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":pig:");
+                else if (x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":skull:");
+                else if (x.Id == Bot.BotSettings.EmissaryAthenaRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":gem:");
+                else if (x.Id == Bot.BotSettings.EmissaryReaperBonesRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:");
+            });
+
             var created = await ctx.Guild.CreateChannelAsync(
-                $"{Bot.BotSettings.AutocreateSymbol} {name} {ctx.User.Username}",
+                $"{channelSymbol} {name} {ctx.User.Username}",
                 ChannelType.Voice, ctx.Guild.GetChannel(Bot.BotSettings.AutocreateCategory),
                 Bot.BotSettings.Bitrate, slots);
 
