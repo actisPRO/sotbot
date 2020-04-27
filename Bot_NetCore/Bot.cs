@@ -684,6 +684,27 @@ namespace SeaOfThieves
         }
 
         /// <summary>
+        ///     Загрузка и перезагрузка настроек
+        /// </summary>
+        public static void EditSettings(string param, string value)
+        {
+            try
+            {
+                if (param == "Token") throw new Exception("Unable to edit Bot Token");
+                var doc = XDocument.Load("settings.xml", LoadOptions.PreserveWhitespace);
+                var elem = doc.Element("Settings").Element(param);
+
+                elem.Value = value;
+                doc.Save("settings.xml");
+                ReloadSettings();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        /// <summary>
         ///     Предназначено для разделения строки с настройками (например, IgnoredChannels)
         /// </summary>
         /// <param name="notSeparatedStrings">Строка, считанная из XML</param>
