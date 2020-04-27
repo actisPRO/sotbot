@@ -258,7 +258,7 @@ namespace SeaOfThieves
                 return;
             }
 
-            //emissary message check
+            //Проверка на сообщение эмиссарства
             if (e.Message.Id == BotSettings.EmissaryMessageId)
             {
                 await e.Message.DeleteReactionAsync(e.Emoji, e.User);
@@ -279,7 +279,7 @@ namespace SeaOfThieves
                                 x.Id == BotSettings.EmissaryReaperBonesRole).ToList()
                          .ForEach(async x => await user.RevokeRoleAsync(x));
 
-                //Возможно нужно добавить кулдаун как при создании кораблей, но бот должен справится без проблем
+                //Выдаем роль в зависимости от реакции
                 switch (e.Emoji.GetDiscordName())
                 {
                     case ":moneybag:":
@@ -300,6 +300,7 @@ namespace SeaOfThieves
                     default:
                         break;
                 }
+                //Отправка в лог
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
                     $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
                     DateTime.Now.ToUniversalTime());
