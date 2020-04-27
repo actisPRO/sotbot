@@ -33,6 +33,11 @@ namespace SeaOfThieves
         public static Dictionary<DiscordUser, DateTime> ShipCooldowns = new Dictionary<DiscordUser, DateTime>();
 
         /// <summary>
+        ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
+        /// </summary>
+        public static Dictionary<DiscordUser, DateTime> EmojiCooldowns = new Dictionary<DiscordUser, DateTime>();
+
+        /// <summary>
         ///     DiscordClient бота.
         /// </summary>
         public DiscordClient Client { get; set; }
@@ -257,9 +262,16 @@ namespace SeaOfThieves
             if (e.Message.Id == BotSettings.EmissaryMessageId)
             {
                 await e.Message.DeleteReactionAsync(e.Emoji, e.User);
-                var user = (DiscordMember)e.User;
+
+                if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
+
+                // если проверка успешно пройдена, добавим пользователя
+                // в словарь кулдаунов
+                EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
                 //Проверка у пользователя уже существующих ролей эмисарства и их удаление
+                var user = (DiscordMember)e.User;
                 user.Roles.Where(x => x.Id == BotSettings.EmissaryGoldhoadersRole ||
                                 x.Id == BotSettings.EmissaryTradingCompanyRole ||
                                 x.Id == BotSettings.EmissaryOrderOfSoulsRole ||
