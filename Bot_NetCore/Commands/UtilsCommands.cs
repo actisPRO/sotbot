@@ -21,9 +21,10 @@ namespace SeaOfThieves.Commands
         public bool keepRainbow;
 
         [Command("config")]
+        [Description("Изменяет конфиг бота")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task GenerateDonatorMessage(CommandContext ctx, string param, string value)
+        public async Task GenerateDonatorMessage(CommandContext ctx, [Description("Параметр")] string param, [Description("Значение")] string value)
         {
             try
             {
@@ -110,6 +111,10 @@ namespace SeaOfThieves.Commands
         {
             try
             {
+                //TODO: Можно изменить на
+                //var message = await ctx.Guild.GetChannel(channelId).SendMessageAsync("**Топ донатов**");
+                //Bot.EditSettings("DonatorMessage", message.Id.ToString());
+                //Bot.ReloadSettings();
                 var message = await ctx.Guild.GetChannel(channelId).SendMessageAsync("**Топ донатов**");
                 var doc = XDocument.Load("settings.xml");
                 doc.Element("Settings").Element("DonatorMessage").Value = Convert.ToString(message.Id);
