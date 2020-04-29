@@ -30,7 +30,7 @@ namespace SeaOfThieves.Commands
                 Bot.EditSettings(param, value);
                 Bot.ReloadSettings();
 
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен параметр `{param}:{value}`");
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен параметр `{param}: {value}`");
             }
             catch (Exception ex)
             {

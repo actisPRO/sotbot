@@ -689,13 +689,17 @@ namespace SeaOfThieves
         {
             try
             {
-                if (param == "Token") throw new Exception("Unable to edit Bot Token");
+                if (param == "Token") throw new Exception("Невозможно изменить Token бота");
                 var doc = XDocument.Load("settings.xml", LoadOptions.PreserveWhitespace);
                 var elem = doc.Element("Settings").Element(param);
 
                 elem.Value = value;
                 doc.Save("settings.xml");
                 ReloadSettings();
+            }
+            catch (NullReferenceException)
+            {
+                throw new NullReferenceException("Не был найден указанный параметр");
             }
             catch (Exception ex)
             {
