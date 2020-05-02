@@ -321,23 +321,21 @@ namespace SeaOfThieves.Commands
             await InvitesLeaderboard(ctx.Guild);
         }
 
-        [Command("codexgen")]
+        [Command("codexmessage")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task CodexGenerateMessage(CommandContext ctx)
+        public async Task CodexMessage(CommandContext ctx, DiscordMessage message)
         {
-            var channel = ctx.Guild.GetChannel(Bot.BotSettings.CodexChannel);
-            var message = "**Я прочитал правила и обязуюсь их выполнять.**";
-            var messageEnt = await channel.SendMessageAsync(message);
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
-            using (var fs = File.Create("codex_message"))
-            using (var sw = new StreamWriter(fs))
-            {
-                sw.WriteLine(messageEnt.Id);
-            }
+            //Обновляем настроки бота
+            if (Bot.BotSettings.EmissaryMessageId != message.Id)
+                Bot.EditSettings("CodexMessageId", message.Id.ToString());
 
-            await messageEnt.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+            //Убираем все реакции с сообщения
+            await message.DeleteAllReactionsAsync();
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji}");
+            //Добавляем реакции к сообщению
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
         }
 
         [Command("throw")]
