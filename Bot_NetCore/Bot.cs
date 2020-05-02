@@ -460,15 +460,24 @@ namespace SeaOfThieves
                 //Вызывает NullReferenceException в случае если ссылка только для одного использования
                 var updatedInvite = guildInvites.ToList().Find(g => invites.Find(i => i.Code == g.Code).Uses < g.Uses);
 
+                //Если не удалось определить инвайт, значит его нет в новых так как к.во использований ограничено и он был удален
+                if(updatedInvite == null)
+                {
+                    updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
+                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) > DateTimeOffset.UtcNow))      //Проверяем если он не истёк
+                                           .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
+                }
+
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
                         $"приглашение {updatedInvite.Code} - {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
 
+                //Проверяем если пригласивший уже существует, если нет то создаем
                 if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
                     Inviter.Create(updatedInvite.Inviter.Id);
 
-                //Проверяет на уже существующие
+                //Проверяем если пользователь был ранее приглашен другими, если нет то вносим в список
                 if (!InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.Contains(e.Member.Id)))
                     InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
                 InviterList.SaveToXML(BotSettings.InviterXML);
