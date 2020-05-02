@@ -177,82 +177,46 @@ namespace SeaOfThieves
         {
             if (e.User.IsBot) return;
 
-            //Emissary Message
-            if (e.Message.Id == BotSettings.EmissaryMessageId) return;
-
-            var doc = XDocument.Load("users.xml");
-            var root = doc.Root;
-
-            foreach (var user in root.Elements())
-                if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
-                    if (user.Element("Status").Value == "False")
-                        return;
-
-            ulong messageId = 0;
-            try
+            //Проверка если сообщение с принятием правил
+            if (e.Message.Id == BotSettings.CodexMessageId)
             {
-                using (var fs = File.OpenRead("codex_message"))
-                using (var sr = new StreamReader(fs))
-                {
-                    messageId = Convert.ToUInt64(sr.ReadLine());
-                }
-            }
-            catch (FileNotFoundException)
-            {
+                //При надобности добавить кулдаун
+                //if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                //    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
+
+                //// если проверка успешно пройдена, добавим пользователя
+                //// в словарь кулдаунов
+                //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
+
+                var user = (DiscordMember)e.User;
+                if (user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+
                 return;
             }
 
-            if (e.Message.Id == messageId)
-                await e.Channel.Guild.RevokeRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
-                    e.Channel.Guild.GetRole(BotSettings.CodexRole), "");
-
-            foreach (var user in root.Elements())
-                if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
-                {
-                    user.Remove();
-                    break;
-                }
-
-            doc.Save("users.xml");
+            //Emissary Message
+            if (e.Message.Id == BotSettings.EmissaryMessageId) return;
         }
 
         private async Task ClientOnMessageReactionAdded(MessageReactionAddEventArgs e)
         {
             if (e.User.IsBot) return;
 
-            //first check if message is codex confirmation
-            ulong messageId = 0;
-            try
+            //Проверка если сообщение с принятием правил
+            if (e.Message.Id == BotSettings.CodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
             {
-                using (var fs = File.OpenRead("codex_message"))
-                using (var sr = new StreamReader(fs))
-                {
-                    messageId = Convert.ToUInt64(sr.ReadLine());
-                }
-            }
-            catch (FileNotFoundException)
-            {
-                File.Create("codex_message");
-            }
+                //При надобности добавить кулдаун
+                //if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                //    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
 
-            if (e.Message.Id == messageId)
-            {
-                var doc = XDocument.Load("users.xml");
-                var root = doc.Root;
+                //// если проверка успешно пройдена, добавим пользователя
+                //// в словарь кулдаунов
+                //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
-                foreach (var user in root.Elements())
-                    if (Convert.ToUInt64(user.Element("Id").Value) == e.User.Id)
-                        if (user.Element("Status").Value == "False")
-                            return;
-
-                await e.Channel.Guild.GrantRoleAsync(await e.Channel.Guild.GetMemberAsync(e.User.Id),
-                    e.Channel.Guild.GetRole(BotSettings.CodexRole));
-
-                var newEl = new XElement("Users", new XElement("Id", e.User.Id), new XElement("Date", DateTime.Now),
-                    new XElement("Status", true));
-                root.Add(newEl);
-
-                doc.Save("users.xml");
+                var user = (DiscordMember)e.User;
+                if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                    await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
 
                 return;
             }
@@ -303,6 +267,8 @@ namespace SeaOfThieves
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
                     $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
                     DateTime.Now.ToUniversalTime());
+
+                return;
             }
 
             //then check if it is private ship confirmation message
@@ -999,8 +965,14 @@ namespace SeaOfThieves
         /// </summary>
         public ulong Developer;
 
-        public ulong CodexChannel;
+        /// <summary>
+        ///     Id сообщения правил
+        /// </summary>
+        public ulong CodexMessageId;
 
+        /// <summary>
+        ///     Id роли правил
+        /// </summary>
         public ulong CodexRole;
 
         /// <summary>
