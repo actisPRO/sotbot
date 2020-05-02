@@ -24,7 +24,7 @@ namespace SeaOfThieves.Commands
         [Description("Изменяет конфиг бота")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task GenerateDonatorMessage(CommandContext ctx, [Description("Параметр")] string param, [Description("Значение")] string value)
+        public async Task Config(CommandContext ctx, [Description("Параметр")] string param, [Description("Значение")] string value)
         {
             try
             {
@@ -33,7 +33,7 @@ namespace SeaOfThieves.Commands
 
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен параметр `{param}: {value}`");
             }
-            catch (Exception ex)
+            catch (NullReferenceException ex)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось изменить параметр `{param}: {value}` | `{ex.Message}`");
             }
@@ -101,28 +101,6 @@ namespace SeaOfThieves.Commands
             catch (NotFoundException)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не найден.");
-            }
-        }
-
-        [Command("generateDonatorMessage")]
-        [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
-        public async Task GenerateDonatorMessage(CommandContext ctx, ulong channelId)
-        {
-            try
-            {
-                //TODO: Можно изменить на
-                //var message = await ctx.Guild.GetChannel(channelId).SendMessageAsync("**Топ донатов**");
-                //Bot.EditSettings("DonatorMessage", message.Id.ToString());
-                //Bot.ReloadSettings();
-                var message = await ctx.Guild.GetChannel(channelId).SendMessageAsync("**Топ донатов**");
-                var doc = XDocument.Load("settings.xml");
-                doc.Element("Settings").Element("DonatorMessage").Value = Convert.ToString(message.Id);
-                Bot.ReloadSettings();
-            }
-            catch (Exception)
-            {
-                await ctx.RespondAsync("**ERRORED**");
             }
         }
 
@@ -334,20 +312,13 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member) //Обновляет статус отображения пользователя в leaderboard
         {
-            try
-            {
-                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
-                InviterList.Inviters.Where(x => x.Key == member.Id).ToList()
-                    .ForEach(x => x.Value.UpdateState(!x.Value.Active));
-                InviterList.SaveToXML(Bot.BotSettings.InviterXML);
+            InviterList.Inviters.Where(x => x.Key == member.Id).ToList()
+                .ForEach(x => x.Value.UpdateState(!x.Value.Active));
+            InviterList.SaveToXML(Bot.BotSettings.InviterXML);
 
-                await InvitesLeaderboard(ctx.Guild);
-            }
-            catch (Exception ex)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Произошла ошибка при выполнении команды! {ex.Message}");
-            }
+            await InvitesLeaderboard(ctx.Guild);
         }
 
         [Command("codexgen")]
@@ -482,29 +453,22 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            try
-            {
-                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
-                //Обновляем настроки бота
-                if(Bot.BotSettings.EmissaryMessageId != message.Id)
-                    Bot.EditSettings("EmissaryMessageId", message.Id.ToString());
+            //Обновляем настроки бота
+            if(Bot.BotSettings.EmissaryMessageId != message.Id)
+                Bot.EditSettings("EmissaryMessageId", message.Id.ToString());
 
-                //Убираем все реакции с сообщения
-                await message.DeleteAllReactionsAsync();
+            //Убираем все реакции с сообщения
+            await message.DeleteAllReactionsAsync();
 
-                //Добавляем реакции к сообщению
-                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
-                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
-                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
-                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
-                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:"));
-                await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
-            }
-            catch (Exception ex)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Произошла ошибка при выполнении команды! {ex.Message}");
-            }
+            //Добавляем реакции к сообщению
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
         }
 
