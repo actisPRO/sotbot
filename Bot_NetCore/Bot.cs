@@ -136,6 +136,7 @@ namespace SeaOfThieves
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
 
             Commands.CommandErrored += CommandsOnCommandErrored;
+            Commands.CommandExecuted += CommandsOnCommandExecuted;
 
             await Client.ConnectAsync();
 
@@ -146,6 +147,11 @@ namespace SeaOfThieves
             unbanCheck.Enabled = true;
 
             await Task.Delay(-1);
+        }
+
+        private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
+        {
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}", DateTime.Now);
         }
 
         private async void DebugLoggerOnLogMessageReceived(object? sender, DebugLogMessageEventArgs e)
@@ -175,7 +181,7 @@ namespace SeaOfThieves
             }
 
             //файл для удобного парсинга
-            using (var fs = new FileStream(fileName + ".csv", FileMode.Append))
+            using (var fs = new FileStream("logfile-" + fileName + ".csv", FileMode.Append))
             {
                 using (var sw = new StreamWriter(fs))
                 {
@@ -184,7 +190,7 @@ namespace SeaOfThieves
             }
 
             //файл для удобного просмотра
-            using (var fs = new FileStream(fileName + ".log", FileMode.Append))
+            using (var fs = new FileStream("logfile-" + fileName + ".log", FileMode.Append))
             {
                 using (var sw = new StreamWriter(fs))
                 {
