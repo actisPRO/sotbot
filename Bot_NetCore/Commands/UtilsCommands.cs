@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -59,10 +59,14 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("whois")]
-        [RequirePermissions(Permissions.Administrator)]
         [Hidden]
         public async Task WhoIs(CommandContext ctx, DiscordMember member)
         {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
             try
             {
                 var embed = new DiscordEmbedBuilder();
@@ -95,6 +99,15 @@ namespace SeaOfThieves.Commands
                         }
 
                 embed.AddField("Владелец приватного корабля", privateShip);
+
+                var codex = "Не принял";
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) codex = "Принял";
+                if (PurgeList.PurgeMembers.ContainsKey(member.Id))
+                    if (PurgeList.PurgeMembers[member.Id].Expired())
+                        codex = "Не принял после раблокировки";
+                    else
+                        codex = "Заблокирован";
+                embed.AddField("Правила", codex, true);
 
                 await ctx.RespondAsync(embed: embed.Build());
             }

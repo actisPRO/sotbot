@@ -2,6 +2,7 @@
 using DSharpPlus.Interactivity;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Bot_NetCore.Misc
 {
@@ -44,6 +45,27 @@ namespace Bot_NetCore.Misc
                 page++;
             }
             return result;
+        }
+
+        //Парсит формат даты на подобии 1d2h30m, 1d, 30m10s
+        //Добавлены дни, взято отсюда: 
+        //https://stackoverflow.com/questions/47702094/parse-the-string-26h44m3s-to-timespan-in-c-sharp
+        public static TimeSpan TimeSpanParse(string input)
+        {
+            var m = Regex.Match(input, @"^((?<days>\d+)d)?((?<hours>\d+)h)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$", 
+                RegexOptions.ExplicitCapture | RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.RightToLeft);
+
+            int ds = m.Groups["days"].Success ? int.Parse(m.Groups["days"].Value) : 0;
+            int hs = m.Groups["hours"].Success ? int.Parse(m.Groups["hours"].Value) : 0;
+            int ms = m.Groups["minutes"].Success ? int.Parse(m.Groups["minutes"].Value) : 0;
+            int ss = m.Groups["seconds"].Success ? int.Parse(m.Groups["seconds"].Value) : 0;
+
+            return TimeSpan.FromSeconds(ds * 24 * 60 * 60 + hs * 60 * 60 + ms * 60 + ss);
+        }
+
+        public static string FormatTimespan(TimeSpan time)
+        {
+            return string.Format("{0:D1}d {1}:{2}:{3}", time.Days, time.Hours, time.Minutes, time.Seconds);
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Bot_NetCore.Entities;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -59,6 +61,79 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
+        }
+
+        [Command("purge")]
+        [Aliases("p")]
+        [Hidden]
+        public async Task Purge(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана")
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+            var purge = new PurgeMember(user.Id,
+                DateTime.Now,
+                Utility.TimeSpanParse(duration),
+                ctx.Member.Id,
+                reason);
+
+            //Возможна только одна блокировка, если уже существует то перезаписываем
+            if (!PurgeList.PurgeMembers.ContainsKey(user.Id))
+                PurgeList.PurgeMembers.Add(user.Id, purge);
+            else
+                PurgeList.PurgeMembers[user.Id].UpdatePurge(DateTime.Now,
+                    Utility.TimeSpanParse(duration),
+                    ctx.Member.Id,
+                    reason);
+
+            //Сохраняем в файл
+            PurgeList.SaveToXML(Bot.BotSettings.PurgeXML);
+
+            //Убираем роль правил
+            await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
+
+            //Отправка сообщения в лс
+            try
+            {
+                await user.SendMessageAsync(
+                    $"**Еще раз внимательно прочитайте правила сервера**\n\n" +
+                    $"**Возможность принять правила заблокирована**\n" +
+                    $"**Разблокировка через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
+                    $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
+                    $"**Причина:** {purge.Reason}");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+
+            //Отправка в журнал
+            await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                "**Блокировка принятия правил**\n\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {user}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Разблокировка через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
+                 $"**Причина:** {reason}");
+
+            //Ответное сообщение в чат
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
+                                   $"Разблокировка через: {Utility.FormatTimespan(purge.PurgeDuration)}!");
+        }
+
+        //TODO
+        [Command("mute")]
+        [Aliases("m")]
+        [Hidden]
+        public async Task Mute(CommandContext ctx, DiscordMember member, string time, [RemainingText] string reason = "Не указана")
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
         }
 
         [Command("warn")]

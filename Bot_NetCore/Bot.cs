@@ -15,6 +15,8 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
+using Bot_NetCore.Entities;
+using Bot_NetCore.Misc;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -81,6 +83,7 @@ namespace SeaOfThieves
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
+            PurgeList.ReadFromXML(BotSettings.PurgeXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -188,6 +191,7 @@ namespace SeaOfThieves
                 //// в словарь кулдаунов
                 //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
+                //Забираем роль
                 var user = (DiscordMember)e.User;
                 if (user.Roles.Any(x => x.Id == BotSettings.CodexRole))
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
@@ -207,13 +211,37 @@ namespace SeaOfThieves
             if (e.Message.Id == BotSettings.CodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
             {
                 //При надобности добавить кулдаун
-                //if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
-                //    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
+                /*if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
 
-                //// если проверка успешно пройдена, добавим пользователя
-                //// в словарь кулдаунов
-                //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
+                // если проверка успешно пройдена, добавим пользователя
+                // в словарь кулдаунов
+                EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);*/
 
+                //Проверка на purge
+                if (PurgeList.PurgeMembers.ContainsKey(e.User.Id))
+                    if (!PurgeList.PurgeMembers[e.User.Id].Expired()) //Проверка истекшей блокировки
+                    {
+                        var moderator = await e.Channel.Guild.GetMemberAsync(PurgeList.PurgeMembers[e.User.Id].Moderator);
+                        try
+                        {
+                            await ((DiscordMember)e.User).SendMessageAsync(
+                                "**Возможность принять правила заблокирована**\n" +
+                                $"**Разблокировка через:** {Utility.FormatTimespan(PurgeList.PurgeMembers[e.User.Id].getRemainingTime())}\n" +
+                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                                $"**Причина:** {PurgeList.PurgeMembers[e.User.Id].Reason}\n");
+                        }
+
+                        catch (UnauthorizedException)
+                        {
+                            //user can block the bot
+                        }
+                        return;
+                    }
+                    else
+                        PurgeList.PurgeMembers.Remove(e.User.Id); //Удаляем блокировку если истекла
+
+                //Выдаем роль правил
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
@@ -964,6 +992,11 @@ namespace SeaOfThieves
         ///     Этому пользователю будут отправляться уведомление об ошибках.
         /// </summary>
         public ulong Developer;
+
+        /// <summary>
+        ///     Путь до файла с блокировкой правил.
+        /// </summary>
+        public string PurgeXML;
 
         /// <summary>
         ///     Id сообщения правил
