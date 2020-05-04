@@ -50,6 +50,7 @@ namespace SeaOfThieves.Entities
             InviterId = id;
             Referrals = new List<ulong>();
             Active = true;
+
             InviterList.Inviters[InviterId] = this;
         }
 

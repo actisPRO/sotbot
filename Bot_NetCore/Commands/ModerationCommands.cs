@@ -66,7 +66,7 @@ namespace SeaOfThieves.Commands
         [Command("purge")]
         [Aliases("p")]
         [Hidden]
-        public async Task Purge(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана")
+        public async Task Purge(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -100,7 +100,7 @@ namespace SeaOfThieves.Commands
                 await user.SendMessageAsync(
                     $"**Еще раз внимательно прочитайте правила сервера**\n\n" +
                     $"**Возможность принять правила заблокирована**\n" +
-                    $"**Разблокировка через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
                     $"**Причина:** {purge.Reason}");
             }
@@ -115,12 +115,12 @@ namespace SeaOfThieves.Commands
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {user}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-                 $"**Разблокировка через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
                  $"**Причина:** {reason}");
 
             //Ответное сообщение в чат
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
-                                   $"Разблокировка через: {Utility.FormatTimespan(purge.PurgeDuration)}!");
+                                   $"Снятие через: {Utility.FormatTimespan(purge.PurgeDuration)}!");
         }
 
         //TODO
@@ -134,6 +134,8 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда в разработке!");
         }
 
         [Command("warn")]
@@ -259,8 +261,7 @@ namespace SeaOfThieves.Commands
 
         [Command("ban")]
         [Hidden]
-        public async Task Ban(CommandContext ctx, DiscordUser member, int mins, int hours = 0, int days = 0,
-            [RemainingText] string reason = "Не указана")
+        public async Task Ban(CommandContext ctx, DiscordUser member, string duration = "1d", [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -268,22 +269,20 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var unbanDate = DateTime.Now.ToUniversalTime();
+            var durationTimeSpan = Utility.TimeSpanParse(duration);
 
-            unbanDate = unbanDate.AddMinutes(mins);
-            unbanDate = unbanDate.AddHours(hours);
-            unbanDate = unbanDate.AddDays(days);
+            var unbanDate = DateTime.Now.ToUniversalTime().Add(durationTimeSpan);
 
             var banId = RandomString.NextString(6);
 
-            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
+            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now.ToUniversalTime(), ctx.Member.Id, reason, banId);
             BanList.SaveToXML(Bot.BotSettings.BanXML);
 
             try
             {
                 var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
                 await guildMember.SendMessageAsync(
-                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** до **{unbanDate} UTC**. " +
+                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** на **{Utility.FormatTimespan(durationTimeSpan)}** до **{unbanDate} UTC **. " +
                     $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
                 await guildMember.BanAsync(0, reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
             }
@@ -300,11 +299,12 @@ namespace SeaOfThieves.Commands
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-                $"**Разблокировка:** {unbanDate} UTC\n" +
+                $"**Разблокировка:** {unbanDate} UTC | {Utility.FormatTimespan(durationTimeSpan)}\n" +
                 $"**ID бана:** {banId}\n" +
                 $"**Причина:** {reason}\n");
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан! " +
+                                   $"Снятие через: {Utility.FormatTimespan(durationTimeSpan)}!");
         }
 
         [Command("unban")]

@@ -155,8 +155,8 @@ namespace SeaOfThieves
         private async void UnbanCheckOnElapsed(object sender, ElapsedEventArgs e)
         {
             var toUnban = from ban in BanList.BannedMembers.Values
-                where ban.UnbanDateTime <= DateTime.Now
-                select ban;
+                          where ban.UnbanDateTime.ToUniversalTime() <= DateTime.Now.ToUniversalTime()
+                          select ban;
 
             var guild = await Client.GetGuildAsync(BotSettings.Guild);
             foreach (var ban in toUnban)
@@ -171,6 +171,12 @@ namespace SeaOfThieves
                 }
                 
                 ban.Unban();
+
+                await guild.GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
+                    "**Снятие Бана**\n\n" +
+                    $"**Модератор:** {Client.CurrentUser.Username}\n" +
+                    $"**Пользователь:** {await Client.GetUserAsync(ban.Id)}\n" +
+                    $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
             }
             
             BanList.SaveToXML(BotSettings.BanXML);
@@ -227,7 +233,7 @@ namespace SeaOfThieves
                         {
                             await ((DiscordMember)e.User).SendMessageAsync(
                                 "**Возможность принять правила заблокирована**\n" +
-                                $"**Разблокировка через:** {Utility.FormatTimespan(PurgeList.PurgeMembers[e.User.Id].getRemainingTime())}\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(PurgeList.PurgeMembers[e.User.Id].getRemainingTime())}\n" +
                                 $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
                                 $"**Причина:** {PurgeList.PurgeMembers[e.User.Id].Reason}\n");
                         }
