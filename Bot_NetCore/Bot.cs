@@ -273,7 +273,8 @@ namespace SeaOfThieves
                                 x.Id == BotSettings.EmissaryTradingCompanyRole ||
                                 x.Id == BotSettings.EmissaryOrderOfSoulsRole ||
                                 x.Id == BotSettings.EmissaryAthenaRole ||
-                                x.Id == BotSettings.EmissaryReaperBonesRole).ToList()
+                                x.Id == BotSettings.EmissaryReaperBonesRole ||
+                                x.Id == BotSettings.ArenaRole).ToList()
                          .ForEach(async x => await user.RevokeRoleAsync(x));
 
                 //Выдаем роль в зависимости от реакции
@@ -293,6 +294,9 @@ namespace SeaOfThieves
                         break;
                     case ":skull_crossbones:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryReaperBonesRole));
+                        break;
+                    case ":crossed_swords:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.ArenaRole));
                         break;
                     default:
                         break;
@@ -594,6 +598,9 @@ namespace SeaOfThieves
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
                         else if (x.Id == BotSettings.EmissaryReaperBonesRole)
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                        else if (x.Id == BotSettings.ArenaRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":crossed_swords:");
+
                     });
 
                     DiscordChannel created = null;
@@ -1043,6 +1050,11 @@ namespace SeaOfThieves
         ///     Id роли эмиссарства
         /// </summary>
         public ulong EmissaryReaperBonesRole;
+
+        /// <summary>
+        ///     Id роли арены
+        /// </summary>
+        public ulong ArenaRole;
     }
 
     public enum CommandType
