@@ -274,6 +274,7 @@ namespace SeaOfThieves
                                 x.Id == BotSettings.EmissaryOrderOfSoulsRole ||
                                 x.Id == BotSettings.EmissaryAthenaRole ||
                                 x.Id == BotSettings.EmissaryReaperBonesRole ||
+                                x.Id == BotSettings.HuntersRole ||
                                 x.Id == BotSettings.ArenaRole).ToList()
                          .ForEach(async x => await user.RevokeRoleAsync(x));
 
@@ -294,6 +295,9 @@ namespace SeaOfThieves
                         break;
                     case ":skull_crossbones:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryReaperBonesRole));
+                        break;
+                    case ":fish:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.HuntersRole));
                         break;
                     case ":crossed_swords:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.ArenaRole));
@@ -598,6 +602,8 @@ namespace SeaOfThieves
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
                         else if (x.Id == BotSettings.EmissaryReaperBonesRole)
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                        else if (x.Id == BotSettings.HuntersRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":fish:");
                         else if (x.Id == BotSettings.ArenaRole)
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":crossed_swords:");
 
@@ -1050,6 +1056,11 @@ namespace SeaOfThieves
         ///     Id роли эмиссарства
         /// </summary>
         public ulong EmissaryReaperBonesRole;
+
+        /// <summary>
+        ///     Id роли охотников
+        /// </summary>
+        public ulong HuntersRole;
 
         /// <summary>
         ///     Id роли арены
