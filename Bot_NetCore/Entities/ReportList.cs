@@ -54,8 +54,8 @@ namespace Bot_NetCore.Entities
         {
             var xElement = new XElement("Report");
             xElement.Add(new XElement("Id", report.Id));
-            xElement.Add(new XElement("PurgeDateTime", report.PurgeDateTime));
-            xElement.Add(new XElement("PurgeDuration", report.PurgeDuration.ToString()));
+            xElement.Add(new XElement("ReportDateTime", report.ReportDateTime));
+            xElement.Add(new XElement("ReportDuration", report.ReportDuration.ToString()));
             xElement.Add(new XElement("Moderator", report.Moderator));
             xElement.Add(new XElement("Reason", report.Reason));
             return xElement;
@@ -65,8 +65,8 @@ namespace Bot_NetCore.Entities
         {
             return new MemberReport(
                         Convert.ToUInt64(element.Element("Id").Value),
-                        Convert.ToDateTime(element.Element("PurgeDateTime").Value),
-                        TimeSpan.Parse(element.Element("PurgeDuration").Value),
+                        Convert.ToDateTime(element.Element("ReportDateTime").Value),
+                        TimeSpan.Parse(element.Element("ReportDuration").Value),
                         Convert.ToUInt64(element.Element("Moderator").Value),
                         element.Element("Reason").Value);
         }
@@ -74,42 +74,42 @@ namespace Bot_NetCore.Entities
 
     public class MemberReport
     {
-        public MemberReport(ulong id, DateTime purgeDateTime, TimeSpan purgeDuration, ulong moderator, string reason)
+        public MemberReport(ulong id, DateTime reportDateTime, TimeSpan reportDuration, ulong moderator, string reason)
         {
             Id = id;
-            PurgeDateTime = purgeDateTime;
-            PurgeDuration = purgeDuration;
+            ReportDateTime = reportDateTime;
+            ReportDuration = reportDuration;
             Moderator = moderator;
             Reason = reason;
         }
 
         public ulong Id { get; }
-        public DateTime PurgeDateTime { get; private set; }
-        public TimeSpan PurgeDuration { get; private set; }
+        public DateTime ReportDateTime { get; private set; }
+        public TimeSpan ReportDuration { get; private set; }
         public ulong Moderator { get; private set; }
         public string Reason { get; private set; }
 
-        public void UpdatePurge(DateTime purgeDateTime, TimeSpan purgeDuration, ulong moderator, string reason)
+        public void UpdateReport(DateTime reportDateTime, TimeSpan reportDuration, ulong moderator, string reason)
         {
-            PurgeDateTime = purgeDateTime;
-            PurgeDuration = purgeDuration;
+            ReportDateTime = reportDateTime;
+            ReportDuration = reportDuration;
             Moderator = moderator;
             Reason = reason;
         }
 
         public bool Expired()
         {
-            return (PurgeDateTime.Add(PurgeDuration) - DateTime.Now).TotalSeconds <= 0;
+            return (ReportDateTime.Add(ReportDuration) - DateTime.Now).TotalSeconds <= 0;
         }
 
         public DateTime getExpirationDateTime()
         {
-            return PurgeDateTime.Add(PurgeDuration);
+            return ReportDateTime.Add(ReportDuration);
         }
 
         public TimeSpan getRemainingTime()
         {
-            return PurgeDateTime.Add(PurgeDuration) - DateTime.Now;
+            return ReportDateTime.Add(ReportDuration) - DateTime.Now;
         }
     }
 }

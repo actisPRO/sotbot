@@ -83,7 +83,7 @@ namespace SeaOfThieves.Commands
             if (!ReportList.CodexPurges.ContainsKey(user.Id))
                 ReportList.CodexPurges.Add(user.Id, purge);
             else
-                ReportList.CodexPurges[user.Id].UpdatePurge(DateTime.Now,
+                ReportList.CodexPurges[user.Id].UpdateReport(DateTime.Now,
                     Utility.TimeSpanParse(duration),
                     ctx.Member.Id,
                     reason);
@@ -120,7 +120,7 @@ namespace SeaOfThieves.Commands
 
             //Ответное сообщение в чат
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
-                                   $"Снятие через: {Utility.FormatTimespan(purge.PurgeDuration)}!");
+                                   $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
         }
 
         //TODO
