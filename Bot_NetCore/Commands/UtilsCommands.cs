@@ -102,8 +102,8 @@ namespace SeaOfThieves.Commands
 
                 var codex = "Не принял";
                 if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) codex = "Принял";
-                if (PurgeList.PurgeMembers.ContainsKey(member.Id))
-                    if (PurgeList.PurgeMembers[member.Id].Expired())
+                if (ReportList.CodexPurges.ContainsKey(member.Id))
+                    if (ReportList.CodexPurges[member.Id].Expired())
                         codex = "Не принял после раблокировки";
                     else
                         codex = "Заблокирован";

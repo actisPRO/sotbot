@@ -73,23 +73,23 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-            var purge = new PurgeMember(user.Id,
+            var purge = new MemberReport(user.Id,
                 DateTime.Now,
                 Utility.TimeSpanParse(duration),
                 ctx.Member.Id,
                 reason);
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!PurgeList.PurgeMembers.ContainsKey(user.Id))
-                PurgeList.PurgeMembers.Add(user.Id, purge);
+            if (!ReportList.CodexPurges.ContainsKey(user.Id))
+                ReportList.CodexPurges.Add(user.Id, purge);
             else
-                PurgeList.PurgeMembers[user.Id].UpdatePurge(DateTime.Now,
+                ReportList.CodexPurges[user.Id].UpdatePurge(DateTime.Now,
                     Utility.TimeSpanParse(duration),
                     ctx.Member.Id,
                     reason);
 
             //Сохраняем в файл
-            PurgeList.SaveToXML(Bot.BotSettings.PurgeXML);
+            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
 
             //Убираем роль правил
             await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));

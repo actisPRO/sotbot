@@ -82,7 +82,7 @@ namespace SeaOfThieves
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
-            PurgeList.ReadFromXML(BotSettings.PurgeXML);
+            ReportList.ReadFromXML(BotSettings.ReportsXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -154,9 +154,14 @@ namespace SeaOfThieves
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}", DateTime.Now);
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
+                    "Bot",
+                    $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    DateTime.Now);
+            return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
 
+#nullable enable //Выдавало warning
         private async void DebugLoggerOnLogMessageReceived(object? sender, DebugLogMessageEventArgs e)
         {
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
@@ -184,7 +189,7 @@ namespace SeaOfThieves
             }
 
             //файл для удобного парсинга
-            using (var fs = new FileStream("logfile-" + fileName + ".csv", FileMode.Append))
+            using (var fs = new FileStream(fileName + ".csv", FileMode.Append))
             {
                 using (var sw = new StreamWriter(fs))
                 {
@@ -193,7 +198,7 @@ namespace SeaOfThieves
             }
 
             //файл для удобного просмотра
-            using (var fs = new FileStream("logfile-" + fileName + ".log", FileMode.Append))
+            using (var fs = new FileStream(fileName + ".log", FileMode.Append))
             {
                 using (var sw = new StreamWriter(fs))
                 {
@@ -201,6 +206,7 @@ namespace SeaOfThieves
                 }
             }
         }
+#nullable disable
 
         private async void UnbanCheckOnElapsed(object sender, ElapsedEventArgs e)
         {
@@ -277,17 +283,17 @@ namespace SeaOfThieves
                 EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);*/
 
                 //Проверка на purge
-                if (PurgeList.PurgeMembers.ContainsKey(e.User.Id))
-                    if (!PurgeList.PurgeMembers[e.User.Id].Expired()) //Проверка истекшей блокировки
+                if (ReportList.CodexPurges.ContainsKey(e.User.Id))
+                    if (!ReportList.CodexPurges[e.User.Id].Expired()) //Проверка истекшей блокировки
                     {
-                        var moderator = await e.Channel.Guild.GetMemberAsync(PurgeList.PurgeMembers[e.User.Id].Moderator);
+                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.CodexPurges[e.User.Id].Moderator);
                         try
                         {
                             await ((DiscordMember)e.User).SendMessageAsync(
                                 "**Возможность принять правила заблокирована**\n" +
-                                $"**Снятие через:** {Utility.FormatTimespan(PurgeList.PurgeMembers[e.User.Id].getRemainingTime())}\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.CodexPurges[e.User.Id].getRemainingTime())}\n" +
                                 $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
-                                $"**Причина:** {PurgeList.PurgeMembers[e.User.Id].Reason}\n");
+                                $"**Причина:** {ReportList.CodexPurges[e.User.Id].Reason}\n");
                         }
 
                         catch (UnauthorizedException)
@@ -297,7 +303,7 @@ namespace SeaOfThieves
                         return;
                     }
                     else
-                        PurgeList.PurgeMembers.Remove(e.User.Id); //Удаляем блокировку если истекла
+                        ReportList.CodexPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
 
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
@@ -1088,7 +1094,7 @@ namespace SeaOfThieves
         /// <summary>
         ///     Путь до файла с блокировкой правил.
         /// </summary>
-        public string PurgeXML;
+        public string ReportsXML;
 
         /// <summary>
         ///     Id сообщения правил
