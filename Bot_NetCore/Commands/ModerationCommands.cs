@@ -73,6 +73,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
+
             var purge = new MemberReport(user.Id,
                 DateTime.Now,
                 Utility.TimeSpanParse(duration),
@@ -100,7 +101,7 @@ namespace SeaOfThieves.Commands
                 await user.SendMessageAsync(
                     $"**Еще раз внимательно прочитайте правила сервера**\n\n" +
                     $"**Возможность принять правила заблокирована**\n" +
-                    $"**Снятие через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
                     $"**Причина:** {purge.Reason}");
             }
@@ -115,7 +116,7 @@ namespace SeaOfThieves.Commands
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {user}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-                 $"**Снятие через:** {Utility.FormatTimespan(purge.getRemainingTime())}\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
             //Ответное сообщение в чат
@@ -123,11 +124,10 @@ namespace SeaOfThieves.Commands
                                    $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
         }
 
-        //TODO
         [Command("mute")]
         [Aliases("m")]
         [Hidden]
-        public async Task Mute(CommandContext ctx, DiscordMember member, string time, [RemainingText] string reason = "Не указана")
+        public async Task Mute(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -135,7 +135,53 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда в разработке!");
+            var mute = new MemberReport(user.Id,
+                DateTime.Now,
+                Utility.TimeSpanParse(duration),
+                ctx.Member.Id,
+                reason);
+
+            //Возможна только одна блокировка, если уже существует то перезаписываем
+            if (!ReportList.Mutes.ContainsKey(user.Id))
+                ReportList.Mutes.Add(user.Id, mute);
+            else
+                ReportList.Mutes[user.Id].UpdateReport(DateTime.Now,
+                    Utility.TimeSpanParse(duration),
+                    ctx.Member.Id,
+                    reason);
+
+            //Сохраняем в файл
+            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+
+            //Выдаем роль мута
+            await user.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.MuteRole));
+
+            //Отправка сообщения в лс
+            try
+            {
+                await user.SendMessageAsync(
+                    $"**Вам выдан мут**\n\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
+                    $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
+                    $"**Причина:** {reason}");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+
+            //Отправка в журнал
+            await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                "**Мут**\n\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {user}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
+                 $"**Причина:** {reason}");
+
+            //Ответное сообщение в чат
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут. " +
+                                   $"Снятие через: {Utility.FormatTimespan(mute.ReportDuration)}!");
         }
 
         [Command("warn")]

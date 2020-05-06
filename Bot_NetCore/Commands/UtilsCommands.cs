@@ -101,13 +101,20 @@ namespace SeaOfThieves.Commands
                 embed.AddField("Владелец приватного корабля", privateShip);
 
                 var codex = "Не принял";
-                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) codex = "Принял";
-                if (ReportList.CodexPurges.ContainsKey(member.Id))
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) 
+                    codex = "Принял";
+                else if (ReportList.CodexPurges.ContainsKey(member.Id))
                     if (ReportList.CodexPurges[member.Id].Expired())
                         codex = "Не принял после раблокировки";
                     else
                         codex = "Заблокирован";
                 embed.AddField("Правила", codex, true);
+
+                var mute = "Нет";
+                if (ReportList.Mutes.ContainsKey(member.Id))
+                    if (!ReportList.Mutes[member.Id].Expired())
+                        mute = Utility.FormatTimespan(ReportList.Mutes[member.Id].getRemainingTime());
+                embed.AddField("Мут", mute, true);
 
                 await ctx.RespondAsync(embed: embed.Build());
             }

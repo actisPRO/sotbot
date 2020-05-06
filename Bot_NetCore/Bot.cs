@@ -144,10 +144,10 @@ namespace SeaOfThieves
             await Client.ConnectAsync();
 
             //Таймер, который каждую минуту проверяет все баны и удаляет истёкшие.
-            var unbanCheck = new Timer(60000);
-            unbanCheck.Elapsed += UnbanCheckOnElapsed;
-            unbanCheck.AutoReset = true;
-            unbanCheck.Enabled = true;
+            var checkExpiredReports = new Timer(60000);
+            checkExpiredReports.Elapsed += CheckExpiredReports;
+            checkExpiredReports.AutoReset = true;
+            checkExpiredReports.Enabled = true;
 
             await Task.Delay(-1);
         }
@@ -208,8 +208,9 @@ namespace SeaOfThieves
         }
 #nullable disable
 
-        private async void UnbanCheckOnElapsed(object sender, ElapsedEventArgs e)
+        private async void CheckExpiredReports(object sender, ElapsedEventArgs e)
         {
+            //Check for expired bans
             var toUnban = from ban in BanList.BannedMembers.Values
                           where ban.UnbanDateTime.ToUniversalTime() <= DateTime.Now.ToUniversalTime()
                           select ban;
@@ -238,6 +239,24 @@ namespace SeaOfThieves
             BanList.SaveToXML(BotSettings.BanXML);
 
             Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Бан-лист был обновлён.", DateTime.Now);
+
+            //Check for expired mutes
+            var count = ReportList.Mutes.Count;
+            ReportList.Mutes.Values.Where(x => x.Expired()).ToList()
+                .ForEach(async x =>
+                {
+                    ReportList.Mutes.Remove(x.Id);
+                    try
+                    {
+                        await guild.RevokeRoleAsync(await guild.GetMemberAsync(x.Id), guild.GetRole(BotSettings.MuteRole), "Unmuted");
+                    }
+                    catch (NotFoundException)
+                    {
+                        //Пользователь не найден
+                    }
+                });
+            if (count != ReportList.Mutes.Count)
+                ReportList.SaveToXML(BotSettings.ReportsXML);
         }
 
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
@@ -1097,52 +1116,57 @@ namespace SeaOfThieves
         public string ReportsXML;
 
         /// <summary>
-        ///     Id сообщения правил
+        ///     Id сообщения правил.
         /// </summary>
         public ulong CodexMessageId;
 
         /// <summary>
-        ///     Id роли правил
+        ///     Id роли правил.
         /// </summary>
         public ulong CodexRole;
 
         /// <summary>
-        /// Id сообщения эмиссарства
+        ///     Id роли мута.
+        /// </summary>
+        public ulong MuteRole;
+
+        /// <summary>
+        /// Id сообщения эмиссарства.
         /// </summary>
         public ulong EmissaryMessageId;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryGoldhoadersRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryTradingCompanyRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryOrderOfSoulsRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryAthenaRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryReaperBonesRole;
 
         /// <summary>
-        ///     Id роли охотников
+        ///     Id роли охотников.
         /// </summary>
         public ulong HuntersRole;
 
         /// <summary>
-        ///     Id роли арены
+        ///     Id роли арены.
         /// </summary>
         public ulong ArenaRole;
     }
