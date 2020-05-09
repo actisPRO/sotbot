@@ -803,7 +803,7 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        ///     Загрузка и перезагрузка настроек
+        ///     Обновляет параметр в настройках бота и перезагружает их.
         /// </summary>
         public static void EditSettings(string param, string value)
         {
