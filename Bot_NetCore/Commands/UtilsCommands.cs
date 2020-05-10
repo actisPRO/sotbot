@@ -265,22 +265,30 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
+            int startPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position + 1; //Начало отсчета от канала Chill
+
+            //Сперва обновляем общий канал и его позицию, если изменена
+            var fleetLobby = ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby);
+            if (fleetLobby.Position != startPosition)
+                await fleetLobby.ModifyAsync(name: "Общий", position: startPosition, user_limit: 99);
+            else
+                await fleetLobby.ModifyAsync(name: "Общий", user_limit: 99);
+
+            //Обновляем остальные каналы
             int i = 1;
-            //Пока убрал смену позиции каналов, так как вызывает долгую задержу при выполнении команды
-            //int chillPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position;
             foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
-                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel) //Убираем из списка очистки текстовые каналы и голосовой канал Chill
-                    if (fleetChannel.Id == Bot.BotSettings.FleetLobby) //Учитываем присутствие канала лобби
-                    {
-                        await fleetChannel.ModifyAsync(name: "Общий", user_limit: 99); //Дискорд не показывает сколько людей находится в канале, так что 99
-                        //await fleetChannel.ModifyPositionAsync(chillPosition + 1);
-                    }
+            {
+                //Убираем из списка очистки текстовые каналы и голосовой канал Chill
+                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel && fleetChannel.Id != Bot.BotSettings.FleetLobby)
+                {
+                    //Обновляем канал и позицию в списке, если изменена
+                    if (fleetChannel.Position != startPosition + i)
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", position: startPosition + 1, user_limit: Bot.BotSettings.FleetUserLimiter);
                     else
-                    {
                         await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
-                        //await fleetChannel.ModifyPositionAsync(chillPosition + i + 1);
-                        i++;
-                    }
+                    i++;
+                }
+            }
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
 
