@@ -60,7 +60,7 @@ namespace SeaOfThieves.Entities
                 {
                     var elem = new Inviter(Convert.ToUInt64(inviter.Element("inviterId").Value),
                                               Convert.ToBoolean(inviter.Element("active").Value));
-                    foreach (var referral in inviter.Elements("referral")) elem.AddReferral(Convert.ToUInt64(referral.Value), date: DateTime.UtcNow.AddMonths(-1));
+                    foreach (var referral in inviter.Elements("referral")) elem.AddReferral(Convert.ToUInt64(referral.Value));
                 }
                 SaveToXML(fileName);
             }
