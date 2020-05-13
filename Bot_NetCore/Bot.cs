@@ -81,6 +81,7 @@ namespace SeaOfThieves
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
+            InviterList.ReadFromXMLMigration(BotSettings.InviterXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
             ReportList.ReadFromXML(BotSettings.ReportsXML);
 
@@ -126,6 +127,7 @@ namespace SeaOfThieves
             Commands.RegisterCommands<PrivateCommands>();
             Commands.RegisterCommands<DonatorCommands>();
             Commands.RegisterCommands<ModerationCommands>();
+            Commands.RegisterCommands<InviteCommands>();
 
             Client.Ready += ClientOnReady;
             Client.GuildMemberAdded += ClientOnGuildMemberAdded;
@@ -524,10 +526,17 @@ namespace SeaOfThieves
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
 
-            InviterList.Inviters.ToList().ForEach(i => { i.Value.Referrals.RemoveAll(r => r == e.Member.Id); });
+            //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
+            if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
+                InviterList.Inviters[0].AddReferral(e.Member.Id, false);
+
+            //При выходе обновляем реферала на неактив.
+            InviterList.Inviters.ToList().Where(i => i.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
+                                         .ForEach(i => i.Value.UpdateReferral(e.Member.Id, false));
+
             InviterList.SaveToXML(BotSettings.InviterXML);
 
-            await UtilsCommands.InvitesLeaderboard(e.Guild);
+            await InviteCommands.UpdateLeaderboard(e.Guild);
 
             e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                 $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) покинул сервер.",
@@ -578,13 +587,16 @@ namespace SeaOfThieves
                 if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
                     Inviter.Create(updatedInvite.Inviter.Id);
 
-                //Проверяем если пользователь был ранее приглашен другими, если нет то вносим в список
-                if (!InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.Contains(e.Member.Id)))
+                //Проверяем если пользователь был ранее приглашен другими и обновляем активность, если нет то вносим в список
+                if (InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.ContainsKey(e.Member.Id)))
+                    InviterList.Inviters.ToList().Where(x => x.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
+                        .ForEach(x => x.Value.UpdateReferral(e.Member.Id, true));
+                else
                     InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
-                InviterList.SaveToXML(BotSettings.InviterXML);
 
+                InviterList.SaveToXML(BotSettings.InviterXML);
                 //Обновление статистики приглашений
-                await UtilsCommands.InvitesLeaderboard(e.Guild);
+                await InviteCommands.UpdateLeaderboard(e.Guild);
             }
             catch (Exception ex)
             {
