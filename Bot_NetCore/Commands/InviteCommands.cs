@@ -67,7 +67,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-
+            var responceMsg = await ctx.RespondAsync("Загрузка пользователей...");
             try
             {
                 var interactivity = ctx.Client.GetInteractivityModule();
@@ -93,6 +93,7 @@ namespace SeaOfThieves.Commands
 
                 var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals);
 
+                await responceMsg.DeleteAsync();
                 await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
             }
             catch (KeyNotFoundException)
@@ -140,7 +141,7 @@ namespace SeaOfThieves.Commands
 
             var embed = new DiscordEmbedBuilder
             {
-                Color = new DiscordColor("#CC00CC"),
+                Color = new DiscordColor("#FF0066"),
                 Title = $"Топ рефералов за {DateTime.UtcNow.ToString("MMMM", new CultureInfo("ru-RU"))}",
             };
 
@@ -152,25 +153,25 @@ namespace SeaOfThieves.Commands
                     if (el.Value.CurrentMonthActiveCount > 0)
                     {
                         var user = await guild.GetMemberAsync(el.Key);
-                        var top = "";
+                        var place = "";
                         switch(i)
                         {
                             case 1:
-                                top = "🥇";
+                                place = "🥇";
                                 break;
                             case 2:
-                                top = "🥈";
+                                place = "🥈";
                                 break;
                             case 3:
-                                top = "🥉";
+                                place = "🥉";
                                 break;
                             default:
-                                top = i.ToString();
+                                place = $"{i}.";
                                 break;
                         }
 
                         embed.AddField(
-                            $"{top}. {user.DisplayName}#{user.Discriminator}",
+                            $"{place} {user.DisplayName}#{user.Discriminator}",
                             $"пригласил {el.Value.CurrentMonthActiveCount} пользователей");
                         i++;
                     }
