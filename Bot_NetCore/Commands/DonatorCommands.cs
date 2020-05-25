@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -163,6 +164,22 @@ namespace SeaOfThieves.Commands
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
                 return;
+            }
+
+            //Проверка названия на копирование админ ролей
+            try
+            {
+                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles)
+                    .Any(x => ctx.Guild.GetRole(x).Name.Equals(newName, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимое название роли **{newName}**");
+                    return;
+                }
+            }
+            catch (NullReferenceException ex)
+            {
+                //Не находит на сервере одну из админ ролей
+                throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
             }
 
             await ctx.Guild.UpdateRoleAsync
