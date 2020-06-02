@@ -1,8 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <inviters>
-  <inviter>
-	 <active>true</active>
-    <inviterId>1111111111111111111</inviterId>
-    <referral>2222222222222222222</referral>
+  <inviter id="1111111111111111111" active="true">
+    <referral id="2222222222222222222" active="true" date="13.04.2020" />
+  </inviter>
+  <inviter id="211585123101966336" active="true">
+    <referral id="477458269640851476" active="true" date="13.05.2020" />
+    <referral id="699682383296856154" active="true" date="13.04.2020" />
+    <referral id="261137595965243393" active="true" date="13.05.2020" />
+  </inviter>
+  <inviter id="477458269640851476" active="true">
+    <referral id="211585123101966336" active="true" date="13.05.2020" />
+    <referral id="699682383296856154" active="false" date="13.05.2020" />
+    <referral id="261137595965243393" active="true" date="13.04.2020" />
   </inviter>
 </inviters>

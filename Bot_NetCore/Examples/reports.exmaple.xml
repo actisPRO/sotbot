@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Reports>
+  <Mutes>
+    <Report>
+      <Id>477458269640851476</Id>
+      <ReportDateTime>2020-05-05T23:13:23.0352586+02:00</ReportDateTime>
+      <ReportDuration>00:00:10</ReportDuration>
+      <Moderator>211585123101966336</Moderator>
+      <Reason>Test report</Reason>
+    </Report>
+  </Mutes>
+  <CodexPurges>
+    <Report>
+      <Id>477458269640851476</Id>
+      <ReportDateTime>2020-05-05T23:52:22.2753137+02:00</ReportDateTime>
+      <ReportDuration>00:10:00</ReportDuration>
+      <Moderator>211585123101966336</Moderator>
+      <Reason>Test report</Reason>
+    </Report>
+  </CodexPurges>
+  <FleetPurges>
+    <Report>
+      <Id>477458269640851476</Id>
+      <ReportDateTime>2020-05-05T23:13:23.0352586+02:00</ReportDateTime>
+      <ReportDuration>00:00:10</ReportDuration>
+      <Moderator>211585123101966336</Moderator>
+      <Reason>Test report</Reason>
+    </Report>
+  </FleetPurges>
+</Reports>

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Bot_NetCore.Entities;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -59,6 +61,127 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
+        }
+
+        [Command("purge")]
+        [Aliases("p")]
+        [Hidden]
+        public async Task Purge(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var purge = new MemberReport(user.Id,
+                DateTime.Now,
+                Utility.TimeSpanParse(duration),
+                ctx.Member.Id,
+                reason);
+
+            //Возможна только одна блокировка, если уже существует то перезаписываем
+            if (!ReportList.CodexPurges.ContainsKey(user.Id))
+                ReportList.CodexPurges.Add(user.Id, purge);
+            else
+                ReportList.CodexPurges[user.Id].UpdateReport(DateTime.Now,
+                    Utility.TimeSpanParse(duration),
+                    ctx.Member.Id,
+                    reason);
+
+            //Сохраняем в файл
+            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+
+            //Убираем роль правил
+            await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
+
+            //Отправка сообщения в лс
+            try
+            {
+                await user.SendMessageAsync(
+                    $"**Еще раз внимательно прочитайте правила сервера**\n\n" +
+                    $"**Возможность принять правила заблокирована**\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
+                    $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
+                    $"**Причина:** {purge.Reason}");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+
+            //Отправка в журнал
+            await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                "**Блокировка принятия правил**\n\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {user}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
+                 $"**Причина:** {reason}");
+
+            //Ответное сообщение в чат
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
+                                   $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
+        }
+
+        [Command("mute")]
+        [Aliases("m")]
+        [Hidden]
+        public async Task Mute(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана")
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var mute = new MemberReport(user.Id,
+                DateTime.Now,
+                Utility.TimeSpanParse(duration),
+                ctx.Member.Id,
+                reason);
+
+            //Возможна только одна блокировка, если уже существует то перезаписываем
+            if (!ReportList.Mutes.ContainsKey(user.Id))
+                ReportList.Mutes.Add(user.Id, mute);
+            else
+                ReportList.Mutes[user.Id].UpdateReport(DateTime.Now,
+                    Utility.TimeSpanParse(duration),
+                    ctx.Member.Id,
+                    reason);
+
+            //Сохраняем в файл
+            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+
+            //Выдаем роль мута
+            await user.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.MuteRole));
+
+            //Отправка сообщения в лс
+            try
+            {
+                await user.SendMessageAsync(
+                    $"**Вам выдан мут**\n\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
+                    $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
+                    $"**Причина:** {reason}");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+
+            //Отправка в журнал
+            await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                "**Мут**\n\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {user}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
+                 $"**Причина:** {reason}");
+
+            //Ответное сообщение в чат
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут. " +
+                                   $"Снятие через: {Utility.FormatTimespan(mute.ReportDuration)}!");
         }
 
         [Command("warn")]
@@ -184,8 +307,7 @@ namespace SeaOfThieves.Commands
 
         [Command("ban")]
         [Hidden]
-        public async Task Ban(CommandContext ctx, DiscordUser member, int mins, int hours = 0, int days = 0,
-            [RemainingText] string reason = "Не указана")
+        public async Task Ban(CommandContext ctx, DiscordUser member, string duration = "1d", [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -193,22 +315,20 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var unbanDate = DateTime.Now.ToUniversalTime();
+            var durationTimeSpan = Utility.TimeSpanParse(duration);
 
-            unbanDate = unbanDate.AddMinutes(mins);
-            unbanDate = unbanDate.AddHours(hours);
-            unbanDate = unbanDate.AddDays(days);
+            var unbanDate = DateTime.Now.ToUniversalTime().Add(durationTimeSpan);
 
             var banId = RandomString.NextString(6);
 
-            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
+            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now.ToUniversalTime(), ctx.Member.Id, reason, banId);
             BanList.SaveToXML(Bot.BotSettings.BanXML);
 
             try
             {
                 var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
                 await guildMember.SendMessageAsync(
-                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** до **{unbanDate} UTC**. " +
+                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** на **{Utility.FormatTimespan(durationTimeSpan)}** до **{unbanDate} UTC **. " +
                     $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
                 await guildMember.BanAsync(0, reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
             }
@@ -225,11 +345,12 @@ namespace SeaOfThieves.Commands
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-                $"**Разблокировка:** {unbanDate} UTC\n" +
+                $"**Разблокировка:** {unbanDate} UTC | {Utility.FormatTimespan(durationTimeSpan)}\n" +
                 $"**ID бана:** {banId}\n" +
                 $"**Причина:** {reason}\n");
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан! " +
+                                   $"Снятие через: {Utility.FormatTimespan(durationTimeSpan)}!");
         }
 
         [Command("unban")]

@@ -15,6 +15,8 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
+using Bot_NetCore.Entities;
+using Bot_NetCore.Misc;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -79,7 +81,9 @@ namespace SeaOfThieves
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
+            InviterList.ReadFromXMLMigration(BotSettings.InviterXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
+            ReportList.ReadFromXML(BotSettings.ReportsXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -123,6 +127,7 @@ namespace SeaOfThieves
             Commands.RegisterCommands<PrivateCommands>();
             Commands.RegisterCommands<DonatorCommands>();
             Commands.RegisterCommands<ModerationCommands>();
+            Commands.RegisterCommands<InviteCommands>();
 
             Client.Ready += ClientOnReady;
             Client.GuildMemberAdded += ClientOnGuildMemberAdded;
@@ -141,19 +146,24 @@ namespace SeaOfThieves
             await Client.ConnectAsync();
 
             //Таймер, который каждую минуту проверяет все баны и удаляет истёкшие.
-            var unbanCheck = new Timer(60000);
-            unbanCheck.Elapsed += UnbanCheckOnElapsed;
-            unbanCheck.AutoReset = true;
-            unbanCheck.Enabled = true;
+            var checkExpiredReports = new Timer(60000);
+            checkExpiredReports.Elapsed += CheckExpiredReports;
+            checkExpiredReports.AutoReset = true;
+            checkExpiredReports.Enabled = true;
 
             await Task.Delay(-1);
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}", DateTime.Now);
+            e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
+                    "Bot",
+                    $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    DateTime.Now);
+            return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
 
+#nullable enable //Выдавало warning
         private async void DebugLoggerOnLogMessageReceived(object? sender, DebugLogMessageEventArgs e)
         {
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
@@ -181,7 +191,7 @@ namespace SeaOfThieves
             }
 
             //файл для удобного парсинга
-            using (var fs = new FileStream("logfile-" + fileName + ".csv", FileMode.Append))
+            using (var fs = new FileStream(fileName + ".csv", FileMode.Append))
             {
                 using (var sw = new StreamWriter(fs))
                 {
@@ -190,7 +200,7 @@ namespace SeaOfThieves
             }
 
             //файл для удобного просмотра
-            using (var fs = new FileStream("logfile-" + fileName + ".log", FileMode.Append))
+            using (var fs = new FileStream(fileName + ".log", FileMode.Append))
             {
                 using (var sw = new StreamWriter(fs))
                 {
@@ -198,12 +208,14 @@ namespace SeaOfThieves
                 }
             }
         }
+#nullable disable
 
-        private async void UnbanCheckOnElapsed(object sender, ElapsedEventArgs e)
+        private async void CheckExpiredReports(object sender, ElapsedEventArgs e)
         {
+            //Check for expired bans
             var toUnban = from ban in BanList.BannedMembers.Values
-                where ban.UnbanDateTime <= DateTime.Now
-                select ban;
+                          where ban.UnbanDateTime.ToUniversalTime() <= DateTime.Now.ToUniversalTime()
+                          select ban;
 
             var guild = await Client.GetGuildAsync(BotSettings.Guild);
             foreach (var ban in toUnban)
@@ -218,11 +230,35 @@ namespace SeaOfThieves
                 }
 
                 ban.Unban();
+
+                await guild.GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
+                    "**Снятие Бана**\n\n" +
+                    $"**Модератор:** {Client.CurrentUser.Username}\n" +
+                    $"**Пользователь:** {await Client.GetUserAsync(ban.Id)}\n" +
+                    $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
             }
 
             BanList.SaveToXML(BotSettings.BanXML);
 
             Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Бан-лист был обновлён.", DateTime.Now);
+
+            //Check for expired mutes
+            var count = ReportList.Mutes.Count;
+            ReportList.Mutes.Values.Where(x => x.Expired()).ToList()
+                .ForEach(async x =>
+                {
+                    ReportList.Mutes.Remove(x.Id);
+                    try
+                    {
+                        await guild.RevokeRoleAsync(await guild.GetMemberAsync(x.Id), guild.GetRole(BotSettings.MuteRole), "Unmuted");
+                    }
+                    catch (NotFoundException)
+                    {
+                        //Пользователь не найден
+                    }
+                });
+            if (count != ReportList.Mutes.Count)
+                ReportList.SaveToXML(BotSettings.ReportsXML);
         }
 
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
@@ -240,6 +276,7 @@ namespace SeaOfThieves
                 //// в словарь кулдаунов
                 //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
 
+                //Забираем роль
                 var user = (DiscordMember)e.User;
                 if (user.Roles.Any(x => x.Id == BotSettings.CodexRole))
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
@@ -259,13 +296,37 @@ namespace SeaOfThieves
             if (e.Message.Id == BotSettings.CodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
             {
                 //При надобности добавить кулдаун
-                //if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
-                //    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
+                /*if (EmojiCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                    if ((EmojiCooldowns[e.User] - DateTime.Now).Seconds > 0) return;
 
-                //// если проверка успешно пройдена, добавим пользователя
-                //// в словарь кулдаунов
-                //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);
+                // если проверка успешно пройдена, добавим пользователя
+                // в словарь кулдаунов
+                EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(BotSettings.FastCooldown);*/
 
+                //Проверка на purge
+                if (ReportList.CodexPurges.ContainsKey(e.User.Id))
+                    if (!ReportList.CodexPurges[e.User.Id].Expired()) //Проверка истекшей блокировки
+                    {
+                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.CodexPurges[e.User.Id].Moderator);
+                        try
+                        {
+                            await ((DiscordMember)e.User).SendMessageAsync(
+                                "**Возможность принять правила заблокирована**\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.CodexPurges[e.User.Id].getRemainingTime())}\n" +
+                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                                $"**Причина:** {ReportList.CodexPurges[e.User.Id].Reason}\n");
+                        }
+
+                        catch (UnauthorizedException)
+                        {
+                            //user can block the bot
+                        }
+                        return;
+                    }
+                    else
+                        ReportList.CodexPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
+
+                //Выдаем роль правил
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
@@ -291,7 +352,9 @@ namespace SeaOfThieves
                                 x.Id == BotSettings.EmissaryTradingCompanyRole ||
                                 x.Id == BotSettings.EmissaryOrderOfSoulsRole ||
                                 x.Id == BotSettings.EmissaryAthenaRole ||
-                                x.Id == BotSettings.EmissaryReaperBonesRole).ToList()
+                                x.Id == BotSettings.EmissaryReaperBonesRole ||
+                                x.Id == BotSettings.HuntersRole ||
+                                x.Id == BotSettings.ArenaRole).ToList()
                          .ForEach(async x => await user.RevokeRoleAsync(x));
 
                 //Выдаем роль в зависимости от реакции
@@ -312,6 +375,12 @@ namespace SeaOfThieves
                     case ":skull_crossbones:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryReaperBonesRole));
                         break;
+                    case ":fish:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.HuntersRole));
+                        break;
+                    case ":crossed_swords:":
+                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.ArenaRole));
+                        break;
                     default:
                         break;
                 }
@@ -323,7 +392,6 @@ namespace SeaOfThieves
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                     $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
                     DateTime.Now);
-
                 return;
             }
 
@@ -458,10 +526,17 @@ namespace SeaOfThieves
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
 
-            InviterList.Inviters.ToList().ForEach(i => { i.Value.Referrals.RemoveAll(r => r == e.Member.Id); });
+            //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
+            if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
+                InviterList.Inviters[0].AddReferral(e.Member.Id, false);
+
+            //При выходе обновляем реферала на неактив.
+            InviterList.Inviters.ToList().Where(i => i.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
+                                         .ForEach(i => i.Value.UpdateReferral(e.Member.Id, false));
+
             InviterList.SaveToXML(BotSettings.InviterXML);
 
-            await UtilsCommands.InvitesLeaderboard(e.Guild);
+            await InviteCommands.UpdateLeaderboard(e.Guild);
 
             e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                 $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) покинул сервер.",
@@ -512,13 +587,16 @@ namespace SeaOfThieves
                 if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
                     Inviter.Create(updatedInvite.Inviter.Id);
 
-                //Проверяем если пользователь был ранее приглашен другими, если нет то вносим в список
-                if (!InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.Contains(e.Member.Id)))
+                //Проверяем если пользователь был ранее приглашен другими и обновляем активность, если нет то вносим в список
+                if (InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.ContainsKey(e.Member.Id)))
+                    InviterList.Inviters.ToList().Where(x => x.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
+                        .ForEach(x => x.Value.UpdateReferral(e.Member.Id, true));
+                else
                     InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
-                InviterList.SaveToXML(BotSettings.InviterXML);
 
+                InviterList.SaveToXML(BotSettings.InviterXML);
                 //Обновление статистики приглашений
-                await UtilsCommands.InvitesLeaderboard(e.Guild);
+                await InviteCommands.UpdateLeaderboard(e.Guild);
             }
             catch (Exception ex)
             {
@@ -633,6 +711,11 @@ namespace SeaOfThieves
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
                         else if (x.Id == BotSettings.EmissaryReaperBonesRole)
                             channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                        else if (x.Id == BotSettings.HuntersRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":fish:");
+                        else if (x.Id == BotSettings.ArenaRole)
+                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":crossed_swords:");
+
                     });
 
                     DiscordChannel created = null;
@@ -732,7 +815,7 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        ///     Загрузка и перезагрузка настроек
+        ///     Обновляет параметр в настройках бота и перезагружает их.
         /// </summary>
         public static void EditSettings(string param, string value)
         {
@@ -1040,44 +1123,64 @@ namespace SeaOfThieves
         public ulong Developer;
 
         /// <summary>
-        ///     Id сообщения правил
+        ///     Путь до файла с блокировкой правил.
+        /// </summary>
+        public string ReportsXML;
+
+        /// <summary>
+        ///     Id сообщения правил.
         /// </summary>
         public ulong CodexMessageId;
 
         /// <summary>
-        ///     Id роли правил
+        ///     Id роли правил.
         /// </summary>
         public ulong CodexRole;
 
         /// <summary>
-        /// Id сообщения эмиссарства
+        ///     Id роли мута.
+        /// </summary>
+        public ulong MuteRole;
+
+        /// <summary>
+        /// Id сообщения эмиссарства.
         /// </summary>
         public ulong EmissaryMessageId;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryGoldhoadersRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryTradingCompanyRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryOrderOfSoulsRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryAthenaRole;
 
         /// <summary>
-        ///     Id роли эмиссарства
+        ///     Id роли эмиссарства.
         /// </summary>
         public ulong EmissaryReaperBonesRole;
+
+        /// <summary>
+        ///     Id роли охотников.
+        /// </summary>
+        public ulong HuntersRole;
+
+        /// <summary>
+        ///     Id роли арены.
+        /// </summary>
+        public ulong ArenaRole;
     }
 
     public enum CommandType

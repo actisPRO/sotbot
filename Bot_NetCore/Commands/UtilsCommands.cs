@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -29,7 +29,6 @@ namespace SeaOfThieves.Commands
             try
             {
                 Bot.EditSettings(param, value);
-                Bot.ReloadSettings();
 
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен параметр `{param}: {value}`");
             }
@@ -59,10 +58,14 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("whois")]
-        [RequirePermissions(Permissions.Administrator)]
         [Hidden]
         public async Task WhoIs(CommandContext ctx, DiscordMember member)
         {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
             try
             {
                 var embed = new DiscordEmbedBuilder();
@@ -95,6 +98,22 @@ namespace SeaOfThieves.Commands
                         }
 
                 embed.AddField("Владелец приватного корабля", privateShip);
+
+                var codex = "Не принял";
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) 
+                    codex = "Принял";
+                else if (ReportList.CodexPurges.ContainsKey(member.Id))
+                    if (ReportList.CodexPurges[member.Id].Expired())
+                        codex = "Не принял после раблокировки";
+                    else
+                        codex = "Заблокирован";
+                embed.AddField("Правила", codex, true);
+
+                var mute = "Нет";
+                if (ReportList.Mutes.ContainsKey(member.Id))
+                    if (!ReportList.Mutes[member.Id].Expired())
+                        mute = Utility.FormatTimespan(ReportList.Mutes[member.Id].getRemainingTime());
+                embed.AddField("Мут", mute, true);
 
                 await ctx.RespondAsync(embed: embed.Build());
             }
@@ -246,79 +265,31 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
+            int startPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position + 1; //Начало отсчета от канала Chill
+
+            //Сперва обновляем общий канал и его позицию, если изменена
+            var fleetLobby = ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby);
+            if (fleetLobby.Position != startPosition)
+                await fleetLobby.ModifyAsync(name: "Общий", position: startPosition, user_limit: 99);
+            else
+                await fleetLobby.ModifyAsync(name: "Общий", user_limit: 99);
+
+            //Обновляем остальные каналы
             int i = 1;
-            //Пока убрал смену позиции каналов, так как вызывает долгую задержу при выполнении команды
-            //int chillPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position;
             foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
-                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel) //Убираем из списка очистки текстовые каналы и голосовой канал Chill
-                    if (fleetChannel.Id == Bot.BotSettings.FleetLobby) //Учитываем присутствие канала лобби
-                    {
-                        await fleetChannel.ModifyAsync(name: "Общий", user_limit: 99); //Дискорд не показывает сколько людей находится в канале, так что 99
-                        //await fleetChannel.ModifyPositionAsync(chillPosition + 1);
-                    }
-                    else
-                    {
-                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
-                        //await fleetChannel.ModifyPositionAsync(chillPosition + i + 1);
-                        i++;
-                    }
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
-        }
-
-        [Command("invitesLeaderboard")]
-        [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
-        public async Task InvitesLeaderboard(CommandContext ctx) //Команда для создания/обновления лидерборда
-        {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
-
-            await InvitesLeaderboard(ctx.Guild);
-        }
-
-        [Command("invitesLeaderboardAll")]
-        [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
-        public async Task InvitesLeaderboardAll(CommandContext ctx) //Выводит список всех пригласивших, в том числе и спрятанных
-        {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
-
-            var interactivity = ctx.Client.GetInteractivityModule();
-
-            List<string> inviters = new List<string>();
-
-            InviterList.Inviters.ToList()
-                .OrderByDescending(x => x.Value.Referrals.Count).ToList()
-                .ForEach(async x =>
+            {
+                //Убираем из списка очистки текстовые каналы и голосовой канал Chill
+                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel && fleetChannel.Id != Bot.BotSettings.FleetLobby)
                 {
-                    try
-                    {
-                        var inviter = await ctx.Guild.GetMemberAsync(x.Key);
-                        string state = x.Value.Active == true ? "Активен" : "Отключен";
-                        inviters.Add($"{inviter.DisplayName}#{inviter.Discriminator} пригласил {x.Value.Referrals.Count} Отображение: {state}");
-                    }
-                    catch (NotFoundException)
-                    {
-                        inviters.Add("Пользователь не найден");
-                    }
-                });
-
-            var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters);
-
-            await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
-        }
-
-        [Command("updateLeaderboardMember")]
-        [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
-        public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member) //Обновляет статус отображения пользователя в leaderboard
-        {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
-
-            InviterList.Inviters.Where(x => x.Key == member.Id).ToList()
-                .ForEach(x => x.Value.UpdateState(!x.Value.Active));
-            InviterList.SaveToXML(Bot.BotSettings.InviterXML);
-
-            await InvitesLeaderboard(ctx.Guild);
+                    //Обновляем канал и позицию в списке, если изменена
+                    if (fleetChannel.Position != startPosition + i)
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", position: startPosition + 1, user_limit: Bot.BotSettings.FleetUserLimiter);
+                    else
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                    i++;
+                }
+            }
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
 
         [Command("codexmessage")]
@@ -399,47 +370,6 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync(message);
         }
 
-        [Command("listinvites")]
-        [Hidden]
-        public async Task ListInvites(CommandContext ctx, DiscordMember member)
-        {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
-            try
-            {
-                var interactivity = ctx.Client.GetInteractivityModule();
-
-                var inviter = InviterList.Inviters[member.Id];
-                List<string> referrals = new List<string>();
-
-                foreach (ulong referralId in inviter.Referrals)
-                {
-                    try
-                    {
-                        var referral = await ctx.Guild.GetMemberAsync(referralId);
-                        referrals.Add($"{referral.Id} - {referral.Username}#{referral.Discriminator} ({referral.Nickname})");
-                    }
-                    catch (NotFoundException)
-                    {
-                        referrals.Add($"Пользователь не найден");
-                    }
-
-                }
-
-                var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals);
-
-                await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
-            }
-            catch (KeyNotFoundException)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден указанный участник!");
-            }
-        }
-
         [Command("emissarymessage")]
         [Description("Обновляет привязку к сообщению эмиссаров (вводится в канале с сообщением)")]
         [Hidden]
@@ -466,72 +396,10 @@ namespace SeaOfThieves.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":fish:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":crossed_swords:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
-        }
-
-        public static async Task<Task> InvitesLeaderboard(DiscordGuild guild)
-        {
-            var channel = guild.GetChannel(Bot.BotSettings.InvitesLeaderboardChannel);
-
-            var inviters = InviterList.Inviters.ToList()
-                .OrderByDescending(x => x.Value.Referrals.Count).ToList()
-                .FindAll(x =>
-                {
-                    try
-                    {
-                        if (!x.Value.Active)
-                            return false;
-                        guild.GetMemberAsync(x.Key);
-                        return true;
-                    }
-                    catch (NotFoundException)
-                    {
-                        return false;
-                    }
-                })
-                .Take(10).ToList();
-
-            var embed = new DiscordEmbedBuilder
-            {
-                Color = new DiscordColor("#CC00CC"),
-                Title = "Топ рефералов",
-            };
-
-            int i = 0;
-            foreach (var el in inviters)
-            {
-                try
-                {
-                    if (el.Value.Referrals.Count > 0)
-                    {
-                        var user = await guild.GetMemberAsync(el.Key);
-                        i++;
-                        embed.AddField(
-                            $"{i}. {user.DisplayName}#{user.Discriminator}",
-                            $"пригласил {el.Value.Referrals.Count} пользователей");
-                    }
-                }
-                catch (NotFoundException)
-                {
-                    //Пользователь не найден, так что пропускаем и не добавляем в статистику
-                }
-            }
-
-            embed.WithFooter("Чтобы попасть в топ, создайте собственную ссылку приглашения");
-
-            //Публикуем и проверяем на уже существующую таблицу топ 10
-            var messages = await channel.GetMessagesAsync();
-            ulong messageId = 0;
-            if (messages.Count > 0)
-                messageId = messages.ToList().Where(x => (x.Author.Id == guild.CurrentMember.Id)).First().Id;
-
-            if (messageId == 0)
-                await channel.SendMessageAsync(embed: embed.Build());
-            else
-                await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
-
-            return Task.CompletedTask;
         }
     }
 }

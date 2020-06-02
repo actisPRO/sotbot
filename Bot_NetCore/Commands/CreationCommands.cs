@@ -74,6 +74,10 @@ namespace SeaOfThieves.Commands
                     channelSymbol = DiscordEmoji.FromName(ctx.Client, ":gem:");
                 else if (x.Id == Bot.BotSettings.EmissaryReaperBonesRole)
                     channelSymbol = DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:");
+                else if (x.Id == Bot.BotSettings.HuntersRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":fish:");
+                else if (x.Id == Bot.BotSettings.ArenaRole)
+                    channelSymbol = DiscordEmoji.FromName(ctx.Client, ":crossed_swords:");
             });
 
             var created = await ctx.Guild.CreateChannelAsync(

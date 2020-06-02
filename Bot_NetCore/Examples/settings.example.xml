@@ -63,8 +63,10 @@
 	
 	<Developer>261137595965243393</Developer>
 
+	<ReportsXML>reports.xml</ReportsXML>
 	<CodexMessageId>705394424468865044</CodexMessageId>
 	<CodexRole>701810271940903018</CodexRole>
+	<MuteRole>707563567930671114</MuteRole>
 
 	<EmissaryMessageId>703926358182592553</EmissaryMessageId>
 	<EmissaryGoldhoadersRole>703929000711553074</EmissaryGoldhoadersRole>
@@ -72,4 +74,6 @@
 	<EmissaryOrderOfSoulsRole>703929012036304948</EmissaryOrderOfSoulsRole>
 	<EmissaryAthenaRole>703929013625815123</EmissaryAthenaRole>
 	<EmissaryReaperBonesRole>703929015181901885</EmissaryReaperBonesRole>
+	<HuntersRole>706860192133939213</HuntersRole>
+	<ArenaRole>706856460952403979</ArenaRole>
 </Settings>
