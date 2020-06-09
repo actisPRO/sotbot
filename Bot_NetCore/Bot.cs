@@ -194,6 +194,7 @@ namespace SeaOfThieves
             {
                 using (var sw = new StreamWriter(fs))
                 {
+                    var message = e.Message.Replace("\"", "'");
                     await sw.WriteLineAsync($"{e.Timestamp:s},{loglevel},{e.Application},\"{e.Message}\"");
                 }
             }
