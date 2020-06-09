@@ -987,6 +987,11 @@ namespace SeaOfThieves
         public ulong BotRole;
 
         /// <summary>
+        ///     Id категории донатных ролей
+        /// </summary>
+        public ulong DonatorSpacerRole;
+
+        /// <summary>
         ///     Текстовый код эмодзи, отправляемого при успешной операции.
         /// </summary>
         public string OkEmoji;

@@ -6,8 +6,9 @@
     <Prefix>!</Prefix>
     
     <BotRole>435393449605464074</BotRole>
-    
-    <OkEmoji>✅</OkEmoji>
+	<DonatorSpacerRole>714897742098464819</DonatorSpacerRole>
+
+	<OkEmoji>✅</OkEmoji>
     <ErrorEmoji>⛔</ErrorEmoji>
     
     <RolesChannel>474870448157491200</RolesChannel>
