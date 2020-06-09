@@ -67,12 +67,12 @@ namespace SeaOfThieves
             var bot = new Bot();
 
             Console.WriteLine(@"
-                ██████╗     ██╗ ██████╗     ██████╗ 
-                ╚════██╗   ███║██╔═████╗   ██╔═████╗
-                 █████╔╝   ╚██║██║██╔██║   ██║██╔██║
-                ██╔═══╝     ██║████╔╝██║   ████╔╝██║
-                ███████╗██╗ ██║╚██████╔╝██╗╚██████╔╝
-                ╚══════╝╚═╝ ╚═╝ ╚═════╝ ╚═╝ ╚═════╝                                      
+                        ██████╗     ██╗ ██╗
+                        ╚════██╗   ███║███║
+                         █████╔╝   ╚██║╚██║
+                        ██╔═══╝     ██║ ██║
+                        ███████╗██╗ ██║ ██║
+                        ╚══════╝╚═╝ ╚═╝ ╚═╝                
             "); //Font Name: ANSI Shadow
 
             ReloadSettings(); // Загрузим настройки
@@ -81,7 +81,6 @@ namespace SeaOfThieves
             DonatorList.ReadFromXML(BotSettings.DonatorXML);
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
-            InviterList.ReadFromXMLMigration(BotSettings.InviterXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
             ReportList.ReadFromXML(BotSettings.ReportsXML);
 

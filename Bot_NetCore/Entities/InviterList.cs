@@ -41,7 +41,7 @@ namespace SeaOfThieves.Entities
             doc.Save(fileName);
         }
 
-        [Obsolete("ReadFromXMLMigration is deprecated, please use ReadFromXML instead.")]
+        /*[Obsolete("ReadFromXMLMigration is deprecated, please use ReadFromXML instead.")]
         public static void ReadFromXMLMigration(string fileName)
         {
             //If old file exist do nothing
@@ -64,7 +64,7 @@ namespace SeaOfThieves.Entities
                 }
                 SaveToXML(fileName);
             }
-        }
+        }*/
 
         public static void ReadFromXML(string fileName)
         {
