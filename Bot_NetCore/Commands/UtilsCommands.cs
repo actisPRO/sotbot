@@ -401,5 +401,24 @@ namespace SeaOfThieves.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
         }
+
+        [Command("gcte")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task GiveCodexRoleToEveryone(CommandContext ctx)
+        {
+            var members = await ctx.Guild.GetAllMembersAsync();
+            for (int i = 0; i < members.Count; ++i)
+            {
+                Console.WriteLine("Member " + i);
+                try
+                {
+                    await members[i].GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole));
+                }
+                catch (Exception)
+                {
+                    
+                }
+            }
+        }
     }
 }
