@@ -74,6 +74,7 @@ namespace SeaOfThieves.Commands
                 ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
 
             await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+            await channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
             await channel.AddOverwriteAsync(ctx.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
 
             var member = await ctx.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);

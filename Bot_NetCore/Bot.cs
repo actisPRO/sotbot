@@ -435,6 +435,7 @@ namespace SeaOfThieves
                             e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), BotSettings.Bitrate);
 
                         await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                        await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
                         await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None,
                             Permissions.UseVoice);
 
