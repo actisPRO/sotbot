@@ -150,7 +150,38 @@ namespace SeaOfThieves
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
 
+            //Таймер, который каждые 5 минут проверяет, все ли участники, подтвердившие прочтение правил имеют роль
+            var checkCodexRoles = new Timer(60000);
+            checkCodexRoles.Elapsed += CheckCodexRolesOnElapsed;
+            checkCodexRoles.AutoReset = true;
+            checkCodexRoles.Enabled = true;
+
             await Task.Delay(-1);
+        }
+
+        private async void CheckCodexRolesOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            var guild = Client.Guilds[BotSettings.Guild];
+            var channel = guild.GetChannel(435486626551037963); //TODO: в настройки
+            
+            var message = await channel.GetMessageAsync(BotSettings.CodexMessageId);
+            var users = await message.GetReactionsAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+            int counter = 0;
+            foreach (var user in users)
+            {
+                if (ReportList.CodexPurges.ContainsKey(user.Id))
+                    if (!ReportList.CodexPurges[user.Id].Expired()) continue;
+
+                var member = await guild.GetMemberAsync(user.Id);
+
+                if (!member.Roles.Contains(guild.GetRole(BotSettings.CodexRole)))
+                {
+                    await member.GrantRoleAsync(guild.GetRole(BotSettings.CodexRole));
+                    counter++;
+                }
+            }
+            
+            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Завершена проверка сообщения о принятии правил. Выдано {counter} ролей.", DateTime.Now);
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -195,7 +226,7 @@ namespace SeaOfThieves
                 using (var sw = new StreamWriter(fs))
                 {
                     var message = e.Message.Replace("\"", "'");
-                    await sw.WriteLineAsync($"{e.Timestamp:s},{loglevel},{e.Application},\"{e.Message}\"");
+                    await sw.WriteLineAsync($"{e.Timestamp:s},{loglevel},{e.Application},\"{message}\"");
                 }
             }
 
