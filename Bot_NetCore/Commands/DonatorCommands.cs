@@ -5,6 +5,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
@@ -115,6 +116,34 @@ namespace SeaOfThieves.Commands
             }
         }
 
+        [Command("donatorrm")]
+        [Aliases("drm")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task DonatorRemove(CommandContext ctx, DiscordMember member)
+        {
+            if (!DonatorList.Donators.ContainsKey(member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не является донатером!");
+                return;
+            }
+
+            try
+            {
+                await ctx.Guild.RevokeRoleAsync(member, ctx.Guild.GetRole(Bot.BotSettings.DonatorRole),
+                    "Donator deletion");
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[member.Id].ColorRole));
+            }
+            catch (NullReferenceException)
+            {
+                
+            }
+            DonatorList.Donators[member.Id].Remove();
+            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён донатер!");
+        }
+        
         [Command("dcolor")]
         [Description("Устанавливает донатерский цвет. Формат: 000000")]
         public async Task DColor(CommandContext ctx, string color)
