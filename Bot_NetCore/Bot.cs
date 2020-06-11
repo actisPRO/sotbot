@@ -150,12 +150,6 @@ namespace SeaOfThieves
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
 
-            //Таймер, который каждые 5 минут проверяет, все ли участники, подтвердившие прочтение правил имеют роль
-            var checkCodexRoles = new Timer(60000 * 5);
-            checkCodexRoles.Elapsed += CheckCodexRolesOnElapsed;
-            checkCodexRoles.AutoReset = true;
-            checkCodexRoles.Enabled = true;
-
             await Task.Delay(-1);
         }
 
