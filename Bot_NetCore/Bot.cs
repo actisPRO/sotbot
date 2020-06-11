@@ -149,33 +149,41 @@ namespace SeaOfThieves
             checkExpiredReports.Elapsed += CheckExpiredReports;
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
+            
+            var clearFindChannel = new Timer(5000);
+            clearFindChannel.Elapsed += ClearFindChannelOnElapsed;
+            clearFindChannel.AutoReset = true;
+            clearFindChannel.Enabled = true;
 
             await Task.Delay(-1);
         }
 
-        private async void CheckCodexRolesOnElapsed(object sender, ElapsedEventArgs e)
+        private async void ClearFindChannelOnElapsed(object sender, ElapsedEventArgs e)
         {
             var guild = Client.Guilds[BotSettings.Guild];
-            var channel = guild.GetChannel(435486626551037963); //TODO: в настройки
-            
-            var message = await channel.GetMessageAsync(BotSettings.CodexMessageId);
-            var users = await message.GetReactionsAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
-            int counter = 0;
-            foreach (var user in users)
+            var channel = guild.GetChannel(Bot.BotSettings.FindChannel);
+
+            var messages = await channel.GetMessagesAsync(100, before: channel.LastMessageId);
+            var toDelete = messages.ToList();
+            try
             {
-                if (ReportList.CodexPurges.ContainsKey(user.Id))
-                    if (!ReportList.CodexPurges[user.Id].Expired()) continue;
-
-                var member = await guild.GetMemberAsync(user.Id);
-
-                if (!member.Roles.Contains(guild.GetRole(BotSettings.CodexRole)))
-                {
-                    await member.GrantRoleAsync(guild.GetRole(BotSettings.CodexRole));
-                    counter++;
-                }
+                toDelete.Add(await channel.GetMessageAsync(channel.LastMessageId));
+            }
+            catch (NotFoundException)
+            {
+                return;
             }
             
-            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Завершена проверка сообщения о принятии правил. Выдано {counter} ролей.", DateTime.Now);
+            while (messages.Count != 0)
+            {            
+                messages = await channel.GetMessagesAsync(100, before: messages.Last().Id);
+                toDelete.AddRange(messages);
+            }
+
+            toDelete.RemoveAll(message => message.Id == BotSettings.IgnoredMessage);
+            await channel.DeleteMessagesAsync(toDelete);
+            
+            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Поиск игроков был очищен.", DateTime.Now);
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -1206,6 +1214,13 @@ namespace SeaOfThieves
         ///     Id роли арены.
         /// </summary>
         public ulong ArenaRole;
+
+        /// <summary>
+        ///     Id канала с поиском игроков.
+        /// </summary>
+        public ulong FindChannel;
+
+        public ulong IgnoredMessage;
     }
 
     public enum CommandType
