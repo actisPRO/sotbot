@@ -643,7 +643,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("shipInfo")]
-        public async Task shipInfo(CommandContext ctx, DiscordMember shipOwner, bool fixShip = false)
+        public async Task shipInfo(CommandContext ctx, DiscordMember shipOwner)
         {
             //Временное ограничение, потом открою для модеров
             if (!Bot.IsModerator(ctx.Member))
@@ -659,15 +659,12 @@ namespace SeaOfThieves.Commands
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось найти корабли во владении!");
 
-                if (fixShip)
-                {
-                    //Не найдены приватные корабли, пробуем почистить список в actions.xml
-                    var doc = XDocument.Load("actions.xml");
-                    foreach (var action in doc.Element("actions").Elements("action"))
-                        if (Convert.ToUInt64(action.Value) == shipOwner.Id && action.Attribute("type").Value == "ship")
-                            action.Remove();
-                    doc.Save("actions.xml");
-                }
+                //Не найдены приватные корабли, пробуем почистить список в actions.xml
+                var doc = XDocument.Load("actions.xml");
+                foreach (var action in doc.Element("actions").Elements("action"))
+                    if (Convert.ToUInt64(action.Value) == shipOwner.Id && action.Attribute("type").Value == "ship")
+                        action.Remove();
+                doc.Save("actions.xml");
 
                 return;
             }
@@ -726,13 +723,13 @@ namespace SeaOfThieves.Commands
 
                 var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
 
-                if (roleNeedFixes || channelNeedFixes && fixShip)
+                if (roleNeedFixes || channelNeedFixes)
                 {
                     // first retrieve the interactivity module from the client
                     var interactivity = ctx.Client.GetInteractivityModule();
 
                     // ok emoji
-                    var okEmoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
+                    var okEmoji = DiscordEmoji.FromName(ctx.Client, ":tools:");
 
                     await message.CreateReactionAsync(okEmoji);
 
