@@ -158,32 +158,31 @@ namespace SeaOfThieves
             await Task.Delay(-1);
         }
 
+        /// <summary>
+        ///     Очистка из канала поиска игроков сообщений опубликованных более чем 15 минут
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void ClearFindChannelOnElapsed(object sender, ElapsedEventArgs e)
         {
             var guild = Client.Guilds[BotSettings.Guild];
-            var channel = guild.GetChannel(Bot.BotSettings.FindChannel);
+            var channel = guild.GetChannel(BotSettings.FindChannel);
 
-            var messages = await channel.GetMessagesAsync(100, before: channel.LastMessageId);
-            var toDelete = messages.ToList();
-            try
-            {
-                toDelete.Add(await channel.GetMessageAsync(channel.LastMessageId));
-            }
-            catch (NotFoundException)
-            {
-                return;
-            }
-            
-            while (messages.Count != 0)
-            {            
-                messages = await channel.GetMessagesAsync(100, before: messages.Last().Id);
-                toDelete.AddRange(messages);
-            }
+            var messages = await channel.GetMessagesAsync(100);
+            var toDelete = messages.ToList()
+                .Where(x => !x.Pinned).ToList()                                                         //Не закрепленные сообщения
+                .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp).TotalMinutes > 15);     //Опубликованные более 15 минут назад
 
-            toDelete.RemoveAll(message => message.Id == BotSettings.IgnoredMessage);
-            await channel.DeleteMessagesAsync(toDelete);
-            
-            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Поиск игроков был очищен.", DateTime.Now);
+            if (toDelete.Count() > 0)
+                try
+                {
+                    await channel.DeleteMessagesAsync(toDelete);
+                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Поиск игроков был очищен.", DateTime.Now);
+                }
+                catch (Exception ex)
+                {
+                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Ошибка при удалении сообщений в поиске игроков. \n{ex.Message}", DateTime.Now);
+                }
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -1233,8 +1232,6 @@ namespace SeaOfThieves
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;
-
-        public ulong IgnoredMessage;
     }
 
     public enum CommandType
