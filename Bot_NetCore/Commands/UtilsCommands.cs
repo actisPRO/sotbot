@@ -402,22 +402,6 @@ namespace SeaOfThieves.Commands
 
         }
 
-        [Command("ignoredmessage")]
-        [Hidden]
-        public async Task UpdateIgnoredMessage(CommandContext ctx, DiscordMessage message)
-        {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-            
-            if (Bot.BotSettings.IgnoredMessage != message.Id)
-                Bot.EditSettings("IgnoredMessage", message.Id.ToString());
-
-            await ctx.Message.DeleteAsync();
-        }
-
         [Command("gcte")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task GiveCodexRoleToEveryone(CommandContext ctx)
