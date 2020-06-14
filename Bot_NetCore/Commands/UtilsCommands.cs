@@ -66,6 +66,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
+            
             try
             {
                 var embed = new DiscordEmbedBuilder();

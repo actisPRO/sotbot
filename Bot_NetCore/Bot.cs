@@ -688,6 +688,12 @@ namespace SeaOfThieves
                 return;
             }
 
+            if (e.Exception.GetType() == typeof(NotFoundException))
+            {
+                await e.Context.RespondAsync($"{BotSettings.ErrorEmoji} Не был найден указанный пользователь.");
+                return;
+            }
+
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
                 $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
                 $"({e.Context.Member.Id}) пытался запустить команду {e.Command.Name}, но произошла ошибка.",
