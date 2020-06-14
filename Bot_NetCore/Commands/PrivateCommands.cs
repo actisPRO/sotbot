@@ -642,8 +642,8 @@ namespace SeaOfThieves.Commands
             doc.Save("active.xml");
         }
 
-        [Command("shipInfo")]
-        public async Task shipInfo(CommandContext ctx, DiscordMember shipOwner)
+        [Command("shipinfo")]
+        public async Task ShipInfo(CommandContext ctx, DiscordMember shipOwner)
         {
             //Временное ограничение, потом открою для модеров
             if (!Bot.IsModerator(ctx.Member))
