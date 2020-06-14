@@ -18,7 +18,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task DonatorAdd(CommandContext ctx, DiscordMember member, int balance)
         {
-            var res = new Donator(member.Id, 0, balance);
+            var res = new Donator(member.Id, 0, DateTime.Today, balance);
             if (balance >= 50)
             {
                 var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
@@ -60,6 +60,7 @@ namespace SeaOfThieves.Commands
 
             var oldBalance = DonatorList.Donators[member.Id].Balance;
             DonatorList.Donators[member.Id].SetBalance(newBalance);
+            DonatorList.Donators[member.Id].Date = DateTime.Today;
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно изменили баланс.");

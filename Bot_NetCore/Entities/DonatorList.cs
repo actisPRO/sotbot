@@ -19,6 +19,7 @@ namespace SeaOfThieves.Entities
                 dElement.Add(new XElement("id", donator.Member));
                 dElement.Add(new XElement("balance", donator.Balance));
                 dElement.Add(new XElement("colorRole", donator.ColorRole));
+                dElement.Add(new XElement("date", donator.Date.ToString("dd-MM-yyyy")));
                 if (donator.Hidden) dElement.Add(new XElement("hidden", "True"));
                 foreach (var friend in donator.Friends) dElement.Add(new XElement("friend", friend));
                 root.Add(dElement);
@@ -33,9 +34,12 @@ namespace SeaOfThieves.Entities
             var doc = XDocument.Load(fileName);
             foreach (var donator in doc.Element("donators").Elements("donator"))
             {
+                var date = DateTime.Now.Date;
+                if (donator.Element("date") != null) date = Convert.ToDateTime(donator.Element("date").Value); 
                 var created =
                     new Donator(Convert.ToUInt64(donator.Element("id").Value),
-                        Convert.ToUInt64(donator.Element("colorRole").Value),
+                        Convert.ToUInt64(donator.Element("colorRole").Value), 
+                        date,
                         Convert.ToDouble(donator.Element("balance").Value));
                 foreach (var friend in donator.Elements("friend")) created.AddFriend(Convert.ToUInt64(friend.Value));
 

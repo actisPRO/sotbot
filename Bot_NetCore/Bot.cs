@@ -138,7 +138,7 @@ namespace SeaOfThieves
             Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
             Client.UnknownEvent += ClientOnUnknownEvent;
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
-
+            
             Commands.CommandErrored += CommandsOnCommandErrored;
             Commands.CommandExecuted += CommandsOnCommandExecuted;
 
