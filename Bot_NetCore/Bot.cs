@@ -189,7 +189,7 @@ namespace SeaOfThieves
         {
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
                     DateTime.Now);
             return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
