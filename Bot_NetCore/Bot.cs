@@ -582,6 +582,16 @@ namespace SeaOfThieves
         /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
+            if (BanList.BannedMembers.ContainsKey(e.Member.Id) && BanList.BannedMembers[e.Member.Id].UnbanDateTime > BanList.BannedMembers[e.Member.Id].BanDateTime)
+            {
+                var ban = BanList.BannedMembers[e.Member.Id];
+                await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
+                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime} UTC.");
+                await e.Member.BanAsync(0, "Autoban");
+
+                return;
+            }
+            
             var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
             var guildInvites = await e.Guild.GetInvitesAsync(); //Запрашиваем новый список инвайтов
             Invites = guildInvites.ToList(); //Обновляю список инвайтов
