@@ -17,6 +17,7 @@ using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
+using DSharpPlus.CommandsNext.Exceptions;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -505,7 +506,7 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
-            if (e.Message.Content.StartsWith(">"))
+            if (e.Message.Content.StartsWith("> "))
                 if (IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
                 {
                     var messageStrings = e.Message.Content.Split('\n');
@@ -668,11 +669,13 @@ namespace SeaOfThieves
         /// <summary>
         ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
-        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
+        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)    
         {
-            if (e.Command.Name == "dgenlist" && e.Exception.GetType() == typeof(NotFoundException)) return; //костыль
+            if (e.Exception is CommandNotFoundException) return;
+            
+            if (e.Command.Name == "dgenlist" && e.Exception is NotFoundException) return; //костыль
 
-            if (e.Exception.GetType() == typeof(ArgumentException) &&
+            if (e.Exception is ArgumentException &&
                 e.Exception.Message.Contains("Could not convert specified value to given type."))
             {
                 await e.Context.RespondAsync(
@@ -680,7 +683,7 @@ namespace SeaOfThieves
                 return;
             }
 
-            if (e.Exception.GetType() == typeof(ArgumentException) &&
+            if (e.Exception is ArgumentException &&
                 e.Exception.Message == "Not enough arguments supplied to the command.")
             {
                 await e.Context.RespondAsync(
@@ -688,7 +691,7 @@ namespace SeaOfThieves
                 return;
             }
 
-            if (e.Exception.GetType() == typeof(NotFoundException))
+            if (e.Exception is NotFoundException)
             {
                 await e.Context.RespondAsync($"{BotSettings.ErrorEmoji} Не был найден указанный пользователь.");
                 return;
