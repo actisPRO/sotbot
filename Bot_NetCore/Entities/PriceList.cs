@@ -13,13 +13,27 @@ namespace SeaOfThieves.Entities
             var doc = XDocument.Load(fileName);
             foreach (var date in doc.Element("Prices").Elements("Date"))
             {
-                var prices = new Dictionary<string, int>();
+                int colorPrice = 0, wantedPrice = 0, roleRenamePrice = 0, friendsPrice = 0;
                 foreach (var price in date.Elements("Service"))
                 {
-                    prices[price.Attribute("id").Value] = Convert.ToInt32(price.Value);
+                    switch (price.Attribute("id").Value)
+                    {
+                        case "color":
+                            colorPrice = Convert.ToInt32(price.Value);
+                            break;
+                        case "wanted":
+                            wantedPrice = Convert.ToInt32(price.Value);
+                            break;
+                        case "role_rename":
+                            roleRenamePrice = Convert.ToInt32(price.Value);
+                            break;
+                        case "friends":
+                            friendsPrice = Convert.ToInt32(price.Value);
+                            break;
+                    }
                 }
                 Prices[Convert.ToDateTime(date.Attribute("date").Value)] = 
-                    new DateServices(Convert.ToDateTime(date.Attribute("date").Value), prices);
+                    new DateServices(Convert.ToDateTime(date.Attribute("date").Value), colorPrice, wantedPrice, roleRenamePrice, friendsPrice);
             }
         }
 
@@ -31,10 +45,11 @@ namespace SeaOfThieves.Entities
             foreach (var date in Prices.Values)
             {
                 var dateEl = new XElement("Date", new XAttribute("date", date.Date.ToString("dd.MM.yyyy")));
-                foreach (var service in date.Services)
-                {
-                    dateEl.Add(new XElement("Service", new XAttribute("id", service.Key), service.Value));
-                }
+                dateEl.Add(new XElement("Service", date.ColorPrice, new XAttribute("id", "color")));
+                dateEl.Add(new XElement("Service", date.WantedPrice, new XAttribute("id", "wanted")));
+                dateEl.Add(new XElement("Service", date.RoleNamePrice, new XAttribute("id", "role_rename")));
+                dateEl.Add(new XElement("Service", date.FriendsPrice, new XAttribute("id", "friends")));
+                
                 root.Add(dateEl);
             }
             

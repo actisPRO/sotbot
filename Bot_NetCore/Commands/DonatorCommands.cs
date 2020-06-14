@@ -12,6 +12,14 @@ namespace SeaOfThieves.Commands
 {
     public class DonatorCommands
     {
+        [Command("dsetprice")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task DonatorSetPrice(CommandContext ctx, string name, int newPrice)
+        {
+            
+        }
+        
         [Command("donatoradd")]
         [Aliases("dadd")]
         [RequirePermissions(Permissions.Administrator)]

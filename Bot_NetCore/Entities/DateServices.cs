@@ -6,12 +6,18 @@ namespace SeaOfThieves.Entities
     public class DateServices
     {
         public DateTime Date;
-        public Dictionary<string, int> Services;
+        public int ColorPrice;
+        public int WantedPrice;
+        public int RoleNamePrice;
+        public int FriendsPrice;
 
-        public DateServices(DateTime date, Dictionary<string, int> services)
+        public DateServices(DateTime date, int colorPrice, int wantedPrice, int roleNamePrice, int friendsPrice)
         {
             Date = date;
-            Services = services;
+            ColorPrice = colorPrice;
+            WantedPrice = wantedPrice;
+            RoleNamePrice = roleNamePrice;
+            FriendsPrice = friendsPrice;
         }
     }
 }
