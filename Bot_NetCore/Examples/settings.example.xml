@@ -67,6 +67,11 @@
     
 	<CodexMessageId>705394424468865044</CodexMessageId>
 	<CodexRole>701810271940903018</CodexRole>
+	
+	<FleetCodexMessageId>722059329305444423</FleetCodexMessageId>
+	<FleetCodexRole>701810271945228358</FleetCodexRole>
+	<FleetCaptainRole>722060809269805126</FleetCaptainRole>
+	
 	<MuteRole>707563567930671114</MuteRole>
 
 	<EmissaryMessageId>703926358182592553</EmissaryMessageId>
