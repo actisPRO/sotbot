@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
@@ -122,6 +123,74 @@ namespace SeaOfThieves.Commands
             //Ответное сообщение в чат
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
                                    $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
+        }
+
+        [Command("fleetpurge")]
+        [Aliases("fp")]
+        [Hidden]
+        public async Task FleetPurge(CommandContext ctx, DiscordMember user, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
+        {
+            var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member); //Только капитаны рейда, модераторы не учитываются
+
+            //Проверка на модератора или капитана рейда
+            if (!Bot.IsModerator(ctx.Member) && !isFleetCaptain)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var durationTimeSpan = Utility.TimeSpanParse(duration);
+
+            if (durationTimeSpan.TotalDays > 1 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(1, 0, 0, 0);
+
+            var fleetPurge = new MemberReport(user.Id,
+                DateTime.Now,
+                durationTimeSpan,
+                ctx.Member.Id,
+                reason);
+
+            //Возможна только одна блокировка, если уже существует то перезаписываем
+            if (!ReportList.FleetPurges.ContainsKey(user.Id))
+                ReportList.FleetPurges.Add(user.Id, fleetPurge);
+            else
+                ReportList.FleetPurges[user.Id].UpdateReport(DateTime.Now,
+                    isFleetCaptain ? new TimeSpan(Math.Max(durationTimeSpan.Ticks, ReportList.FleetPurges[user.Id].ReportDuration.Ticks)) : durationTimeSpan, //Если капитан рейда, перезаписываем только максимальное время блокировки
+                    ctx.Member.Id,
+                    reason);
+
+            //Сохраняем в файл
+            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+
+            //Убираем роль правил
+            await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
+
+            //Отправка сообщения в лс
+            try
+            {
+                await user.SendMessageAsync(
+                    $"**Возможность принять правила заблокирована**\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
+                    $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
+                    $"**Причина:** {fleetPurge.Reason}");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+
+            //Отправка в журнал
+            await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                "**Блокировка принятия правил рейда**\n\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {user}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
+                 $"**Причина:** {reason}");
+
+            //Ответное сообщение в чат
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
+                                   $"Снятие через: {Utility.FormatTimespan(fleetPurge.ReportDuration)}!");
         }
 
         [Command("mute")]

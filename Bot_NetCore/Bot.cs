@@ -136,7 +136,7 @@ namespace SeaOfThieves
             Client.VoiceStateUpdated += ClientOnVoiceStateUpdated;
             Client.MessageCreated += ClientOnMessageCreated;
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
-            Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
+            //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
             Client.UnknownEvent += ClientOnUnknownEvent;
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
 #if DEBUG
@@ -374,6 +374,40 @@ namespace SeaOfThieves
                 return;
             }
 
+            //Проверка если сообщение с принятием правил
+            if (e.Message.Id == BotSettings.FleetCodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
+            {
+                //Проверка на purge
+                if (ReportList.FleetPurges.ContainsKey(e.User.Id))
+                    if (!ReportList.FleetPurges[e.User.Id].Expired()) //Проверка истекшей блокировки
+                    {
+                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.FleetPurges[e.User.Id].Moderator);
+                        try
+                        {
+                            await ((DiscordMember)e.User).SendMessageAsync(
+                                "**Возможность принять правила рейда заблокирована**\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.FleetPurges[e.User.Id].getRemainingTime())}\n" +
+                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                                $"**Причина:** {ReportList.FleetPurges[e.User.Id].Reason}\n");
+                        }
+
+                        catch (UnauthorizedException)
+                        {
+                            //user can block the bot
+                        }
+                        return;
+                    }
+                    else
+                        ReportList.FleetPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
+
+                //Выдаем роль правил рейда
+                var user = (DiscordMember)e.User;
+                if (!user.Roles.Any(x => x.Id == BotSettings.FleetCodexRole))
+                    await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.FleetCodexRole));
+
+                return;
+            }
+
             //Проверка на сообщение эмиссарства
             if (e.Message.Id == BotSettings.EmissaryMessageId)
             {
@@ -442,7 +476,7 @@ namespace SeaOfThieves
 
                 if (e.Message.Id == ship.CreationMessage)
                 {
-                    if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":white_check_mark:"))
+                    if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":white_check_mark:"))
                     {
                         var name = ship.Name;
                         var role = await e.Channel.Guild.CreateRoleAsync($"☠{name}☠", null, null, false, true);
@@ -475,7 +509,7 @@ namespace SeaOfThieves
                             $"Администратор {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил создание приватного корабля {name}.",
                             DateTime.Now);
                     }
-                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":no_entry:"))
+                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":no_entry:"))
                     {
                         var name = ship.Name;
                         var member =
@@ -1211,6 +1245,21 @@ namespace SeaOfThieves
         ///     Id роли правил.
         /// </summary>
         public ulong CodexRole;
+
+        /// <summary>
+        ///     Id сообщения правил рейда.
+        /// </summary>
+        public ulong FleetCodexMessageId;
+
+        /// <summary>
+        ///     Id роли правил рейда.
+        /// </summary>
+        public ulong FleetCodexRole;
+
+        /// <summary>
+        ///     Id роли капитана рейда.
+        /// </summary>
+        public ulong FleetCaptainRole;
 
         /// <summary>
         ///     Id роли мута.
