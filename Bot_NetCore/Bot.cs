@@ -83,6 +83,7 @@ namespace SeaOfThieves
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
             ReportList.ReadFromXML(BotSettings.ReportsXML);
+            UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -138,7 +139,14 @@ namespace SeaOfThieves
             Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
             Client.UnknownEvent += ClientOnUnknownEvent;
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
-            
+#if DEBUG
+            Client.ClientErrored += args =>
+            {
+                Console.WriteLine(args.Exception.InnerException);
+                return Task.CompletedTask;
+            }; 
+#endif
+
             Commands.CommandErrored += CommandsOnCommandErrored;
             Commands.CommandExecuted += CommandsOnCommandExecuted;
 
@@ -554,6 +562,23 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
+            // Сохранение ролей участника
+            var roles = e.Member.Roles;
+            var rolesToSave = new List<ulong>();
+            foreach (var role in roles)
+            {
+                if (role.Id != BotSettings.CodexRole && role.Id != e.Guild.EveryoneRole.Id)
+                {
+                    rolesToSave.Add(role.Id);
+                }
+            }
+
+            if (rolesToSave.Count != 0)
+            {
+                UsersLeftList.Users[e.Member.Id] = new UserLeft(e.Member.Id, rolesToSave);
+                UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
+            }
+            
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
@@ -578,8 +603,6 @@ namespace SeaOfThieves
         /// <summary>
         ///     Приветственное сообщение + лог посещений + проверка на бан
         /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
             var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
@@ -592,6 +615,26 @@ namespace SeaOfThieves
                                             "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
                                             "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
                                             "**Удачной игры!**");
+
+            // Выдача ролей, которые были у участника перед выходом.
+            if (UsersLeftList.Users.ContainsKey(e.Member.Id))
+            {
+                foreach (var role in UsersLeftList.Users[e.Member.Id].Roles)
+                {
+                    try
+                    {
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(role));
+                    }    
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+                }
+
+                UsersLeftList.Users[e.Member.Id] = null;
+                UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
+            }
+            
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
@@ -1218,6 +1261,11 @@ namespace SeaOfThieves
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;
+
+        /// <summary>
+        ///     Путь до файла с вышедшими пользователями.
+        /// </summary>
+        public string UsersLeftXML;
     }
 
     public enum CommandType
