@@ -153,22 +153,14 @@ namespace SeaOfThieves.Commands
                     if (el.Value.CurrentMonthActiveCount > 0)
                     {
                         var user = await guild.GetMemberAsync(el.Key);
-                        var place = "";
-                        switch(i)
+
+                        var place = i switch
                         {
-                            case 1:
-                                place = "🥇";
-                                break;
-                            case 2:
-                                place = "🥈";
-                                break;
-                            case 3:
-                                place = "🥉";
-                                break;
-                            default:
-                                place = $"{i}.";
-                                break;
-                        }
+                            1 => "🥇",
+                            2 => "🥈",
+                            3 => "🥉",
+                            _ => $"{i}.",
+                        };
 
                         embed.AddField(
                             $"{place} {user.DisplayName}#{user.Discriminator}",
