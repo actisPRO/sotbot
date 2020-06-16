@@ -176,9 +176,11 @@ namespace SeaOfThieves
         {
             var guild = Client.Guilds[BotSettings.Guild];
 
-            var channels = new Dictionary<DiscordChannel, TimeSpan>();
-            channels.Add(guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 15, 0));            //15 минут для канала поиска
-            channels.Add(guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0));   //24 часа для канала создания рейда
+            var channels = new Dictionary<DiscordChannel, TimeSpan>
+            {
+                { guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 15, 0) },            //15 минут для канала поиска
+                { guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0) }   //24 часа для канала создания рейда
+            };
 
             foreach (var channel in channels)
             {
