@@ -158,10 +158,11 @@ namespace SeaOfThieves
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
             
-            var clearFindChannel = new Timer(5000);
-            clearFindChannel.Elapsed += ClearFindChannelOnElapsed;
-            clearFindChannel.AutoReset = true;
-            clearFindChannel.Enabled = true;
+            //Таймер который каждую минуту проверяет истекшие сообщения в каналах
+            var clearChannelMessages = new Timer(60000);
+            clearChannelMessages.Elapsed += ClearChannelMessagesOnElapsed;
+            clearChannelMessages.AutoReset = true;
+            clearChannelMessages.Enabled = true;
 
             await Task.Delay(-1);
         }
@@ -171,26 +172,32 @@ namespace SeaOfThieves
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void ClearFindChannelOnElapsed(object sender, ElapsedEventArgs e)
+        private async void ClearChannelMessagesOnElapsed(object sender, ElapsedEventArgs e)
         {
             var guild = Client.Guilds[BotSettings.Guild];
-            var channel = guild.GetChannel(BotSettings.FindChannel);
 
-            var messages = await channel.GetMessagesAsync(100);
-            var toDelete = messages.ToList()
-                .Where(x => !x.Pinned).ToList()                                                         //Не закрепленные сообщения
-                .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp).TotalMinutes > 15);     //Опубликованные более 15 минут назад
+            var channels = new Dictionary<DiscordChannel, TimeSpan>();
+            channels.Add(guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 15, 0));            //15 минут для канала поиска
+            channels.Add(guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0));   //24 часа для канала создания рейда
 
-            if (toDelete.Count() > 0)
-                try
-                {
-                    await channel.DeleteMessagesAsync(toDelete);
-                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Поиск игроков был очищен.", DateTime.Now);
-                }
-                catch (Exception ex)
-                {
-                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Ошибка при удалении сообщений в поиске игроков. \n{ex.Message}", DateTime.Now);
-                }
+            foreach (var channel in channels)
+            {
+                var messages = await channel.Key.GetMessagesAsync(100);
+                var toDelete = messages.ToList()
+                    .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
+                    .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+
+                if (toDelete.Count() > 0)
+                    try
+                    {
+                        await channel.Key.DeleteMessagesAsync(toDelete);
+                        Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
+                    }
+                    catch (Exception ex)
+                    {
+                        Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
+                    }
+            }
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -1310,6 +1317,11 @@ namespace SeaOfThieves
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;
+
+        /// <summary>
+        ///     Id канала с созданием рейда.
+        /// </summary>
+        public ulong FleetCreationChannel;
 
         /// <summary>
         ///     Путь до файла с вышедшими пользователями.
