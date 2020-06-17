@@ -557,7 +557,7 @@ namespace SeaOfThieves
         {
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
-                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
+                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). **Участников на сервере:** {e.Guild.MemberCount}.");
 
             //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
             if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
@@ -620,10 +620,11 @@ namespace SeaOfThieves
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
-                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
+                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. " +
+                        $"**Участников на сервере:** {e.Guild.MemberCount}.");
 
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}",
+                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.",
                     DateTime.Now);
 
                 //Проверяем если пригласивший уже существует, если нет то создаем
@@ -645,7 +646,9 @@ namespace SeaOfThieves
             {
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
-                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт произошла ошибка.");
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
+                        $"**Участников на сервере:** {e.Guild.MemberCount}." +
+                        $"При попытке отследить инвайт произошла ошибка.");
 
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                     $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
