@@ -17,7 +17,54 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task DonatorSetPrice(CommandContext ctx, string name, int newPrice)
         {
+            if (!PriceList.Prices.ContainsKey(DateTime.Today))
+            {
+                var latestPrices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
+                PriceList.Prices[DateTime.Today] = new DateServices(DateTime.Today, latestPrices.ColorPrice,
+                    latestPrices.WantedPrice, latestPrices.RoleNamePrice, latestPrices.FriendsPrice);
+            }
+
+            switch (name)
+            {
+                case "color":
+                    PriceList.Prices[DateTime.Today].ColorPrice = newPrice;
+                    break;
+                case "wanted":
+                    PriceList.Prices[DateTime.Today].WantedPrice = newPrice;
+                    break;
+                case "role_rename":
+                    PriceList.Prices[DateTime.Today].RoleNamePrice = newPrice;
+                    break;
+                case "friends":
+                    PriceList.Prices[DateTime.Today].FriendsPrice = newPrice;
+                    break;
+                default:
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Неправильно указано имя услуги!");
+                    return;
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменена цена услуги!");
             
+            PriceList.SaveToXML(Bot.BotSettings.PriceListXML);
+        }
+        
+        [Command("dgetprices")]
+        [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
+        public async Task DonatorGetPrices(CommandContext ctx)
+        {
+            var lastDate = PriceList.GetLastDate(DateTime.Now);
+            var prices = PriceList.Prices[lastDate];
+
+            var embed = new DiscordEmbedBuilder();
+            embed.Color = DiscordColor.Goldenrod;
+            embed.Title = "Текущие цены на донат";
+            embed.AddField("Color", prices.ColorPrice.ToString(), true);
+            embed.AddField("Wanted", prices.WantedPrice.ToString(), true);
+            embed.AddField("Role rename", prices.RoleNamePrice.ToString(), true);
+            embed.AddField("Friends", prices.FriendsPrice.ToString(), true);
+
+            await ctx.RespondAsync(embed: embed.Build());
         }
         
         [Command("donatoradd")]

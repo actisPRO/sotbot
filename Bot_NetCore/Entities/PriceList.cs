@@ -1,12 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace SeaOfThieves.Entities
 {
     public static class PriceList
     {
-        public static Dictionary<DateTime, DateServices> Prices;
+        public static Dictionary<DateTime, DateServices> Prices = new Dictionary<DateTime, DateServices>();
+
+        public static DateTime GetLastDate(DateTime forDate)
+        {
+            var retVal = forDate;
+            foreach (var date in Prices.Keys)
+            {
+                if (date <= forDate) retVal = date;
+                else break;
+            }
+
+            return retVal;
+        }
 
         public static void ReadFromXML(string fileName)
         {
@@ -32,8 +45,10 @@ namespace SeaOfThieves.Entities
                             break;
                     }
                 }
-                Prices[Convert.ToDateTime(date.Attribute("date").Value)] = 
-                    new DateServices(Convert.ToDateTime(date.Attribute("date").Value), colorPrice, wantedPrice, roleRenamePrice, friendsPrice);
+
+                var dateVal = Convert.ToDateTime(date.Attribute("date").Value);
+                Prices[dateVal] = 
+                    new DateServices(dateVal, colorPrice, wantedPrice, roleRenamePrice, friendsPrice);
             }
         }
 

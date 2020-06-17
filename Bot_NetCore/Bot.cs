@@ -84,6 +84,7 @@ namespace SeaOfThieves
             InviterList.ReadFromXML(BotSettings.InviterXML);
             ReportList.ReadFromXML(BotSettings.ReportsXML);
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
+            PriceList.ReadFromXML(BotSettings.PriceListXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -1329,6 +1330,11 @@ namespace SeaOfThieves
         ///     Путь до файла с вышедшими пользователями.
         /// </summary>
         public string UsersLeftXML;
+
+        /// <summary>
+        ///     Путь до файла с ценами на донат.
+        /// </summary>
+        public string PriceListXML;
     }
 
     public enum CommandType

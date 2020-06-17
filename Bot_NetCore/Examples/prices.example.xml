@@ -3,7 +3,7 @@
     <Date date="01.01.1970">
         <Service id="color">50</Service>
         <Service id="wanted">100</Service>
-        <Service id="role_reame">250</Service>
+        <Service id="role_rename">250</Service>
         <Service id="friends">250</Service>
     </Date>
     <Date date="15.06.2020">
