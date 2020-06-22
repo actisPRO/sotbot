@@ -65,10 +65,10 @@ namespace Bot_NetCore.Misc
 
         public static string FormatTimespan(TimeSpan time)
         {
-            string ds = time.Days != 0 ? string.Format("{0:%d}дней ", time) : "";
-            string hs = time.Hours != 0 ? string.Format("{0:%h}часов ", time) : "";
-            string ms = time.Minutes != 0 ? string.Format("{0:%m}мин ", time) : "";
-            string ss = time.Seconds != 0 ? string.Format(" {0:%s}сек ", time) : "";
+            string ds = time.Days != 0 ? string.Format("{0:%d} дней ", time) : "";
+            string hs = time.Hours != 0 ? string.Format("{0:%h} часов ", time) : "";
+            string ms = time.Minutes != 0 ? string.Format("{0:%m} мин ", time) : "";
+            string ss = time.Seconds != 0 ? string.Format("{0:%s} сек ", time) : "";
             return (ds + hs + ms + ss).TrimEnd(' ');
             //return string.Format("{0:%d}д {0:%h}ч {0:%m}м {0:%s}с", time);
         }
