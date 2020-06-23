@@ -857,6 +857,8 @@ namespace SeaOfThieves
 
                     await member.PlaceInAsync(created);
 
+                    await created.AddOverwriteAsync(member, Permissions.MoveMembers, Permissions.None);
+
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                         $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
                         DateTime.Now.ToUniversalTime());

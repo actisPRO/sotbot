@@ -88,6 +88,8 @@ namespace SeaOfThieves.Commands
             try
             {
                 await ctx.Member.PlaceInAsync(created);
+
+                await created.AddOverwriteAsync(ctx.Member, Permissions.MoveMembers, Permissions.None);
             }
             catch (BadRequestException)
             {
