@@ -380,14 +380,19 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task ShowSettings(CommandContext ctx)
         {
-            var message = "**Текущие настройки бота:**\n";
+            var interactivity = ctx.Client.GetInteractivityModule();
+
+            List<string> settings = new List<string>();
+
             foreach (var field in typeof(Settings).GetFields())
             {
                 if (field.Name == "Token") continue;
-                message += $"**{field.Name}** = {field.GetValue(Bot.BotSettings)}\n";
+                settings.Add($"**{field.Name}** = {field.GetValue(Bot.BotSettings)}");
             }
 
-            await ctx.RespondAsync(message);
+            var settingsPagination = Utility.GeneratePagesInEmbeds(settings, "**Текущие настройки бота**");
+
+            await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
         }
 
         [Command("emissarymessage")]

@@ -8,7 +8,7 @@ namespace Bot_NetCore.Misc
 {
     class Utility
     {
-        public static IEnumerable<Page> GeneratePagesInEmbeds(List<string> input)
+        public static IEnumerable<Page> GeneratePagesInEmbeds(List<string> input, string title = "")
         {
             if (input.Count == 0)
                 throw new InvalidOperationException("You must provide a list of strings that is not null or empty!");
@@ -38,9 +38,9 @@ namespace Bot_NetCore.Misc
                 {
                     Embed = new DiscordEmbedBuilder()
                     {
-                        Title = $"Страница {page} / {split.Count}. Всего {input.Count}",
+                        Title = title,
                         Description = s
-                    }
+                    }.WithFooter($"Страница {page} / {split.Count}. Всего {input.Count}")
                 });
                 page++;
             }
