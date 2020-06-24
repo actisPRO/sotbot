@@ -76,18 +76,22 @@ namespace SeaOfThieves.Commands
 
                 embed.AddField("Имя на сервере", member.Username);
 
+                //Предупреждения
                 var warnings = 0;
                 if (UserList.Users.ContainsKey(member.Id)) warnings = UserList.Users[member.Id].Warns.Count;
                 embed.AddField("Предупреждения", warnings.ToString(), true);
 
+                //Донат
                 var donate = 0;
                 if (DonatorList.Donators.ContainsKey(member.Id)) donate = (int)DonatorList.Donators[member.Id].Balance;
                 embed.AddField("Донат", donate.ToString(), true);
 
+                //Модератор
                 var moderator = "Нет";
                 if (Bot.IsModerator(member)) moderator = "Да";
                 embed.AddField("Модератор", moderator, true);
 
+                //Приватный корабль
                 var privateShip = "Нет";
                 foreach (var ship in ShipList.Ships.Values)
                     foreach (var shipMember in ship.Members.Values)
@@ -100,21 +104,36 @@ namespace SeaOfThieves.Commands
 
                 embed.AddField("Владелец приватного корабля", privateShip);
 
+                //Правила
                 var codex = "Не принял";
                 if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) 
                     codex = "Принял";
                 else if (ReportList.CodexPurges.ContainsKey(member.Id))
                     if (ReportList.CodexPurges[member.Id].Expired())
-                        codex = "Не принял после раблокировки";
+                        codex = "Не принял*";
                     else
-                        codex = "Заблокирован";
+                        codex = Utility.FormatTimespan(ReportList.CodexPurges[member.Id].getRemainingTime());
                 embed.AddField("Правила", codex, true);
 
+                //Правила рейда
+                var fleetCodex = "Не принял";
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
+                    fleetCodex = "Принял";
+                else if (ReportList.FleetPurges.ContainsKey(member.Id))
+                    if (ReportList.FleetPurges[member.Id].Expired())
+                        fleetCodex = "Не принял*";
+                    else
+                        fleetCodex = Utility.FormatTimespan(ReportList.FleetPurges[member.Id].getRemainingTime());
+                embed.AddField("Правила рейда", fleetCodex, true);
+
+                //Мут
                 var mute = "Нет";
                 if (ReportList.Mutes.ContainsKey(member.Id))
                     if (!ReportList.Mutes[member.Id].Expired())
                         mute = Utility.FormatTimespan(ReportList.Mutes[member.Id].getRemainingTime());
                 embed.AddField("Мут", mute, true);
+
+                embed.WithFooter("(*) Не принял после разблокировки");
 
                 await ctx.RespondAsync(embed: embed.Build());
             }

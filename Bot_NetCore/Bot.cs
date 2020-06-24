@@ -84,6 +84,8 @@ namespace SeaOfThieves
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
             ReportList.ReadFromXML(BotSettings.ReportsXML);
+            UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
+            PriceList.ReadFromXML(BotSettings.PriceListXML);
 
             DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
             UserList.SaveToXML(BotSettings.WarningsXML);
@@ -122,7 +124,7 @@ namespace SeaOfThieves
 
             Interactivity = Client.UseInteractivity(icfg);
 
-            Commands.RegisterCommands<CreationCommands>();
+            Commands.RegisterCommands<PublicCommands>();
             Commands.RegisterCommands<UtilsCommands>();
             Commands.RegisterCommands<PrivateCommands>();
             Commands.RegisterCommands<DonatorCommands>();
@@ -136,9 +138,16 @@ namespace SeaOfThieves
             Client.VoiceStateUpdated += ClientOnVoiceStateUpdated;
             Client.MessageCreated += ClientOnMessageCreated;
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
-            Client.MessageReactionRemoved += ClientOnMessageReactionRemoved;
+            //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
             Client.UnknownEvent += ClientOnUnknownEvent;
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
+#if DEBUG
+            Client.ClientErrored += args =>
+            {
+                Console.WriteLine(args.Exception.InnerException);
+                return Task.CompletedTask;
+            }; 
+#endif
 
             Commands.CommandErrored += CommandsOnCommandErrored;
             Commands.CommandExecuted += CommandsOnCommandExecuted;
@@ -151,39 +160,48 @@ namespace SeaOfThieves
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
             
-            var clearFindChannel = new Timer(60000 * 30);
-            clearFindChannel.Elapsed += ClearFindChannelOnElapsed;
-            clearFindChannel.AutoReset = true;
-            clearFindChannel.Enabled = true;
+            //Таймер который каждую минуту проверяет истекшие сообщения в каналах
+            var clearChannelMessages = new Timer(60000);
+            clearChannelMessages.Elapsed += ClearChannelMessagesOnElapsed;
+            clearChannelMessages.AutoReset = true;
+            clearChannelMessages.Enabled = true;
 
             await Task.Delay(-1);
         }
 
         /// <summary>
-        ///     Очистка из канала поиска игроков сообщений опубликованных более чем 15 минут
+        ///     Очистка сообщений из каналов
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void ClearFindChannelOnElapsed(object sender, ElapsedEventArgs e)
+        private async void ClearChannelMessagesOnElapsed(object sender, ElapsedEventArgs e)
         {
             var guild = Client.Guilds[BotSettings.Guild];
-            var channel = guild.GetChannel(BotSettings.FindChannel);
 
-            var messages = await channel.GetMessagesAsync(100);
-            var toDelete = messages.ToList()
-                .Where(x => !x.Pinned).ToList()                                                         //Не закрепленные сообщения
-                .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp).TotalMinutes > 15);     //Опубликованные более 15 минут назад
+            var channels = new Dictionary<DiscordChannel, TimeSpan>
+            {
+                { guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 15, 0) },            //15 минут для канала поиска
+                { guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0) }   //24 часа для канала создания рейда
+            };
 
-            if (toDelete.Count() > 0)
-                try
-                {
-                    await channel.DeleteMessagesAsync(toDelete);
-                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Поиск игроков был очищен.", DateTime.Now);
-                }
-                catch (Exception ex)
-                {
-                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Ошибка при удалении сообщений в поиске игроков. \n{ex.Message}", DateTime.Now);
-                }
+            foreach (var channel in channels)
+            {
+                var messages = await channel.Key.GetMessagesAsync(100);
+                var toDelete = messages.ToList()
+                    .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
+                    .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+
+                if (toDelete.Count() > 0)
+                    try
+                    {
+                        await channel.Key.DeleteMessagesAsync(toDelete);
+                        Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
+                    }
+                    catch (Exception ex)
+                    {
+                        Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
+                    }
+            }
         }
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
@@ -362,7 +380,44 @@ namespace SeaOfThieves
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                {
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+                }
+
+                return;
+            }
+
+            //Проверка если сообщение с принятием правил
+            if (e.Message.Id == BotSettings.FleetCodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
+            {
+                //Проверка на purge
+                if (ReportList.FleetPurges.ContainsKey(e.User.Id))
+                    if (!ReportList.FleetPurges[e.User.Id].Expired()) //Проверка истекшей блокировки
+                    {
+                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.FleetPurges[e.User.Id].Moderator);
+                        try
+                        {
+                            await ((DiscordMember)e.User).SendMessageAsync(
+                                "**Возможность принять правила рейда заблокирована**\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.FleetPurges[e.User.Id].getRemainingTime())}\n" +
+                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                                $"**Причина:** {ReportList.FleetPurges[e.User.Id].Reason}\n");
+                        }
+
+                        catch (UnauthorizedException)
+                        {
+                            //user can block the bot
+                        }
+                        return;
+                    }
+                    else
+                        ReportList.FleetPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
+
+                //Выдаем роль правил рейда
+                var user = (DiscordMember)e.User;
+                if (!user.Roles.Any(x => x.Id == BotSettings.FleetCodexRole))
+                    await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.FleetCodexRole));
 
                 return;
             }
@@ -435,7 +490,7 @@ namespace SeaOfThieves
 
                 if (e.Message.Id == ship.CreationMessage)
                 {
-                    if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":white_check_mark:"))
+                    if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":white_check_mark:"))
                     {
                         var name = ship.Name;
                         var role = await e.Channel.Guild.CreateRoleAsync($"☠{name}☠", null, null, false, true);
@@ -443,6 +498,7 @@ namespace SeaOfThieves
                             e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), BotSettings.Bitrate);
 
                         await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                        await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
                         await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None,
                             Permissions.UseVoice);
 
@@ -468,7 +524,7 @@ namespace SeaOfThieves
                             $"Администратор {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил создание приватного корабля {name}.",
                             DateTime.Now);
                     }
-                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient) e.Client, ":no_entry:"))
+                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":no_entry:"))
                     {
                         var name = ship.Name;
                         var member =
@@ -555,6 +611,23 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
+            // Сохранение ролей участника
+            var roles = e.Member.Roles;
+            var rolesToSave = new List<ulong>();
+            foreach (var role in roles)
+            {
+                if (role.Id != BotSettings.CodexRole && role.Id != e.Guild.EveryoneRole.Id)
+                {
+                    rolesToSave.Add(role.Id);
+                }
+            }
+
+            if (rolesToSave.Count != 0)
+            {
+                UsersLeftList.Users[e.Member.Id] = new UserLeft(e.Member.Id, rolesToSave);
+                UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
+            }
+            
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). **Участников на сервере:** {e.Guild.MemberCount}.");
@@ -579,8 +652,6 @@ namespace SeaOfThieves
         /// <summary>
         ///     Приветственное сообщение + лог посещений + проверка на бан
         /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
             if (BanList.BannedMembers.ContainsKey(e.Member.Id) && BanList.BannedMembers[e.Member.Id].UnbanDateTime > BanList.BannedMembers[e.Member.Id].BanDateTime)
@@ -611,7 +682,26 @@ namespace SeaOfThieves
             {
                 //Пользователь заблокировал бота
             }
+          
+            // Выдача ролей, которые были у участника перед выходом.
+            if (UsersLeftList.Users.ContainsKey(e.Member.Id))
+            {
+                foreach (var role in UsersLeftList.Users[e.Member.Id].Roles)
+                {
+                    try
+                    {
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(role));
+                    }    
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+                }
 
+                UsersLeftList.Users[e.Member.Id] = null;
+                UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
+            }
+          
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
@@ -622,7 +712,7 @@ namespace SeaOfThieves
                 if(updatedInvite == null)
                 {
                     updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
-                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) > DateTimeOffset.UtcNow))      //Проверяем если он не истёк
+                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.UtcNow))      //Проверяем если он не истёк
                                            .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
                 }
 
@@ -1019,6 +1109,11 @@ namespace SeaOfThieves
         public ulong BotRole;
 
         /// <summary>
+        ///     Id категории донатных ролей
+        /// </summary>
+        public ulong DonatorSpacerRole;
+
+        /// <summary>
         ///     Текстовый код эмодзи, отправляемого при успешной операции.
         /// </summary>
         public string OkEmoji;
@@ -1201,6 +1296,25 @@ namespace SeaOfThieves
         public ulong CodexRole;
 
         /// <summary>
+        ///     Id сообщения правил рейда.
+        /// </summary>
+        public ulong FleetCodexMessageId;
+
+        /// <summary>
+        ///     Id роли правил рейда.
+        /// </summary>
+        public ulong FleetCodexRole;
+
+        /// <summary>
+        ///     Id роли капитана рейда.
+        /// </summary>
+        public ulong FleetCaptainRole;
+      
+        ///     Id роли бана принятия правил.
+        /// </summary>
+        public ulong PurgeCodexRole;
+
+        /// <summary>
         ///     Id роли мута.
         /// </summary>
         public ulong MuteRole;
@@ -1249,6 +1363,21 @@ namespace SeaOfThieves
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;
+      
+        /// <summary>
+        ///     Id канала с созданием рейда.
+        /// </summary>
+        public ulong FleetCreationChannel;
+
+        /// <summary>
+        ///     Путь до файла с вышедшими пользователями.
+        /// </summary>
+        public string UsersLeftXML;
+
+        /// <summary>
+        ///     Путь до файла с ценами на донат.
+        /// </summary>
+        public string PriceListXML;
     }
 
     public enum CommandType
