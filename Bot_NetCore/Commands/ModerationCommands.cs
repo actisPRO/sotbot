@@ -100,6 +100,7 @@ namespace SeaOfThieves.Commands
 
             //Убираем роль правил
             await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
+            await user.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
 
             //Отправка сообщения в лс
             try

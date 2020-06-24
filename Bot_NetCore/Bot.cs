@@ -361,7 +361,10 @@ namespace SeaOfThieves
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                {
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+                }
 
                 return;
             }
@@ -603,7 +606,7 @@ namespace SeaOfThieves
                 if(updatedInvite == null)
                 {
                     updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
-                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) > DateTimeOffset.UtcNow))      //Проверяем если он не истёк
+                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.UtcNow))      //Проверяем если он не истёк
                                            .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
                 }
 
@@ -1174,6 +1177,11 @@ namespace SeaOfThieves
         ///     Id роли правил.
         /// </summary>
         public ulong CodexRole;
+
+        /// <summary>
+        ///     Id роли бана принятия правил.
+        /// </summary>
+        public ulong PurgeCodexRole;
 
         /// <summary>
         ///     Id роли мута.
