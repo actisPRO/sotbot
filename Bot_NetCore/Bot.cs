@@ -379,7 +379,10 @@ namespace SeaOfThieves
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                {
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+                }
 
                 return;
             }
@@ -494,6 +497,7 @@ namespace SeaOfThieves
                             e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), BotSettings.Bitrate);
 
                         await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                        await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
                         await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None,
                             Permissions.UseVoice);
 
@@ -689,7 +693,7 @@ namespace SeaOfThieves
                 if(updatedInvite == null)
                 {
                     updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
-                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) > DateTimeOffset.UtcNow))      //Проверяем если он не истёк
+                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.UtcNow))      //Проверяем если он не истёк
                                            .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
                 }
 
@@ -1075,6 +1079,11 @@ namespace SeaOfThieves
         public ulong BotRole;
 
         /// <summary>
+        ///     Id категории донатных ролей
+        /// </summary>
+        public ulong DonatorSpacerRole;
+
+        /// <summary>
         ///     Текстовый код эмодзи, отправляемого при успешной операции.
         /// </summary>
         public string OkEmoji;
@@ -1270,6 +1279,10 @@ namespace SeaOfThieves
         ///     Id роли капитана рейда.
         /// </summary>
         public ulong FleetCaptainRole;
+      
+        ///     Id роли бана принятия правил.
+        /// </summary>
+        public ulong PurgeCodexRole;
 
         /// <summary>
         ///     Id роли мута.

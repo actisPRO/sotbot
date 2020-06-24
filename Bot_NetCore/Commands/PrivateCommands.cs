@@ -9,6 +9,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity;
 using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
@@ -74,6 +75,7 @@ namespace SeaOfThieves.Commands
                 ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
 
             await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+            await channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
             await channel.AddOverwriteAsync(ctx.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
 
             var member = await ctx.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
@@ -241,7 +243,7 @@ namespace SeaOfThieves.Commands
                     $"{Bot.BotSettings.ErrorEmoji} Корабль **{name}** не был найден! Проверьте правильность названия и попробуйте снова!");
                 return;
             }
-            
+
             if (!ship.IsInvited(ctx.Member.Id))
             {
                 await ctx.RespondAsync(
@@ -251,9 +253,9 @@ namespace SeaOfThieves.Commands
 
             var shipCount = 0;
             foreach (var _ship in ShipList.Ships.Values)
-            foreach (var _member in _ship.Members.Values)
-                if (_member.Id == ctx.Member.Id && _member.Status)
-                    ++shipCount;
+                foreach (var _member in _ship.Members.Values)
+                    if (_member.Id == ctx.Member.Id && _member.Status)
+                        ++shipCount;
 
             if (shipCount >= Bot.BotSettings.MaxPrivateShips)
             {
@@ -288,7 +290,7 @@ namespace SeaOfThieves.Commands
                     $"{Bot.BotSettings.ErrorEmoji} Корабль **{name}** не был найден! Проверьте правильность названия и попробуйте снова!");
                 return;
             }
-            
+
             if (!ship.IsInvited(ctx.Member.Id))
             {
                 await ctx.RespondAsync(
@@ -495,61 +497,61 @@ namespace SeaOfThieves.Commands
 
             foreach (var ship in ShipList.Ships.Values)
                 //if (ship.Name != "test") continue;
-            foreach (var member in ship.Members.Values)
-                if (member.Type == MemberType.Owner)
-                    try
-                    {
-                        var owner = await ctx.Member.Guild.GetMemberAsync(member.Id);
-
-                        if (force)
-                        {
-                            try
-                            {
-                                await owner.SendMessageAsync(
-                                    $"Ваш корабль **{ship.Name} будет автоматически удалён через {days} дня. " +
-                                    $"Причина: {forceReason}.");
-                            }
-                            catch (UnauthorizedException)
-                            {
-                            }
-
-                            root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), owner.Id));
-                            continue;
-                        }
-
-                        if (ship.Members.Count < 4)
-                        {
-                            try
-                            {
-                                await owner.SendMessageAsync(
-                                    $"Ваш корабль **{ship.Name}** будет автоматически удалён через {days} дня, поскольку " +
-                                    "в нём меньше, чем 4 человека.");
-                            }
-                            catch (UnauthorizedException)
-                            {
-                            }
-
-                            root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), owner.Id));
-                            continue;
-                        }
-
+                foreach (var member in ship.Members.Values)
+                    if (member.Type == MemberType.Owner)
                         try
                         {
-                            await owner.SendMessageAsync(
-                                $"Поскольку вы являетесь владельцем корабля **{ship.Name}**, вы должны " +
-                                "подтвердить его активность командой `!active`, иначе он будет удален " +
-                                $"через {days} дня.");
-                        }
-                        catch (UnauthorizedException)
-                        {
-                        }
+                            var owner = await ctx.Member.Guild.GetMemberAsync(member.Id);
 
-                        root.Add(new XElement("Owner", new XAttribute("status", "False"), owner.Id));
-                    }
-                    catch (NotFoundException)
-                    {
-                        root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), member.Id));
-                    }
+                            if (force)
+                            {
+                                try
+                                {
+                                    await owner.SendMessageAsync(
+                                        $"Ваш корабль **{ship.Name} будет автоматически удалён через {days} дня. " +
+                                        $"Причина: {forceReason}.");
+                                }
+                                catch (UnauthorizedException)
+                                {
+                                }
+
+                                root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), owner.Id));
+                                continue;
+                            }
+
+                            if (ship.Members.Count < 4)
+                            {
+                                try
+                                {
+                                    await owner.SendMessageAsync(
+                                        $"Ваш корабль **{ship.Name}** будет автоматически удалён через {days} дня, поскольку " +
+                                        "в нём меньше, чем 4 человека.");
+                                }
+                                catch (UnauthorizedException)
+                                {
+                                }
+
+                                root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), owner.Id));
+                                continue;
+                            }
+
+                            try
+                            {
+                                await owner.SendMessageAsync(
+                                    $"Поскольку вы являетесь владельцем корабля **{ship.Name}**, вы должны " +
+                                    "подтвердить его активность командой `!active`, иначе он будет удален " +
+                                    $"через {days} дня.");
+                            }
+                            catch (UnauthorizedException)
+                            {
+                            }
+
+                            root.Add(new XElement("Owner", new XAttribute("status", "False"), owner.Id));
+                        }
+                        catch (NotFoundException)
+                        {
+                            root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), member.Id));
+                        }
 
             doc.Save("active.xml");
 
@@ -639,5 +641,150 @@ namespace SeaOfThieves.Commands
 
             doc.Save("active.xml");
         }
+
+        [Command("shipinfo")]
+        public async Task ShipInfo(CommandContext ctx, DiscordMember shipOwner)
+        {
+            //Временное ограничение, потом открою для модеров
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            //Get ship data
+            var ownedShips = ShipList.Ships.Values.Where(s => s.Members.Values.Any(m => m.Type == MemberType.Owner && m.Id == shipOwner.Id));
+
+            if (ownedShips.Count() == 0)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось найти корабли во владении!");
+
+                //Не найдены приватные корабли, пробуем почистить список в actions.xml
+                var doc = XDocument.Load("actions.xml");
+                foreach (var action in doc.Element("actions").Elements("action"))
+                    if (Convert.ToUInt64(action.Value) == shipOwner.Id && action.Attribute("type").Value == "ship")
+                        action.Remove();
+                doc.Save("actions.xml");
+
+                return;
+            }
+
+            ownedShips.ToList().ForEach(async ship =>
+            {
+                var roleNeedFixes = false;
+                var channelNeedFixes = false;
+
+                var embed = new DiscordEmbedBuilder();
+                embed.Title = ship.Name;
+
+                embed.AddField("Статус", ship.Status ? "Подтвержден" : "Не подтвержден");
+
+                //Роль
+                embed.AddField("Роль", "_");
+                embed.AddField("Роль в памяти", ship.Role.ToString(), true);
+                try
+                {
+                    var role = ctx.Channel.Guild.GetRole(ship.Role);
+                    embed.AddField("Роль в ДС", $"{role.Id} \n {role.Name}", true);
+                }
+                catch (NullReferenceException)
+                {
+                    embed.AddField("Роль в ДС", "Не найдена", true);
+                    roleNeedFixes = true;
+                }
+
+                //Канал
+                embed.AddField("Канал", "_");
+                embed.AddField("Канал в памяти", ship.Channel.ToString(), true);
+                try
+                {
+                    var channel = ctx.Channel.Guild.Channels.FirstOrDefault(x => x.Id == ship.Channel);
+                    embed.AddField("Канал", $"{channel.Id} \n {channel.Name}", true);
+                }
+                catch (NullReferenceException)
+                {
+                    embed.AddField("Канал", "Не найден", true);
+                    channelNeedFixes = true;
+                }
+
+                //Пользователи
+                var users = "";
+                ship.Members.ToList().ForEach(m => users += $"<@{m.Value.Id}> | {m.Value.Type} | {m.Value.Status} \n");
+                embed.AddField("Пользователи", users);
+
+                var msgContent = "";
+                msgContent += roleNeedFixes ? "Не найдена роль " : "";
+                msgContent += channelNeedFixes ? "Не найден канал " : "";
+
+                if (roleNeedFixes || channelNeedFixes)
+                    embed.Color = new DiscordColor("#FF0000");
+                else
+                    embed.Color = new DiscordColor("#00FF00");
+
+                var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
+
+                if (roleNeedFixes || channelNeedFixes)
+                {
+                    // first retrieve the interactivity module from the client
+                    var interactivity = ctx.Client.GetInteractivityModule();
+
+                    // ok emoji
+                    var okEmoji = DiscordEmoji.FromName(ctx.Client, ":tools:");
+
+                    await message.CreateReactionAsync(okEmoji);
+
+                    // wait for a reaction
+                    var em = await interactivity.WaitForMessageReactionAsync(xe => xe.Name == okEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
+
+                    await message.DeleteOwnReactionAsync(okEmoji);
+
+                    try
+                    {
+                        if (em.Emoji.Name == okEmoji.Name)
+                        {
+                            //Create Role if needed
+                            if (roleNeedFixes)
+                            {
+                                var role = await ctx.Guild.CreateRoleAsync($"☠{ship.Name}☠", null, null, false, true);
+                                await shipOwner.GrantRoleAsync(role);
+                                ship.Role = role.Id;
+                            }
+
+                            //Create Channel if needed
+                            if (channelNeedFixes)
+                            {
+                                var channel = await ctx.Guild.CreateChannelAsync($"☠{ship.Name}☠", ChannelType.Voice,
+                                       ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
+
+                                var role = ctx.Channel.Guild.GetRole(ship.Role);
+                                await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                                await channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
+                                await channel.AddOverwriteAsync(ctx.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
+
+                                ship.Channel = channel.Id;
+                            }
+
+                            //Sync Role and Channel if needed
+                            if (roleNeedFixes && channelNeedFixes == false)
+                            {
+                                var role = ctx.Channel.Guild.GetRole(ship.Role);
+                                await ctx.Channel.Guild.GetChannel(ship.Channel).AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                            }
+
+                            //Save Data
+                            ShipList.Ships[ship.Name].SetChannel(ship.Channel);
+                            ShipList.Ships[ship.Name].SetRole(ship.Role);
+
+                            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+                        }
+                    }
+                    catch
+                    {
+                        await ctx.RespondAsync("Время ответа вышло, заново введите команду `shipInfo`");
+                    }
+                }
+            });
+        }
+
     }
 }

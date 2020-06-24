@@ -81,6 +81,12 @@ namespace SeaOfThieves.Commands
                 ctx.Member.Id,
                 reason);
 
+            if (purge.ReportDuration.TotalSeconds < 1)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
+                return;
+            }
+
             //Возможна только одна блокировка, если уже существует то перезаписываем
             if (!ReportList.CodexPurges.ContainsKey(member.Id))
                 ReportList.CodexPurges.Add(member.Id, purge);
@@ -209,6 +215,12 @@ namespace SeaOfThieves.Commands
                 Utility.TimeSpanParse(duration),
                 ctx.Member.Id,
                 reason);
+
+            if(mute.ReportDuration.TotalSeconds < 1)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
+                return;
+            }
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
             if (!ReportList.Mutes.ContainsKey(member.Id))
@@ -387,6 +399,12 @@ namespace SeaOfThieves.Commands
             }
 
             var durationTimeSpan = Utility.TimeSpanParse(duration);
+
+            if (durationTimeSpan.TotalSeconds < 1)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
+                return;
+            }
 
             var unbanDate = DateTime.Now.ToUniversalTime().Add(durationTimeSpan);
 

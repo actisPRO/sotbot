@@ -82,7 +82,7 @@ namespace SeaOfThieves.Commands
             {
                 var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
                 res.SetRole(role.Id);
-                await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
+                await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
                 await member.GrantRoleAsync(role);
                 message += "• `!dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
             }
@@ -197,7 +197,7 @@ namespace SeaOfThieves.Commands
 
             var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
             await ctx.Guild.UpdateRoleAsync(role, color: discordColor);
-            await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
+            await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен цвет донатера!");
         }

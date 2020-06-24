@@ -125,17 +125,10 @@ namespace SeaOfThieves.Commands
                 .OrderByDescending(x => x.Value.CurrentMonthActiveCount).ToList()
                 .FindAll(x =>
                 {
-                    try
-                    {
                         if (!x.Value.Active)
                             return false;
-                        guild.GetMemberAsync(x.Key);
+                        //guild.GetMemberAsync(x.Key);
                         return true;
-                    }
-                    catch (NotFoundException)
-                    {
-                        return false;
-                    }
                 })
                 .Take(10).ToList();
 
@@ -148,9 +141,10 @@ namespace SeaOfThieves.Commands
             int i = 1;
             foreach (var el in currentMonthInviters)
             {
-                try
+                if (el.Value.CurrentMonthActiveCount > 0)
                 {
-                    if (el.Value.CurrentMonthActiveCount > 0)
+                    var userString = "";
+                    try
                     {
                         var user = await guild.GetMemberAsync(el.Key);
 
@@ -166,11 +160,35 @@ namespace SeaOfThieves.Commands
                             $"{place} {user.DisplayName}#{user.Discriminator}",
                             $"пригласил {el.Value.CurrentMonthActiveCount} пользователей");
                         i++;
+                      
+                        userString = $"{user.Username}#{user.Discriminator}";
                     }
-                }
-                catch (NotFoundException)
-                {
-                    //Пользователь не найден, так что пропускаем и не добавляем в статистику
+                    catch (NotFoundException)
+                    {
+                        //Пользователь не найден
+                        userString = $"Пользователь покинул сервер";
+                    }
+                    var place = "";
+                    switch(i)
+                    {
+                        case 1:
+                            place = "🥇";
+                            break;
+                        case 2:
+                            place = "🥈";
+                            break;
+                        case 3:
+                            place = "🥉";
+                            break;
+                        default:
+                            place = $"{i}.";
+                            break;
+                    }
+
+                    embed.AddField(
+                        $"{place} {userString}",
+                        $"пригласил {el.Value.CurrentMonthActiveCount} пользователей");
+                    i++;
                 }
             }
 
