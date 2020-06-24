@@ -123,7 +123,7 @@ namespace SeaOfThieves
 
             Interactivity = Client.UseInteractivity(icfg);
 
-            Commands.RegisterCommands<CreationCommands>();
+            Commands.RegisterCommands<PublicCommands>();
             Commands.RegisterCommands<UtilsCommands>();
             Commands.RegisterCommands<PrivateCommands>();
             Commands.RegisterCommands<DonatorCommands>();
