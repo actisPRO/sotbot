@@ -1310,6 +1310,7 @@ namespace SeaOfThieves
         /// </summary>
         public ulong FleetCaptainRole;
       
+        /// <summary>
         ///     Id роли бана принятия правил.
         /// </summary>
         public ulong PurgeCodexRole;
