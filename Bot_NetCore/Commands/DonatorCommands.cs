@@ -176,10 +176,11 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < 50)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.ColorPrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 50 рублей. " +
-                                       "Если вы донатили до *17.09.2018*, обратитесь к **Actis** для смены цвета.");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
 
@@ -211,12 +212,13 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < 250)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.RoleNamePrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
-
             //Проверка названия на копирование админ ролей
             try
             {
@@ -249,9 +251,11 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < 250)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
 
@@ -278,9 +282,11 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < 250)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 250 рублей!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
 
@@ -302,9 +308,11 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < 100)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 100 рублей!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
 
@@ -322,9 +330,11 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < 100)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш баланс меньше 100 рублей!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
 
