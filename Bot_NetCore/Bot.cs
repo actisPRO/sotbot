@@ -151,7 +151,7 @@ namespace SeaOfThieves
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
             
-            var clearFindChannel = new Timer(5000);
+            var clearFindChannel = new Timer(60000 * 30);
             clearFindChannel.Elapsed += ClearFindChannelOnElapsed;
             clearFindChannel.AutoReset = true;
             clearFindChannel.Enabled = true;
