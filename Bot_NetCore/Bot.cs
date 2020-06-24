@@ -17,6 +17,7 @@ using SeaOfThieves.Commands;
 using SeaOfThieves.Entities;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
+using DSharpPlus.CommandsNext.Exceptions;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -169,7 +170,7 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        ///     Очистка из канала поиска игроков сообщений опубликованных более чем 15 минут
+        ///     Очистка сообщений из каналов
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -207,7 +208,7 @@ namespace SeaOfThieves
         {
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Id}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
                     DateTime.Now);
             return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
@@ -561,7 +562,7 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
-            if (e.Message.Content.StartsWith(">"))
+            if (e.Message.Content.StartsWith("> "))
                 if (IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
                 {
                     var messageStrings = e.Message.Content.Split('\n');
@@ -629,7 +630,7 @@ namespace SeaOfThieves
             
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
-                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id})");
+                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). **Участников на сервере:** {e.Guild.MemberCount}.");
 
             //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
             if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
@@ -653,17 +654,35 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
+            if (BanList.BannedMembers.ContainsKey(e.Member.Id) && BanList.BannedMembers[e.Member.Id].UnbanDateTime > BanList.BannedMembers[e.Member.Id].BanDateTime)
+            {
+                var ban = BanList.BannedMembers[e.Member.Id];
+                await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
+                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime} UTC.");
+                await e.Member.BanAsync(0, "Autoban");
+
+                return;
+            }
+            
             var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
             var guildInvites = await e.Guild.GetInvitesAsync(); //Запрашиваем новый список инвайтов
             Invites = guildInvites.ToList(); //Обновляю список инвайтов
 
-            await e.Member.SendMessageAsync($"**Привет, {e.Member.Mention}!\n**" +
-                                            "Мы рады что ты присоединился к нашему серверу :wink:!\n\n" +
-                                            "Прежде чем приступать к игре, прочитай, пожалуйста, правила в канале " +
-                                            "`👮-пиратский-кодекс-👮` и гайд по боту в канале `📚-гайд-📚`.\n" +
-                                            "Если у тебя есть какие-то вопросы, не стесняйся писать администраторам.\n\n" +
-                                            "**Удачной игры!**");
-
+            try
+            {
+                await e.Member.SendMessageAsync($"**Привет, {e.Member.Mention}!\n**" +
+                                                "Мы рады что ты присоединился к нашему сообществу :wink:!\n\n" +
+                                                "Прежде чем приступать к игре, прочитай и прими правила в канале " +
+                                                "`#👮-пиратский-кодекс-👮`. После принятия можешь ознакомиться с гайдом по боту" +
+                                                "в канале `#📚-гайд-по-боту-📚`.\n" +
+                                                "Если у тебя есть какие-то вопросы, не стесняйся писать администрации.\n\n" +
+                                                "**Удачной игры!**");
+            }
+            catch(UnauthorizedException ex)
+            {
+                //Пользователь заблокировал бота
+            }
+          
             // Выдача ролей, которые были у участника перед выходом.
             if (UsersLeftList.Users.ContainsKey(e.Member.Id))
             {
@@ -682,7 +701,7 @@ namespace SeaOfThieves
                 UsersLeftList.Users[e.Member.Id] = null;
                 UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
             }
-            
+          
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
@@ -700,10 +719,11 @@ namespace SeaOfThieves
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
-                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}");
+                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. " +
+                        $"**Участников на сервере:** {e.Guild.MemberCount}.");
 
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}",
+                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.",
                     DateTime.Now);
 
                 //Проверяем если пригласивший уже существует, если нет то создаем
@@ -725,7 +745,9 @@ namespace SeaOfThieves
             {
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
-                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). При попытке отследить инвайт произошла ошибка.");
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
+                        $"**Участников на сервере:** {e.Guild.MemberCount}." +
+                        $"При попытке отследить инвайт произошла ошибка.");
 
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                     $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
@@ -749,11 +771,13 @@ namespace SeaOfThieves
         /// <summary>
         ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
-        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
+        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)    
         {
-            if (e.Command.Name == "dgenlist" && e.Exception.GetType() == typeof(NotFoundException)) return; //костыль
+            if (e.Exception is CommandNotFoundException) return;
+            
+            if (e.Command.Name == "dgenlist" && e.Exception is NotFoundException) return; //костыль
 
-            if (e.Exception.GetType() == typeof(ArgumentException) &&
+            if (e.Exception is ArgumentException &&
                 e.Exception.Message.Contains("Could not convert specified value to given type."))
             {
                 await e.Context.RespondAsync(
@@ -761,11 +785,17 @@ namespace SeaOfThieves
                 return;
             }
 
-            if (e.Exception.GetType() == typeof(ArgumentException) &&
+            if (e.Exception is ArgumentException &&
                 e.Exception.Message == "Not enough arguments supplied to the command.")
             {
                 await e.Context.RespondAsync(
                     $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели не все параметры.");
+                return;
+            }
+
+            if (e.Exception is NotFoundException)
+            {
+                await e.Context.RespondAsync($"{BotSettings.ErrorEmoji} Не был найден указанный пользователь.");
                 return;
             }
 
@@ -1333,7 +1363,7 @@ namespace SeaOfThieves
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;
-
+      
         /// <summary>
         ///     Id канала с созданием рейда.
         /// </summary>
