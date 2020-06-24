@@ -53,7 +53,7 @@ namespace SeaOfThieves.Commands
                     }
                 });
 
-            var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters);
+            var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters, "Полный список рефералов");
 
             await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
         }
@@ -82,7 +82,7 @@ namespace SeaOfThieves.Commands
                     try
                     {
                         var refMember = await ctx.Guild.GetMemberAsync(referral.Id);
-                        referrals.Add($"{refMember.Id} - {refMember.Username}#{refMember.Discriminator} ({refMember.Nickname})");
+                        referrals.Add($"{refMember.Id} - {refMember.Username}#{refMember.Discriminator} ({refMember.DisplayName})");
                     }
                     catch (NotFoundException)
                     {
@@ -91,7 +91,7 @@ namespace SeaOfThieves.Commands
 
                 }
 
-                var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals);
+                var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals, $"Список приглашенных пользователем {member.DisplayName}");
 
                 await responceMsg.DeleteAsync();
                 await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));

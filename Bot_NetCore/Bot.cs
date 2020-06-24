@@ -678,7 +678,7 @@ namespace SeaOfThieves
                                                 "Если у тебя есть какие-то вопросы, не стесняйся писать администрации.\n\n" +
                                                 "**Удачной игры!**");
             }
-            catch(UnauthorizedException ex)
+            catch(UnauthorizedException)
             {
                 //Пользователь заблокировал бота
             }
