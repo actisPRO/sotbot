@@ -1,16 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SeaOfThieves.Entities
 {
     public class Donator
     {
-        public Donator(ulong member, ulong colorRole, double balance = 0)
+        public Donator(ulong member, ulong colorRole, DateTime date, double balance = 0)
         {
             Member = member;
             Balance = balance;
             ColorRole = colorRole;
             Friends = new List<ulong>();
             Hidden = false;
+            Date = date;
 
             DonatorList.Donators[Member] = this;
         }
@@ -20,6 +22,7 @@ namespace SeaOfThieves.Entities
         public ulong ColorRole { get; private set; }
         public List<ulong> Friends { get; }
         public bool Hidden { get; private set; }
+        public DateTime Date { get; set; }
 
         public void AddFriend(ulong friend)
         {

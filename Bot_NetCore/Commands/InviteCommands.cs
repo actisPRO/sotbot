@@ -154,22 +154,14 @@ namespace SeaOfThieves.Commands
                         //Пользователь не найден
                         userString = $"Пользователь покинул сервер";
                     }
-                    var place = "";
-                    switch(i)
+
+                    var place = i switch
                     {
-                        case 1:
-                            place = "🥇";
-                            break;
-                        case 2:
-                            place = "🥈";
-                            break;
-                        case 3:
-                            place = "🥉";
-                            break;
-                        default:
-                            place = $"{i}.";
-                            break;
-                    }
+                        1 => "🥇",
+                        2 => "🥈",
+                        3 => "🥉",
+                        _ => $"{i}."
+                    };
 
                     embed.AddField(
                         $"{place} {userString}",
