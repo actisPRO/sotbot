@@ -67,7 +67,7 @@ namespace SeaOfThieves.Commands
         [Command("purge")]
         [Aliases("p")]
         [Hidden]
-        public async Task Purge(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
+        public async Task Purge(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -75,17 +75,17 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var purge = new MemberReport(user.Id,
+            var purge = new MemberReport(member.Id,
                 DateTime.Now,
                 Utility.TimeSpanParse(duration),
                 ctx.Member.Id,
                 reason);
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.CodexPurges.ContainsKey(user.Id))
-                ReportList.CodexPurges.Add(user.Id, purge);
+            if (!ReportList.CodexPurges.ContainsKey(member.Id))
+                ReportList.CodexPurges.Add(member.Id, purge);
             else
-                ReportList.CodexPurges[user.Id].UpdateReport(DateTime.Now,
+                ReportList.CodexPurges[member.Id].UpdateReport(DateTime.Now,
                     Utility.TimeSpanParse(duration),
                     ctx.Member.Id,
                     reason);
@@ -94,12 +94,12 @@ namespace SeaOfThieves.Commands
             ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
 
             //Убираем роль правил
-            await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
+            await member.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
 
             //Отправка сообщения в лс
             try
             {
-                await user.SendMessageAsync(
+                await member.SendMessageAsync(
                     $"**Еще раз внимательно прочитайте правила сервера**\n\n" +
                     $"**Возможность принять правила заблокирована**\n" +
                     $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
@@ -115,20 +115,20 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** {user}\n" +
+                 $"**Кому:** {member}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила {member.Mention}. " +
                                    $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
         }
 
         [Command("fleetpurge")]
         [Aliases("fp")]
         [Hidden]
-        public async Task FleetPurge(CommandContext ctx, DiscordMember user, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
+        public async Task FleetPurge(CommandContext ctx, DiscordMember member, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member); //Только капитаны рейда, модераторы не учитываются
 
@@ -144,18 +144,18 @@ namespace SeaOfThieves.Commands
             if (durationTimeSpan.TotalDays > 1 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
                 durationTimeSpan = new TimeSpan(1, 0, 0, 0);
 
-            var fleetPurge = new MemberReport(user.Id,
+            var fleetPurge = new MemberReport(member.Id,
                 DateTime.Now,
                 durationTimeSpan,
                 ctx.Member.Id,
                 reason);
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.FleetPurges.ContainsKey(user.Id))
-                ReportList.FleetPurges.Add(user.Id, fleetPurge);
+            if (!ReportList.FleetPurges.ContainsKey(member.Id))
+                ReportList.FleetPurges.Add(member.Id, fleetPurge);
             else
-                ReportList.FleetPurges[user.Id].UpdateReport(DateTime.Now,
-                    isFleetCaptain ? new TimeSpan(Math.Max(durationTimeSpan.Ticks, ReportList.FleetPurges[user.Id].ReportDuration.Ticks)) : durationTimeSpan, //Если капитан рейда, перезаписываем только максимальное время блокировки
+                ReportList.FleetPurges[member.Id].UpdateReport(DateTime.Now,
+                    isFleetCaptain ? new TimeSpan(Math.Max(durationTimeSpan.Ticks, ReportList.FleetPurges[member.Id].ReportDuration.Ticks)) : durationTimeSpan, //Если капитан рейда, перезаписываем только максимальное время блокировки
                     ctx.Member.Id,
                     reason);
 
@@ -163,12 +163,12 @@ namespace SeaOfThieves.Commands
             ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
 
             //Убираем роль правил
-            await user.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
+            await member.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
 
             //Отправка сообщения в лс
             try
             {
-                await user.SendMessageAsync(
+                await member.SendMessageAsync(
                     $"**Возможность принять правила заблокирована**\n" +
                     $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
@@ -183,20 +183,20 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил рейда**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** {user}\n" +
+                 $"**Кому:** {member}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила. " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила рейда {member.Mention}. " +
                                    $"Снятие через: {Utility.FormatTimespan(fleetPurge.ReportDuration)}!");
         }
 
         [Command("mute")]
         [Aliases("m")]
         [Hidden]
-        public async Task Mute(CommandContext ctx, DiscordMember user, string duration, [RemainingText] string reason = "Не указана")
+        public async Task Mute(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -204,17 +204,17 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var mute = new MemberReport(user.Id,
+            var mute = new MemberReport(member.Id,
                 DateTime.Now,
                 Utility.TimeSpanParse(duration),
                 ctx.Member.Id,
                 reason);
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.Mutes.ContainsKey(user.Id))
-                ReportList.Mutes.Add(user.Id, mute);
+            if (!ReportList.Mutes.ContainsKey(member.Id))
+                ReportList.Mutes.Add(member.Id, mute);
             else
-                ReportList.Mutes[user.Id].UpdateReport(DateTime.Now,
+                ReportList.Mutes[member.Id].UpdateReport(DateTime.Now,
                     Utility.TimeSpanParse(duration),
                     ctx.Member.Id,
                     reason);
@@ -223,12 +223,12 @@ namespace SeaOfThieves.Commands
             ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
 
             //Выдаем роль мута
-            await user.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.MuteRole));
+            await member.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.MuteRole));
 
             //Отправка сообщения в лс
             try
             {
-                await user.SendMessageAsync(
+                await member.SendMessageAsync(
                     $"**Вам выдан мут**\n\n" +
                     $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
@@ -243,13 +243,13 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Мут**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** {user}\n" +
+                 $"**Кому:** {member}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут. " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут {member.Mention}. " +
                                    $"Снятие через: {Utility.FormatTimespan(mute.ReportDuration)}!");
         }
 
@@ -265,7 +265,7 @@ namespace SeaOfThieves.Commands
             }
 
             Warn(ctx.Client, ctx.Member, ctx.Guild, member, reason);
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {member.Mention}!");
         }
 
         [Command("wlist")]
@@ -340,7 +340,9 @@ namespace SeaOfThieves.Commands
 
             UserList.Users[member.Id].RemoveWarning(id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено предупреждение!");
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено предупреждение с {member.Mention}!");
+
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Снятие предупреждения**\n\n" +
                 $"**Администратор:** {ctx.Member}\n" +
@@ -371,7 +373,7 @@ namespace SeaOfThieves.Commands
             }
 
             Kick(ctx.Member, ctx.Guild, member, reason);
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно исключён участник!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно исключён участник {member.Mention}!");
         }
 
         [Command("ban")]
@@ -418,7 +420,7 @@ namespace SeaOfThieves.Commands
                 $"**ID бана:** {banId}\n" +
                 $"**Причина:** {reason}\n");
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан! " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан {member.Mention}! " +
                                    $"Снятие через: {Utility.FormatTimespan(durationTimeSpan)}!");
         }
 
@@ -436,7 +438,7 @@ namespace SeaOfThieves.Commands
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не был забанен!");
             }
-            
+
             var bannedUser = BanList.BannedMembers[member.Id];
             bannedUser.Unban();
             BanList.SaveToXML(Bot.BotSettings.BanXML);
@@ -448,7 +450,7 @@ namespace SeaOfThieves.Commands
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снят бан!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снят бан c {member.Mention}!");
         }
 
         /// <summary>
