@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Prices>
+    <Date date="01.01.1970">
+        <Service id="color">50</Service>
+        <Service id="wanted">100</Service>
+        <Service id="role_rename">250</Service>
+        <Service id="friends">250</Service>
+    </Date>
+    <Date date="15.06.2020">
+        <Service id="color">100</Service>
+        <Service id="wanted">200</Service>
+        <Service id="role_rename">300</Service>
+        <Service id="friends">300</Service>
+    </Date>
+</Prices>
