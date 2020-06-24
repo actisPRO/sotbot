@@ -112,6 +112,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не является донатером!");
                 return;
             }
+            var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
 
             var oldBalance = DonatorList.Donators[member.Id].Balance;
             DonatorList.Donators[member.Id].SetBalance(newBalance);
@@ -119,57 +120,22 @@ namespace SeaOfThieves.Commands
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно изменили баланс.");
-            await member.SendMessageAsync(
-                $"Администратор **{ctx.Member.Username}** изменил ваш баланс. Ваш новый баланс: **{newBalance}** рублей.");
 
-            if (oldBalance < 50)
-            {
-                if (newBalance >= 50) await member.SendMessageAsync("Используйте `!dcolor` для изменения цвета ника.");
+            var message = $"Ваш баланс был изменён. **Новый баланс: {newBalance} ₽\n" +
+                          $"Доступные функции:**\n";
 
-                if (newBalance >= 100)
-                    await member.SendMessageAsync(
-                        "Используйте `!droleadd` для выдачи роли Wanted. `!drolerm` для того чтобы убрать её.");
+            if (newBalance >= prices.ColorPrice)
+                message += "• `!dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
+            if (newBalance >= prices.WantedPrice)
+                message += "• `!droleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                           "• `!drolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
+            if (newBalance >= prices.RoleNamePrice)
+                message += "• `!drename` — изменяет название вашей роли донатера.\n";
+            if (newBalance >= prices.FriendsPrice)
+                message += "• `!dfriend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                           "• `!dunfriend` — убирает у друга ваш цвет.";
 
-                if (newBalance >= 250)
-                    await member.SendMessageAsync(
-                        "Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
-            }
-            else if (oldBalance < 100)
-            {
-                if (newBalance < 50) await member.SendMessageAsync("Вам стал недоступен функционал `!dcolor`.");
-
-                if (newBalance >= 100)
-                    await member.SendMessageAsync(
-                        "Используйте `!droleadd` для выдачи роли Wanted. `!drolerm` для того чтобы убрать её.");
-
-                if (newBalance >= 250)
-                    await member.SendMessageAsync(
-                        "Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
-            }
-            else if (oldBalance < 250)
-            {
-                if (newBalance < 50) await member.SendMessageAsync("Вам стал недоступен функционал `!dcolor`.");
-
-                if (newBalance < 100)
-                    await member.SendMessageAsync(
-                        "Вам стал недоступен функционал `!droleadd`, `!drolerm`.");
-
-                if (newBalance >= 250)
-                    await member.SendMessageAsync(
-                        "Используйте `!drename` для переименования роли донатера. `!dfriend` для выдачи своему другу цвета донатера.");
-            }
-            else
-            {
-                if (newBalance < 50) await member.SendMessageAsync("Вам стал недоступен функционал `!dcolor`.");
-
-                if (newBalance < 100)
-                    await member.SendMessageAsync(
-                        "Вам стал недоступен функционал `!droleadd`, `!drolerm`.");
-
-                if (newBalance < 250)
-                    await member.SendMessageAsync(
-                        "Вам стал недоступен функционал `!drename`, `!dfriend`.");
-            }
+            await member.SendMessageAsync(message);
         }
 
         [Command("donatorrm")]
