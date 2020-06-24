@@ -74,31 +74,31 @@ namespace SeaOfThieves.Commands
         public async Task DonatorAdd(CommandContext ctx, DiscordMember member, int balance)
         {
             var res = new Donator(member.Id, 0, DateTime.Today, balance);
-            if (balance >= 50)
+            var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
+            var message = $"Спасибо за поддержку нашего сообщества! **Ваш баланс: {balance} ₽.\n" +
+                          $"Доступные функции:**\n";
+            
+            if (balance >= prices.ColorPrice)
             {
                 var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
                 res.SetRole(role.Id);
                 await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.BotRole).Position - 1);
                 await member.GrantRoleAsync(role);
+                message += "• `!dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
             }
 
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
-            var over100Message = ".";
-            if (balance >= 100)
-                over100Message = ", `!droleadd` для выдачи роли Wanted, `!drolerm` для снятия роли Wanted";
-
-            var over250Message = ".";
-            if (balance >= 250)
-                over250Message =
-                    ", `!drename` для переименования своей роли, `!dfriend` для того чтобы выдать свой цвет другу.";
-
-            var over50Message = "";
-            if (balance >= 50)
-                over50Message = "Используйте команду " +
-                                $"`!dcolor код_цвета` для изменения цвета{over100Message}{over250Message}";
-            await member.SendMessageAsync(
-                $"Администратор **{ctx.Member.Username}** добавил вас в качестве донатера. Ваш баланс: **{balance} рублей**. {over50Message}");
+            if (balance >= prices.WantedPrice)
+                message += "• `!droleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                           "• `!drolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
+            if (balance >= prices.RoleNamePrice)
+                message += "• `!drename` — изменяет название вашей роли донатера.\n";
+            if (balance >= prices.FriendsPrice)
+                message += "• `!dfriend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                           "• `!dunfriend` — убирает у друга ваш цвет.";
+            
+            await member.SendMessageAsync(message);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
         }
 
