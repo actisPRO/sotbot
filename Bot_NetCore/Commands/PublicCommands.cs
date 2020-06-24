@@ -1,15 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity;
 
 namespace SeaOfThieves.Commands
 {
-    public class CreationCommands
+    public class PublicCommands
     {
         [Command("create")]
         [Aliases("c")]
@@ -88,8 +92,6 @@ namespace SeaOfThieves.Commands
             try
             {
                 await ctx.Member.PlaceInAsync(created);
-
-                await created.AddOverwriteAsync(ctx.Member, Permissions.MoveMembers, Permissions.None);
             }
             catch (BadRequestException)
             {
@@ -100,6 +102,117 @@ namespace SeaOfThieves.Commands
             }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно создан канал **{created.Name}**!");
+        }
+
+        [Command("votekick")]
+        [Aliases("vk")]
+        [Description("Создаёт голосование против другого игрока")]
+        public async Task VoteKick(CommandContext ctx, [Description("Пользователь")] DiscordMember member)
+        {
+            if (ctx.Member.Id == member.Id)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не можете кикнуть самого себя!");
+                return;
+            }
+
+            if (Bot.IsModerator(member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не можете кикнуть данного пользователя!");
+                return;
+            }
+
+            //В DSharpPlus 3.2.3 нету параметра Users в классе DiscordChannel.
+            //Так что проверяем по пользователям на их присутствие в канале
+            var channel = member.VoiceState?.Channel;
+
+            if (channel == null ||                               //Пользователь не в канале
+               channel.Id != ctx.Member.VoiceState?.Channel.Id) //Оба пользователя не из одного и того же канала
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не найден или не в вашем канале!");
+                return;
+            }
+
+            if (channel.ParentId != Bot.BotSettings.AutocreateCategory)      //Не канал автосоздания
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете проголосовать только в канале автосоздания!");
+                return;
+            }
+
+            //Эмоции голосования
+            var emoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
+
+            var interactivity = ctx.Client.GetInteractivityModule();
+
+            //Упираюсь в лимит DSharpPlus, в данной версии не известно сколько пользователей в канале
+            //Так что считаем что канал полный
+            var votesNeeded = channel.UserLimit switch
+            {
+                4 => 3, //Галеон
+                3 => 2, //Бриг
+                2 => 1, //Шлюп
+                _ => Math.Round((channel.UserLimit - 1) * 0.5 + 1, MidpointRounding.AwayFromZero) //Остальные каналы 50% + 1 голосов
+            };
+
+            //Embed голосования
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = $"Голосование за кик с канала!",
+                Description = "Участники канала могут проголосовать за кик пользователя."
+            };
+
+            embed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
+            embed.WithFooter($"Голосование закончится через 60 сек. Нужно {votesNeeded} голос(а).");
+            var msg = await ctx.RespondAsync(embed: embed);
+
+            //Добавляем реакции к сообщению
+            await msg.CreateReactionAsync(emoji);
+
+            //Собираем данные
+            var pollResult = await interactivity.CollectReactionsAsync(msg, new TimeSpan(0, 0, 60));
+
+            //Обработка результатов
+            var votedUsers = await msg.GetReactionsAsync(emoji);
+
+            //Чистим реакции
+            await msg.DeleteAllReactionsAsync();
+
+            //Каст из DiscordUser в DiscordMember для проверки активного канала
+            var votedMembers = new List<DiscordMember>();
+            foreach (var votedUser in votedUsers)
+                votedMembers.Add(await ctx.Guild.GetMemberAsync(votedUser.Id));
+
+            var votedCount = votedMembers.Where(x => x.VoiceState?.Channel.Id == channel.Id).Count();
+
+            //Результат
+            var resultEmbed = new DiscordEmbedBuilder
+            {
+                Title = $"Голосование за кик с канала окончено!"
+            };
+
+            resultEmbed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
+
+            if (member.VoiceState?.Channel.Id != channel.Id)
+            {
+                resultEmbed.AddField($"{Bot.BotSettings.ErrorEmoji} Пользователь уже покинул канал.",
+                                     $"Голосов за кик: { votedCount}");
+                resultEmbed.WithColor(new DiscordColor("FF0000"));
+            }
+            else if (votedCount >= votesNeeded)
+            {
+                resultEmbed.AddField($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал.",
+                                     $"Голосов за кик: { votedCount}");
+                resultEmbed.WithColor(new DiscordColor("00FF00"));
+                await member.PlaceInAsync(ctx.Guild.AfkChannel);
+            }
+            else
+            {
+                resultEmbed.AddField($"{Bot.BotSettings.ErrorEmoji} Недостаточно голосов.",
+                                     $"Голосов за кик: { votedCount}");
+                resultEmbed.WithColor(new DiscordColor("FF0000"));
+                resultEmbed.WithFooter($"Нужно {votesNeeded} голос(а).");
+            }
+
+            await msg.ModifyAsync(embed: resultEmbed);
         }
     }
 }
