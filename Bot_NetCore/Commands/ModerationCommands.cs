@@ -36,7 +36,7 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
+            //await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
         }
 
         [Command("clearchannelstartfrom")]
@@ -61,7 +61,7 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
+            //await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
         }
 
         [Command("purge")]
