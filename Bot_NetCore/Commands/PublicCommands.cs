@@ -149,7 +149,7 @@ namespace SeaOfThieves.Commands
             {
                 4 => 3, //Галеон
                 3 => 2, //Бриг
-                2 => 1, //Шлюп
+                2 => 2, //Шлюп - 2 Так как будут бегать по каналам и абузить. Легче пересоздать канал
                 _ => Math.Round((channel.UserLimit - 1) * 0.5 + 1, MidpointRounding.AwayFromZero) //Остальные каналы 50% + 1 голосов
             };
 
