@@ -736,7 +736,7 @@ namespace SeaOfThieves.Commands
                     // wait for a reaction
                     var em = await interactivity.WaitForMessageReactionAsync(xe => xe.Name == okEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
 
-                    await message.DeleteOwnReactionAsync(okEmoji);
+                    await message.DeleteAllReactionsAsync();
 
                     try
                     {
@@ -746,7 +746,20 @@ namespace SeaOfThieves.Commands
                             if (roleNeedFixes)
                             {
                                 var role = await ctx.Guild.CreateRoleAsync($"☠{ship.Name}☠", null, null, false, true);
-                                await shipOwner.GrantRoleAsync(role);
+                                //await shipOwner.GrantRoleAsync(role);
+                                ship.Members.ToList().ForEach(async x => {
+                                    try
+                                    {
+                                        var member = await ctx.Guild.GetMemberAsync(x.Value.Id);
+                                        await member.GrantRoleAsync(role);
+                                        //await Task.Delay(500);
+                                    }
+                                    catch (NotFoundException)
+                                    {
+                                        ship.Members.Remove(x.Key);
+
+                                    }
+                                    });
                                 ship.Role = role.Id;
                             }
 
@@ -776,6 +789,8 @@ namespace SeaOfThieves.Commands
                             ShipList.Ships[ship.Name].SetRole(ship.Role);
 
                             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+                            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
                         }
                     }
                     catch
