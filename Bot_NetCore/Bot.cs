@@ -698,7 +698,7 @@ namespace SeaOfThieves
                     }
                 }
 
-                UsersLeftList.Users[e.Member.Id] = null;
+                UsersLeftList.Users.Remove(e.Member.Id);
                 UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
             }
           
