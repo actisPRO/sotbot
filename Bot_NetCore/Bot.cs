@@ -379,10 +379,17 @@ namespace SeaOfThieves
 
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
-                if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                if (!user.Roles.Contains(e.Channel.Guild.GetRole(BotSettings.CodexRole)))
                 {
+                    //Выдаем роль правил
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+
+                    //Убираем роль блокировки правил
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
+                        DateTime.Now);
                 }
 
                 return;
@@ -417,7 +424,12 @@ namespace SeaOfThieves
                 //Выдаем роль правил рейда
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.FleetCodexRole))
+                {
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.FleetCodexRole));
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил рейда.",
+                        DateTime.Now);
+                }
 
                 return;
             }
@@ -477,9 +489,6 @@ namespace SeaOfThieves
                     $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
                     DateTime.Now.ToUniversalTime());
 
-                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                    $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
-                    DateTime.Now);
                 return;
             }
 
