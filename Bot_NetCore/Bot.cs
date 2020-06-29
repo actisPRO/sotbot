@@ -562,6 +562,43 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
+            if (e.Channel.Id == BotSettings.CodexReserveChannel)
+            {
+                if (!IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
+                    await e.Message.DeleteAsync();
+
+                //Проверка на purge
+                if (ReportList.CodexPurges.ContainsKey(e.Author.Id))
+                    if (!ReportList.CodexPurges[e.Author.Id].Expired()) //Проверка истекшей блокировки
+                    {
+                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.CodexPurges[e.Author.Id].Moderator);
+                        try
+                        {
+                            await ((DiscordMember)e.Author).SendMessageAsync(
+                                "**Возможность принять правила заблокирована**\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.CodexPurges[e.Author.Id].getRemainingTime())}\n" +
+                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                                $"**Причина:** {ReportList.CodexPurges[e.Author.Id].Reason}\n");
+                        }
+
+                        catch (UnauthorizedException)
+                        {
+                            //user can block the bot
+                        }
+                        return;
+                    }
+                    else
+                        ReportList.CodexPurges.Remove(e.Author.Id); //Удаляем блокировку если истекла
+
+                //Выдаем роль правил
+                var user = (DiscordMember)e.Author;
+                if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                {
+                    await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+                }
+            }
+
             if (e.Message.Content.StartsWith("> "))
                 if (IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
                 {
@@ -1289,6 +1326,11 @@ namespace SeaOfThieves
         ///     Id сообщения правил.
         /// </summary>
         public ulong CodexMessageId;
+
+        /// <summary>
+        ///     Id резервного канала правил.
+        /// </summary>
+        public ulong CodexReserveChannel;
 
         /// <summary>
         ///     Id роли правил.
