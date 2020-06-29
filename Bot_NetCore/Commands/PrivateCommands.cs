@@ -708,6 +708,7 @@ namespace SeaOfThieves.Commands
                     channelNeedFixes = true;
                 }
 
+                //TODO: Убрать в !list, так как может быть слишком длинное сообщение.
                 //Пользователи
                 var users = "";
                 ship.Members.ToList().ForEach(m => users += $"<@{m.Value.Id}> | {m.Value.Type} | {m.Value.Status} \n");
