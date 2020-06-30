@@ -612,10 +612,17 @@ namespace SeaOfThieves
 
                 //Выдаем роль правил
                 var user = (DiscordMember)e.Author;
-                if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                if (!user.Roles.Contains(e.Channel.Guild.GetRole(BotSettings.CodexRole)))
                 {
+                    //Выдаем роль правил
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+
+                    //Убираем роль блокировки правил
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил.",
+                        DateTime.Now);
                 }
             }
 
