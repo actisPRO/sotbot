@@ -140,6 +140,7 @@ namespace SeaOfThieves
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
             //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
             Client.UnknownEvent += ClientOnUnknownEvent;
+            Client.ClientErrored += ClientOnErrored;
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
 #if DEBUG
             Client.ClientErrored += args =>
@@ -167,6 +168,16 @@ namespace SeaOfThieves
             clearChannelMessages.Enabled = true;
 
             await Task.Delay(-1);
+        }
+
+        private Task ClientOnErrored(ClientErrorEventArgs e)
+        {
+            e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
+                $"Возникла ошибка при выполнении ивента {e.EventName}.\n" +
+                $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
+                $"**Трассировка стека:** \n```{e.Exception.StackTrace}```",
+                DateTime.Now);
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -486,7 +497,7 @@ namespace SeaOfThieves
                 }
                 //Отправка в лог
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
-                    $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
+                    $"{e.User.Username}#{e.User.Discriminator} получил новую роль эмиссарства.",
                     DateTime.Now.ToUniversalTime());
 
                 return;
