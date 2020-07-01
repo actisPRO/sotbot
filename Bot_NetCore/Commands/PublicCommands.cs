@@ -191,25 +191,26 @@ namespace SeaOfThieves.Commands
 
             resultEmbed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
 
-            if (member.VoiceState?.Channel.Id != channel.Id)
+            if (member.VoiceState?.Channel == null ||
+                member.VoiceState?.Channel != null &&
+                member.VoiceState?.Channel.Id != channel.Id)
             {
-                resultEmbed.AddField($"{Bot.BotSettings.ErrorEmoji} Пользователь уже покинул канал.",
-                                     $"Голосов за кик: { votedCount}");
-                resultEmbed.WithColor(new DiscordColor("FF0000"));
+                resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Пользователь уже покинул канал.");
+                resultEmbed.WithColor(new DiscordColor("00FF00"));
             }
             else if (votedCount >= votesNeeded)
             {
-                resultEmbed.AddField($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал.",
-                                     $"Голосов за кик: { votedCount}");
+                resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал.");
+                resultEmbed.WithFooter($"Голосов за кик: { votedCount}");
                 resultEmbed.WithColor(new DiscordColor("00FF00"));
+
                 await member.PlaceInAsync(ctx.Guild.AfkChannel);
             }
             else
             {
-                resultEmbed.AddField($"{Bot.BotSettings.ErrorEmoji} Недостаточно голосов.",
-                                     $"Голосов за кик: { votedCount}");
+                resultEmbed.WithDescription($"{Bot.BotSettings.ErrorEmoji} Недостаточно голосов.");
+                resultEmbed.WithFooter($"Голосов за кик: { votedCount}. Нужно {votesNeeded} голос(а).");
                 resultEmbed.WithColor(new DiscordColor("FF0000"));
-                resultEmbed.WithFooter($"Нужно {votesNeeded} голос(а).");
             }
 
             await msg.ModifyAsync(embed: resultEmbed);
