@@ -173,9 +173,7 @@ namespace SeaOfThieves
         private Task ClientOnErrored(ClientErrorEventArgs e)
         {
             e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
-                $"Возникла ошибка при выполнении ивента {e.EventName}.\n" +
-                $"Исключение: {e.Exception.InnerException.GetType()}:{e.Exception.InnerException.Message}\n" +
-                $"Трассировка стека: \n```{e.Exception.InnerException.StackTrace}```",
+                $"Возникла ошибка при выполнении ивента {e.EventName}.",
                 DateTime.Now);
             return Task.CompletedTask;
         }
@@ -662,11 +660,18 @@ namespace SeaOfThieves
             if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id)
                 ) // в лог не должны отправляться сообщения,
                 // удаленные из лога
-                await e.Guild.GetChannel(BotSettings.FulllogChannel)
-                        .SendMessageAsync("**Удаление сообщения**\n" +
-                                        $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                        $"**Канал:** {e.Channel}\n" +
-                                        $"**Содержимое: ```{e.Message.Content}```**");
+                try
+                {
+                    await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                            .SendMessageAsync("**Удаление сообщения**\n" +
+                                            $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                            $"**Канал:** {e.Channel}\n" +
+                                            $"**Содержимое: ```{e.Message.Content}```**");
+                }
+                catch (NullReferenceException)
+                {
+                    //Ничего не делаем
+                }
         }
 
         /// <summary>
