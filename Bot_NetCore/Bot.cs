@@ -203,8 +203,10 @@ namespace SeaOfThieves
                         .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
 
                     if (toDelete.Count() > 0)
+                    {
                         await channel.Key.DeleteMessagesAsync(toDelete);
                         Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
+                    }
 
                 } catch (Exception ex)
                 {
