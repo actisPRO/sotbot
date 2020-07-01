@@ -174,8 +174,8 @@ namespace SeaOfThieves
         {
             e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
                 $"Возникла ошибка при выполнении ивента {e.EventName}.\n" +
-                $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
-                $"**Трассировка стека:** \n```{e.Exception.StackTrace}```",
+                $"Исключение: {e.Exception.InnerException.GetType()}:{e.Exception.InnerException.Message}\n" +
+                $"Трассировка стека: \n```{e.Exception.InnerException.StackTrace}```",
                 DateTime.Now);
             return Task.CompletedTask;
         }
@@ -657,17 +657,16 @@ namespace SeaOfThieves
         /// <summary>
         ///     Отлавливаем удаленные сообщения и отправляем в лог
         /// </summary>
-        private Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
+        private async Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
         {
             if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id)
                 ) // в лог не должны отправляться сообщения,
                 // удаленные из лога
-                e.Guild.GetChannel(BotSettings.FulllogChannel)
-                    .SendMessageAsync("**Удаление сообщения**\n" +
-                                      $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                      $"**Канал:** {e.Channel}\n" +
-                                      $"**Содержимое: ```{e.Message.Content}```**");
-            return Task.CompletedTask;
+                await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                        .SendMessageAsync("**Удаление сообщения**\n" +
+                                        $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                        $"**Канал:** {e.Channel}\n" +
+                                        $"**Содержимое: ```{e.Message.Content}```**");
         }
 
         /// <summary>
