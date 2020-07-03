@@ -331,8 +331,9 @@ namespace SeaOfThieves.Commands
 
             if (!ship.Members[member.Id].Status)
             {
+                ship.RemoveMember(member.Id);
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Используйте команду `!uninvite [DiscordMember]`, чтобы отозвать приглашение!");
+                    $"{Bot.BotSettings.OkEmoji} Вы выгнали участника **{member.Username}** с корабля **{ship.Name}**!");
                 return;
             }
 
@@ -707,6 +708,7 @@ namespace SeaOfThieves.Commands
                     channelNeedFixes = true;
                 }
 
+                //TODO: Убрать в !list, так как может быть слишком длинное сообщение.
                 //Пользователи
                 var users = "";
                 ship.Members.ToList().ForEach(m => users += $"<@{m.Value.Id}> | {m.Value.Type} | {m.Value.Status} \n");
@@ -747,18 +749,19 @@ namespace SeaOfThieves.Commands
                             {
                                 var role = await ctx.Guild.CreateRoleAsync($"☠{ship.Name}☠", null, null, false, true);
                                 //await shipOwner.GrantRoleAsync(role);
-                                ship.Members.ToList().ForEach(async x => {
-                                    try
-                                    {
-                                        var member = await ctx.Guild.GetMemberAsync(x.Value.Id);
-                                        await member.GrantRoleAsync(role);
-                                        //await Task.Delay(500);
-                                    }
-                                    catch (NotFoundException)
-                                    {
-                                        ship.Members.Remove(x.Key);
+                                ship.Members.Where(x => x.Value.Status).ToList()
+                                    .ForEach(async x => {
+                                        try
+                                        {
+                                            var member = await ctx.Guild.GetMemberAsync(x.Value.Id);
+                                            await member.GrantRoleAsync(role);
+                                            //await Task.Delay(500);
+                                        }
+                                        catch (NotFoundException)
+                                        {
+                                            ship.Members.Remove(x.Key);
 
-                                    }
+                                        }
                                     });
                                 ship.Role = role.Id;
                             }

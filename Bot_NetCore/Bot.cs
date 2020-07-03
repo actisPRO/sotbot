@@ -140,6 +140,7 @@ namespace SeaOfThieves
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
             //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
             Client.UnknownEvent += ClientOnUnknownEvent;
+            Client.ClientErrored += ClientOnErrored;
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
 #if DEBUG
             Client.ClientErrored += args =>
@@ -169,6 +170,14 @@ namespace SeaOfThieves
             await Task.Delay(-1);
         }
 
+        private Task ClientOnErrored(ClientErrorEventArgs e)
+        {
+            e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
+                $"Возникла ошибка при выполнении ивента {e.EventName}.",
+                DateTime.Now);
+            return Task.CompletedTask;
+        }
+
         /// <summary>
         ///     Очистка сообщений из каналов
         /// </summary>
@@ -180,27 +189,29 @@ namespace SeaOfThieves
 
             var channels = new Dictionary<DiscordChannel, TimeSpan>
             {
-                { guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 15, 0) },            //15 минут для канала поиска
+                { guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 30, 0) },           //30 минут для канала поиска
                 { guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0) }   //24 часа для канала создания рейда
             };
 
             foreach (var channel in channels)
             {
-                var messages = await channel.Key.GetMessagesAsync(100);
-                var toDelete = messages.ToList()
-                    .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
-                    .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+                try
+                { 
+                    var messages = await channel.Key.GetMessagesAsync();
+                    var toDelete = messages.ToList()
+                        .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
+                        .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
 
-                if (toDelete.Count() > 0)
-                    try
+                    if (toDelete.Count() > 0)
                     {
                         await channel.Key.DeleteMessagesAsync(toDelete);
                         Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
                     }
-                    catch (Exception ex)
-                    {
-                        Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
-                    }
+
+                } catch (Exception ex)
+                {
+                    Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
+                }
             }
         }
 
@@ -379,10 +390,17 @@ namespace SeaOfThieves
 
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
-                if (!user.Roles.Any(x => x.Id == BotSettings.CodexRole))
+                if (!user.Roles.Contains(e.Channel.Guild.GetRole(BotSettings.CodexRole)))
                 {
+                    //Выдаем роль правил
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+
+                    //Убираем роль блокировки правил
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
+                        DateTime.Now);
                 }
 
                 return;
@@ -417,7 +435,12 @@ namespace SeaOfThieves
                 //Выдаем роль правил рейда
                 var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == BotSettings.FleetCodexRole))
+                {
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.FleetCodexRole));
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил рейда.",
+                        DateTime.Now);
+                }
 
                 return;
             }
@@ -474,12 +497,9 @@ namespace SeaOfThieves
                 }
                 //Отправка в лог
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
-                    $"{e.User.Username}#{e.User.Discriminator} acquired new emissary role.",
+                    $"{e.User.Username}#{e.User.Discriminator} получил новую роль эмиссарства.",
                     DateTime.Now.ToUniversalTime());
 
-                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                    $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
-                    DateTime.Now);
                 return;
             }
 
@@ -562,6 +582,50 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnMessageCreated(MessageCreateEventArgs e)
         {
+            if (e.Channel.Id == BotSettings.CodexReserveChannel)
+            {
+                if (!IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
+                    await e.Message.DeleteAsync();
+
+                //Проверка на purge
+                if (ReportList.CodexPurges.ContainsKey(e.Author.Id))
+                    if (!ReportList.CodexPurges[e.Author.Id].Expired()) //Проверка истекшей блокировки
+                    {
+                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.CodexPurges[e.Author.Id].Moderator);
+                        try
+                        {
+                            await ((DiscordMember)e.Author).SendMessageAsync(
+                                "**Возможность принять правила заблокирована**\n" +
+                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.CodexPurges[e.Author.Id].getRemainingTime())}\n" +
+                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                                $"**Причина:** {ReportList.CodexPurges[e.Author.Id].Reason}\n");
+                        }
+
+                        catch (UnauthorizedException)
+                        {
+                            //user can block the bot
+                        }
+                        return;
+                    }
+                    else
+                        ReportList.CodexPurges.Remove(e.Author.Id); //Удаляем блокировку если истекла
+
+                //Выдаем роль правил
+                var user = (DiscordMember)e.Author;
+                if (!user.Roles.Contains(e.Channel.Guild.GetRole(BotSettings.CodexRole)))
+                {
+                    //Выдаем роль правил
+                    await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole));
+
+                    //Убираем роль блокировки правил
+                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
+
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил.",
+                        DateTime.Now);
+                }
+            }
+
             if (e.Message.Content.StartsWith("> "))
                 if (IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
                 {
@@ -593,17 +657,23 @@ namespace SeaOfThieves
         /// <summary>
         ///     Отлавливаем удаленные сообщения и отправляем в лог
         /// </summary>
-        private Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
+        private async Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
         {
             if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id)
                 ) // в лог не должны отправляться сообщения,
                 // удаленные из лога
-                e.Guild.GetChannel(BotSettings.FulllogChannel)
-                    .SendMessageAsync("**Удаление сообщения**\n" +
-                                      $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                      $"**Канал:** {e.Channel}\n" +
-                                      $"**Содержимое: ```{e.Message.Content}```**");
-            return Task.CompletedTask;
+                try
+                {
+                    await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                            .SendMessageAsync("**Удаление сообщения**\n" +
+                                            $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                            $"**Канал:** {e.Channel}\n" +
+                                            $"**Содержимое: ```{e.Message.Content}```**");
+                }
+                catch (NullReferenceException)
+                {
+                    //Ничего не делаем
+                }
         }
 
         /// <summary>
@@ -1289,6 +1359,11 @@ namespace SeaOfThieves
         ///     Id сообщения правил.
         /// </summary>
         public ulong CodexMessageId;
+
+        /// <summary>
+        ///     Id резервного канала правил.
+        /// </summary>
+        public ulong CodexReserveChannel;
 
         /// <summary>
         ///     Id роли правил.

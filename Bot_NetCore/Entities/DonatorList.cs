@@ -35,7 +35,7 @@ namespace SeaOfThieves.Entities
             foreach (var donator in doc.Element("donators").Elements("donator"))
             {
                 var date = DateTime.Now.Date;
-                if (donator.Element("date") != null) date = Convert.ToDateTime(donator.Element("date").Value); 
+                if (donator.Element("date") != null) DateTime.ParseExact(donator.Element("date").Value, "dd-MM-yyyy", null);
                 var created =
                     new Donator(Convert.ToUInt64(donator.Element("id").Value),
                         Convert.ToUInt64(donator.Element("colorRole").Value), 
