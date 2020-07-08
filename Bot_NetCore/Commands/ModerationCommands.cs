@@ -148,8 +148,8 @@ namespace SeaOfThieves.Commands
 
             var durationTimeSpan = Utility.TimeSpanParse(duration);
 
-            if (durationTimeSpan.TotalDays > 1 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
-                durationTimeSpan = new TimeSpan(1, 0, 0, 0);
+            if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(3, 0, 0, 0);
 
             var fleetPurge = new MemberReport(member.Id,
                 DateTime.Now,
