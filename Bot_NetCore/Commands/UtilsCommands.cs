@@ -296,16 +296,19 @@ namespace SeaOfThieves.Commands
 
             //Обновляем остальные каналы
             int i = 1;
+            int fleetNum = 1;
             foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
             {
                 //Убираем из списка очистки текстовые каналы и голосовой канал Chill
                 if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel && fleetChannel.Id != Bot.BotSettings.FleetLobby)
                 {
+                    if (i % 6 == 0)
+                        fleetNum++;
                     //Обновляем канал и позицию в списке, если изменена
                     if (fleetChannel.Position != startPosition + i)
-                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", position: startPosition + 1, user_limit: Bot.BotSettings.FleetUserLimiter);
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i} - №{fleetNum}", position: startPosition + 1, user_limit: Bot.BotSettings.FleetUserLimiter);
                     else
-                        await fleetChannel.ModifyAsync(name: $"Рейд#{i}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                        await fleetChannel.ModifyAsync(name: $"Рейд#{i} - №{fleetNum}", user_limit: Bot.BotSettings.FleetUserLimiter);
                     i++;
                 }
             }
