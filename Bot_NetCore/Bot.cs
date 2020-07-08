@@ -185,33 +185,45 @@ namespace SeaOfThieves
         /// <param name="e"></param>
         private async void ClearChannelMessagesOnElapsed(object sender, ElapsedEventArgs e)
         {
-            var guild = Client.Guilds[BotSettings.Guild];
-
-            var channels = new Dictionary<DiscordChannel, TimeSpan>
+            try
             {
-                { guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 30, 0) },           //30 минут для канала поиска
-                { guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0) }   //24 часа для канала создания рейда
-            };
+                var guild = Client.Guilds[BotSettings.Guild];
 
-            foreach (var channel in channels)
-            {
-                try
-                { 
-                    var messages = await channel.Key.GetMessagesAsync();
-                    var toDelete = messages.ToList()
-                        .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
-                        .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
-
-                    if (toDelete.Count() > 0)
-                    {
-                        await channel.Key.DeleteMessagesAsync(toDelete);
-                        Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
-                    }
-
-                } catch (Exception ex)
+                var channels = new Dictionary<DiscordChannel, TimeSpan>
                 {
-                    Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
+                    { guild.GetChannel(BotSettings.FindChannel), new TimeSpan(0, 30, 0) },           //30 минут для канала поиска
+                    { guild.GetChannel(BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0) }   //24 часа для канала создания рейда
+                };
+
+                foreach (var channel in channels)
+                {
+                    try
+                    {
+                        var messages = await channel.Key.GetMessagesAsync();
+                        var toDelete = messages.ToList()
+                            .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
+                            .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+
+                        if (toDelete.Count() > 0)
+                        {
+                            await channel.Key.DeleteMessagesAsync(toDelete);
+                            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Client.DebugLogger.LogMessage(LogLevel.Error, "Bot", $"Ошибка при удалении сообщений в каналах. \n" +
+                        $"{ex.GetType()}" +
+                        $"{ex.Message}\n" +
+                        $"{ex.StackTrace}",
+                    DateTime.Now);
             }
         }
 
