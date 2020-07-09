@@ -285,32 +285,38 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            int startPosition = ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position + 1; //Начало отсчета от канала Chill
+            //Сбрасываем позицию канала Chill, если вдруг изменена (Позиция 0)
+            if (ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position != 0)
+                await ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).ModifyPositionAsync(0);
 
-            //Сперва обновляем общий канал и его позицию, если изменена
+            //Обновляем общий канал и его позицию, если изменена (Позиция 1)
             var fleetLobby = ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby);
-            if (fleetLobby.Position != startPosition)
-                await fleetLobby.ModifyAsync(name: "Общий", position: startPosition, user_limit: 99);
+            if (ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby).Position != 1)
+                await fleetLobby.ModifyAsync(name: "Общий", position: 1, user_limit: 99);
             else
                 await fleetLobby.ModifyAsync(name: "Общий", user_limit: 99);
 
-            //Обновляем остальные каналы
-            int i = 1;
-            int fleetNum = 1;
-            foreach (var fleetChannel in ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children)
+            //Выбираем остальные каналы и сортуруем по ID.
+            var channels = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children
+                .Where(x => x.Type == ChannelType.Voice &&
+                            x.Id != Bot.BotSettings.FleetChillChannel &&
+                            x.Id != Bot.BotSettings.FleetLobby)
+                .OrderBy(x => x.Id);
+            
+            //Сбрасываем остальные каналы.
+            int i = 0;
+            int fleetNum = 0;
+            foreach (var fleetChannel in channels)
             {
-                //Убираем из списка очистки текстовые каналы и голосовой канал Chill
-                if (fleetChannel.Type == ChannelType.Voice && fleetChannel.Id != Bot.BotSettings.FleetChillChannel && fleetChannel.Id != Bot.BotSettings.FleetLobby)
-                {
-                    if (i % 6 == 0)
-                        fleetNum++;
-                    //Обновляем канал и позицию в списке, если изменена
-                    if (fleetChannel.Position != startPosition + i)
-                        await fleetChannel.ModifyAsync(name: $"Рейд#{i} - №{fleetNum}", position: startPosition + 1, user_limit: Bot.BotSettings.FleetUserLimiter);
-                    else
-                        await fleetChannel.ModifyAsync(name: $"Рейд#{i} - №{fleetNum}", user_limit: Bot.BotSettings.FleetUserLimiter);
-                    i++;
-                }
+                if (i % 5 == 0)
+                    fleetNum++;
+
+                //Обновляем канал и позицию в списке, если изменена (Позиция i + 2)
+                if (fleetChannel.Position != i + 2)
+                    await fleetChannel.ModifyAsync(name: $"Рейд#{(i % 5) + 1} - №{fleetNum}", position: i + 2, user_limit: Bot.BotSettings.FleetUserLimiter);
+                else
+                    await fleetChannel.ModifyAsync(name: $"Рейд#{(i % 5) + 1} - №{fleetNum}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                i++;
             }
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
         }
