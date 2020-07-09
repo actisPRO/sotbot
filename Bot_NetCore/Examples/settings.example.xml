@@ -43,6 +43,7 @@
     <WarningsXML>warnings.xml</WarningsXML>
     <ModlogChannel>479674576369090560</ModlogChannel>
     <FulllogChannel>479674700218499072</FulllogChannel>
+	<AutoclearLogChannel>730788331796824065</AutoclearLogChannel>
     <UserlogChannel>481316315215429672</UserlogChannel>
     <ErrorLog>672017814932029461</ErrorLog>
     

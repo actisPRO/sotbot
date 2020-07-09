@@ -672,11 +672,21 @@ namespace SeaOfThieves
                 // удаленные из лога
                 try
                 {
-                    await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                    //Каналы авто-очистки отправляются в отдельный канал.
+                    if (e.Channel.Id == BotSettings.FindChannel ||
+                        e.Channel.Id == BotSettings.FleetCreationChannel ||
+                        e.Channel.Id == BotSettings.CodexReserveChannel)
+                        await e.Guild.GetChannel(BotSettings.FulllogChannel)
                             .SendMessageAsync("**Удаление сообщения**\n" +
                                             $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
                                             $"**Канал:** {e.Channel}\n" +
                                             $"**Содержимое: ```{e.Message.Content}```**");
+                    else
+                        await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                                .SendMessageAsync("**Удаление сообщения**\n" +
+                                                $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                                $"**Канал:** {e.Channel}\n" +
+                                                $"**Содержимое: ```{e.Message.Content}```**");
                 }
                 catch (NullReferenceException)
                 {
@@ -1369,10 +1379,18 @@ namespace SeaOfThieves
         public ulong FulllogChannel;
 
         /// <summary>
+        ///     ID канала-лога в который отправляются сообщения с каналов авто-очистки.
+        /// </summary>
+        public ulong AutoclearLogChannel;
+
+        /// <summary>
         ///     ID канала-лога в который отправляются сообщения о входящих и выходящих пользователях.
         /// </summary>
         public ulong UserlogChannel;
 
+        /// <summary>
+        ///     ID канала-лога в который отправляются сообщения с ошибками.
+        /// </summary>
         public ulong ErrorLog;
 
         /// <summary>
