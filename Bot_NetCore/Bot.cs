@@ -18,6 +18,7 @@ using SeaOfThieves.Entities;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext.Exceptions;
+using System.Reflection;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -124,12 +125,7 @@ namespace SeaOfThieves
 
             Interactivity = Client.UseInteractivity(icfg);
 
-            Commands.RegisterCommands<PublicCommands>();
-            Commands.RegisterCommands<UtilsCommands>();
-            Commands.RegisterCommands<PrivateCommands>();
-            Commands.RegisterCommands<DonatorCommands>();
-            Commands.RegisterCommands<ModerationCommands>();
-            Commands.RegisterCommands<InviteCommands>();
+            Commands.RegisterCommands(Assembly.GetExecutingAssembly());
 
             Client.Ready += ClientOnReady;
             Client.GuildMemberAdded += ClientOnGuildMemberAdded;
@@ -698,7 +694,9 @@ namespace SeaOfThieves
             var rolesToSave = new List<ulong>();
             foreach (var role in roles)
             {
-                if (role.Id != BotSettings.CodexRole && role.Id != e.Guild.EveryoneRole.Id)
+                if (role.Id != BotSettings.CodexRole &&
+                    role.Id != BotSettings.FleetCodexRole &&
+                    role.Id != e.Guild.EveryoneRole.Id)
                 {
                     rolesToSave.Add(role.Id);
                 }
@@ -736,16 +734,50 @@ namespace SeaOfThieves
         /// </summary>
         private async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
+            //Проверка на бан
             if (BanList.BannedMembers.ContainsKey(e.Member.Id) && BanList.BannedMembers[e.Member.Id].UnbanDateTime > BanList.BannedMembers[e.Member.Id].BanDateTime)
             {
                 var ban = BanList.BannedMembers[e.Member.Id];
-                await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
+                //Отправка сообщения в лс
+                try
+                {
+                    await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
                                                 $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime} UTC.");
+                }
+                catch (UnauthorizedException)
+                {
+                    //user can block the bot
+                }
                 await e.Member.BanAsync(0, "Autoban");
 
                 return;
             }
-            
+
+            //Проверка на mute
+            if (ReportList.Mutes.ContainsKey(e.Member.Id) && !ReportList.Mutes[e.Member.Id].Expired())
+            {
+                //Отправка сообщения в лс
+                try
+                {
+                    await e.Member.SendMessageAsync(
+                        $"**Вам выдан мут на данном сервере**\n\n" +
+                        $"**Снятие через:** {Utility.FormatTimespan(ReportList.Mutes[e.Member.Id].getRemainingTime())}\n" +
+                        $"**Причина:** {ReportList.Mutes[e.Member.Id].Reason}");
+                }
+                catch (UnauthorizedException)
+                {
+                    //user can block the bot
+                }
+
+                //Выдаем роль мута
+                await e.Member.GrantRoleAsync(e.Guild.GetRole(BotSettings.MuteRole));
+            }
+
+            //Проверка на purge
+            if (ReportList.CodexPurges.ContainsKey(e.Member.Id) && !ReportList.Mutes[e.Member.Id].Expired())
+                await e.Member.GrantRoleAsync(e.Guild.GetRole(BotSettings.PurgeCodexRole));
+
+
             var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
             var guildInvites = await e.Guild.GetInvitesAsync(); //Запрашиваем новый список инвайтов
             Invites = guildInvites.ToList(); //Обновляю список инвайтов
