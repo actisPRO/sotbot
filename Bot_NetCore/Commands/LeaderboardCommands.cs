@@ -14,22 +14,27 @@ using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
-    public class InviteCommands
+    [Group("leaderboard")]
+    [Description("Команды лидерборда\n" +
+                 "!help [Команда] для описания команды")]
+    public class LeaderboardCommands
     {
-        [Command("invitesLeaderboard")]
+        [Command("create")]
+        [Description("Команда для создания/обновления лидерборда")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task InvitesLeaderboard(CommandContext ctx) //Команда для создания/обновления лидерборда
+        public async Task Create(CommandContext ctx)
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
             await UpdateLeaderboard(ctx.Guild);
         }
 
-        [Command("invitesLeaderboardAll")]
+        [Command("showall")]
+        [Description("Выводит список всех пригласивших, в том числе и спрятанных")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task InvitesLeaderboardAll(CommandContext ctx) //Выводит список всех пригласивших, в том числе и спрятанных
+        public async Task ShowAll(CommandContext ctx)
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
@@ -59,6 +64,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("listinvites")]
+        [Description("Выводит список приглашенных пользователем участников")]
         [Hidden]
         public async Task ListInvites(CommandContext ctx, DiscordMember member)
         {
@@ -102,10 +108,11 @@ namespace SeaOfThieves.Commands
             }
         }
 
-        [Command("updateLeaderboardMember")]
+        [Command("updatemember")]
+        [Description("Обновляет статус отображения пользователя в leaderboard")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task UpdateLeaderboardMember(CommandContext ctx, [Description("Участник")] DiscordMember member) //Обновляет статус отображения пользователя в leaderboard
+        public async Task UpdateMember(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 

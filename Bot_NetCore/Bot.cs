@@ -732,7 +732,7 @@ namespace SeaOfThieves
 
             InviterList.SaveToXML(BotSettings.InviterXML);
 
-            await InviteCommands.UpdateLeaderboard(e.Guild);
+            await LeaderboardCommands.UpdateLeaderboard(e.Guild);
 
             e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                 $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) покинул сервер.",
@@ -863,7 +863,7 @@ namespace SeaOfThieves
 
                 InviterList.SaveToXML(BotSettings.InviterXML);
                 //Обновление статистики приглашений
-                await InviteCommands.UpdateLeaderboard(e.Guild);
+                await LeaderboardCommands.UpdateLeaderboard(e.Guild);
             }
             catch (Exception ex)
             {
