@@ -14,6 +14,9 @@ using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
+    [Group("private")]
+    [Description("Команды приватных кораблей \n" +
+                 "!help [Команда] для описания команды")]
     public class PrivateCommands
     {
         [Command("new")]
@@ -34,8 +37,8 @@ namespace SeaOfThieves.Commands
                                   $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
                                   $"**Название:** {name}\n" +
                                   $"**Время:** {DateTime.Now.ToUniversalTime()}\n\n" +
-                                  $"Используйте реакцию или отправьте `{Bot.BotSettings.Prefix}confirm {name}` для подтверждения, или " +
-                                  $"`{Bot.BotSettings.Prefix}decline {name}` для отказа.");
+                                  $"Используйте реакцию или отправьте `{Bot.BotSettings.Prefix}private confirm {name}` для подтверждения, или " +
+                                  $"`{Bot.BotSettings.Prefix}private decline {name}` для отказа.");
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
@@ -163,7 +166,7 @@ namespace SeaOfThieves.Commands
 
             await member.SendMessageAsync(
                 $"Вы были приглашены на корабль **{ship.Name}** участником **{ctx.Member.Username}**! Отправьте " +
-                $"`{Bot.BotSettings.Prefix}yes {ship.Name}` для принятия приглашения, или `{Bot.BotSettings.Prefix}no {ship.Name}` для отказа.");
+                $"`{Bot.BotSettings.Prefix}private yes {ship.Name}` для принятия приглашения, или `{Bot.BotSettings.Prefix}private no {ship.Name}` для отказа.");
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно отправлено приглашение участнику {member.Username}!");
         }
@@ -368,7 +371,7 @@ namespace SeaOfThieves.Commands
             if (!ShipList.Ships[name].Members[ctx.Member.Id].Status)
             {
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Чтобы отклонить приглашение используйте команду `!no`!");
+                    $"{Bot.BotSettings.ErrorEmoji} Чтобы отклонить приглашение используйте команду `{Bot.BotSettings.Prefix}private no`!");
                 return;
             }
 
@@ -540,7 +543,7 @@ namespace SeaOfThieves.Commands
                             {
                                 await owner.SendMessageAsync(
                                     $"Поскольку вы являетесь владельцем корабля **{ship.Name}**, вы должны " +
-                                    "подтвердить его активность командой `!active`, иначе он будет удален " +
+                                    $"подтвердить его активность командой `{Bot.BotSettings.Prefix}private active`, иначе он будет удален " +
                                     $"через {days} дня.");
                             }
                             catch (UnauthorizedException)
@@ -619,6 +622,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("active")]
+        [Description("Подтверждает активность корабля при чистке")]
         public async Task Active(CommandContext ctx)
         {
             var doc = XDocument.Load("active.xml");
@@ -644,6 +648,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("shipinfo")]
+        [Hidden]
         public async Task ShipInfo(CommandContext ctx, DiscordMember shipOwner)
         {
             //Временное ограничение, потом открою для модеров
@@ -798,7 +803,7 @@ namespace SeaOfThieves.Commands
                     }
                     catch
                     {
-                        await ctx.RespondAsync("Время ответа вышло, заново введите команду `shipInfo`");
+                        await ctx.RespondAsync("Время ответа вышло, заново введите команду `{Bot.BotSettings.Prefix}private shipInfo`");
                     }
                 }
             });
