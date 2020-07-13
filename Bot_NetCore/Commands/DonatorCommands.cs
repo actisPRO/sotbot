@@ -10,6 +10,9 @@ using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
+    [Group("donator")]
+    [Description("Команды доната\n" +
+                 "!help [Команда] для описания команды")]
     public class DonatorCommands
     {
         [Command("dsetprice")]
@@ -84,19 +87,19 @@ namespace SeaOfThieves.Commands
                 res.SetRole(role.Id);
                 await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
                 await member.GrantRoleAsync(role);
-                message += "• `!dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
+                message += $"• `{Bot.BotSettings.Prefix}donator dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
             }
 
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
             if (balance >= prices.WantedPrice)
-                message += "• `!droleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
-                           "• `!drolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
+                message += $"• `{Bot.BotSettings.Prefix}donator droleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                           $"• `{Bot.BotSettings.Prefix}donator drolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
             if (balance >= prices.RoleNamePrice)
-                message += "• `!drename` — изменяет название вашей роли донатера.\n";
+                message += $"• `{Bot.BotSettings.Prefix}donator drename` — изменяет название вашей роли донатера.\n";
             if (balance >= prices.FriendsPrice)
-                message += "• `!dfriend` — добавляет другу ваш цвет (до 5 друзей).\n" +
-                           "• `!dunfriend` — убирает у друга ваш цвет.";
+                message += $"• `{Bot.BotSettings.Prefix}donator dfriend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                           $"• `{Bot.BotSettings.Prefix}donator dunfriend` — убирает у друга ваш цвет.";
             
             await member.SendMessageAsync(message);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
@@ -125,15 +128,15 @@ namespace SeaOfThieves.Commands
                           $"Доступные функции:**\n";
 
             if (newBalance >= prices.ColorPrice)
-                message += "• `!dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
+                message += $"• `{Bot.BotSettings.Prefix}donator dcolor hex-код-цвета` — изменяет цвет вашего ника.\n";
             if (newBalance >= prices.WantedPrice)
-                message += "• `!droleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
-                           "• `!drolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
+                message += $"• `{Bot.BotSettings.Prefix}donator droleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                           $"• `{Bot.BotSettings.Prefix}donator drolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
             if (newBalance >= prices.RoleNamePrice)
-                message += "• `!drename` — изменяет название вашей роли донатера.\n";
+                message += $"• `{Bot.BotSettings.Prefix}donator drename` — изменяет название вашей роли донатера.\n";
             if (newBalance >= prices.FriendsPrice)
-                message += "• `!dfriend` — добавляет другу ваш цвет (до 5 друзей).\n" +
-                           "• `!dunfriend` — убирает у друга ваш цвет.";
+                message += $"• `{Bot.BotSettings.Prefix}donator dfriend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                           $"• `{Bot.BotSettings.Prefix}donator dunfriend` — убирает у друга ваш цвет.";
 
             await member.SendMessageAsync(message);
         }
