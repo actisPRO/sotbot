@@ -110,7 +110,8 @@ namespace SeaOfThieves
             var ccfg = new CommandsNextConfiguration
             {
                 StringPrefix = BotSettings.Prefix,
-                EnableDms = true,
+                EnableDms = false,
+                CaseSensitive = false,
                 EnableMentionPrefix = true,
                 EnableDefaultHelp = true
             };
@@ -119,7 +120,7 @@ namespace SeaOfThieves
 
             var icfg = new InteractivityConfiguration
             {
-                PaginationBehaviour = TimeoutBehaviour.Ignore,
+                PaginationBehaviour = TimeoutBehaviour.Delete,
                 PaginationTimeout = TimeSpan.FromMinutes(2)
             };
 
