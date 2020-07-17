@@ -646,9 +646,166 @@ namespace SeaOfThieves.Commands
 
         [Command("shipinfo")]
         [Hidden]
-        public async Task ShipInfo(CommandContext ctx, DiscordMember shipOwner)
+        public async Task ShipInfo(CommandContext ctx, [RemainingText]string name)
         {
-            //Временное ограничение, потом открою для модеров
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            if (!ShipList.Ships.ContainsKey(name))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не найден корабль с названием **{name}**!");
+                return;
+            }
+
+            //Get ship data
+            var ship = ShipList.Ships[name];
+
+            var roleNeedFixes = false;
+            var channelNeedFixes = false;
+
+            var embed = new DiscordEmbedBuilder();
+            embed.Title = ship.Name;
+
+            embed.AddField("Статус", ship.Status ? "Подтвержден" : "Не подтвержден");
+
+            //Роль
+            embed.AddField("Роль", "_");
+            embed.AddField("Роль в памяти", ship.Role.ToString(), true);
+            try
+            {
+                var role = ctx.Channel.Guild.GetRole(ship.Role);
+                embed.AddField("Роль в ДС", $"{role.Id} \n {role.Name}", true);
+            }
+            catch (NullReferenceException)
+            {
+                embed.AddField("Роль в ДС", "Не найдена", true);
+                roleNeedFixes = true;
+            }
+
+            //Канал
+            embed.AddField("Канал", "_");
+            embed.AddField("Канал в памяти", ship.Channel.ToString(), true);
+            try
+            {
+                var channel = ctx.Channel.Guild.Channels.FirstOrDefault(x => x.Id == ship.Channel);
+                embed.AddField("Канал", $"{channel.Id} \n {channel.Name}", true);
+            }
+            catch (NullReferenceException)
+            {
+                embed.AddField("Канал", "Не найден", true);
+                channelNeedFixes = true;
+            }
+
+            var msgContent = "";
+            msgContent += roleNeedFixes ? "Не найдена роль " : "";
+            msgContent += channelNeedFixes ? "Не найден канал " : "";
+
+            if (roleNeedFixes || channelNeedFixes)
+                embed.Color = new DiscordColor("#FF0000");
+            else
+                embed.Color = new DiscordColor("#00FF00");
+
+            var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
+
+            // first retrieve the interactivity module from the client
+            var interactivity = ctx.Client.GetInteractivityModule();
+
+            // list emoji
+            var listEmoji = DiscordEmoji.FromName(ctx.Client, ":scroll:");
+            // ok emoji
+            var okEmoji = DiscordEmoji.FromName(ctx.Client, ":tools:");
+
+            await message.CreateReactionAsync(listEmoji);
+            if (roleNeedFixes || channelNeedFixes)
+                await message.CreateReactionAsync(okEmoji);
+
+            // wait for a reaction
+            var em = await interactivity.WaitForMessageReactionAsync(xe => xe.Name == okEmoji.Name || xe.Name == listEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
+
+            try
+            {
+                //Чистим реакции, они больше не кликабельны
+                await message.DeleteAllReactionsAsync();
+
+                //Список пользователей
+                if (em.Emoji.Name == listEmoji.Name)
+                {
+                    List<string> members = new List<string>();
+                    await ctx.Channel.TriggerTypingAsync();
+                    ship.Members.ToList().ForEach(m => members.Add($"<@{m.Value.Id}> | {m.Value.Type} | {m.Value.Status}"));
+
+                    var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа.");
+
+                    await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                }
+
+                //Починка корабля
+                else if (em.Emoji.Name == okEmoji.Name && (roleNeedFixes || channelNeedFixes))
+                {
+                    //Create Role if needed
+                    if (roleNeedFixes)
+                    {
+                        var role = await ctx.Guild.CreateRoleAsync($"☠{ship.Name}☠", null, null, false, true);
+                        //await shipOwner.GrantRoleAsync(role);
+                        ship.Members.Where(x => x.Value.Status).ToList()
+                            .ForEach(async x =>
+                            {
+                                try
+                                {
+                                    var member = await ctx.Guild.GetMemberAsync(x.Value.Id);
+                                    await member.GrantRoleAsync(role);
+                                        //await Task.Delay(500);
+                                    }
+                                catch (NotFoundException)
+                                {
+                                    ship.Members.Remove(x.Key);
+
+                                }
+                            });
+                        ship.Role = role.Id;
+                    }
+
+                    //Create Channel if needed
+                    if (channelNeedFixes)
+                    {
+                        var channel = await ctx.Guild.CreateChannelAsync($"☠{ship.Name}☠", ChannelType.Voice,
+                               ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
+
+                        var role = ctx.Channel.Guild.GetRole(ship.Role);
+                        await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                        await channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
+                        await channel.AddOverwriteAsync(ctx.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
+
+                        ship.Channel = channel.Id;
+                    }
+
+                    //Sync Role and Channel if needed
+                    if (roleNeedFixes && channelNeedFixes == false)
+                    {
+                        var role = ctx.Channel.Guild.GetRole(ship.Role);
+                        await ctx.Channel.Guild.GetChannel(ship.Channel).AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
+                    }
+
+                    //Save Data
+                    ShipList.Ships[ship.Name].SetChannel(ship.Channel);
+                    ShipList.Ships[ship.Name].SetRole(ship.Role);
+
+                    ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+                }
+            }
+            catch
+            {
+                await message.DeleteAllReactionsAsync();
+            }
+        }
+
+        [Command("usershipinfo")]
+        [Hidden]
+        public async Task UserShipInfo(CommandContext ctx, DiscordMember member)
+        {
             if (!Bot.IsModerator(ctx.Member))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
@@ -656,7 +813,7 @@ namespace SeaOfThieves.Commands
             }
 
             //Get ship data
-            var ownedShips = ShipList.Ships.Values.Where(s => s.Members.Values.Any(m => m.Type == MemberType.Owner && m.Id == shipOwner.Id));
+            var ownedShips = ShipList.Ships.Values.Where(s => s.Members.Values.Any(m => m.Type == MemberType.Owner && m.Id == member.Id));
 
             if (ownedShips.Count() == 0)
             {
@@ -665,153 +822,17 @@ namespace SeaOfThieves.Commands
                 //Не найдены приватные корабли, пробуем почистить список в actions.xml
                 var doc = XDocument.Load("actions.xml");
                 foreach (var action in doc.Element("actions").Elements("action"))
-                    if (Convert.ToUInt64(action.Value) == shipOwner.Id && action.Attribute("type").Value == "ship")
+                    if (Convert.ToUInt64(action.Value) == member.Id && action.Attribute("type").Value == "ship")
                         action.Remove();
                 doc.Save("actions.xml");
 
                 return;
             }
-
-            ownedShips.ToList().ForEach(async ship =>
+            else
             {
-                var roleNeedFixes = false;
-                var channelNeedFixes = false;
-
-                var embed = new DiscordEmbedBuilder();
-                embed.Title = ship.Name;
-
-                embed.AddField("Статус", ship.Status ? "Подтвержден" : "Не подтвержден");
-
-                //Роль
-                embed.AddField("Роль", "_");
-                embed.AddField("Роль в памяти", ship.Role.ToString(), true);
-                try
-                {
-                    var role = ctx.Channel.Guild.GetRole(ship.Role);
-                    embed.AddField("Роль в ДС", $"{role.Id} \n {role.Name}", true);
-                }
-                catch (NullReferenceException)
-                {
-                    embed.AddField("Роль в ДС", "Не найдена", true);
-                    roleNeedFixes = true;
-                }
-
-                //Канал
-                embed.AddField("Канал", "_");
-                embed.AddField("Канал в памяти", ship.Channel.ToString(), true);
-                try
-                {
-                    var channel = ctx.Channel.Guild.Channels.FirstOrDefault(x => x.Id == ship.Channel);
-                    embed.AddField("Канал", $"{channel.Id} \n {channel.Name}", true);
-                }
-                catch (NullReferenceException)
-                {
-                    embed.AddField("Канал", "Не найден", true);
-                    channelNeedFixes = true;
-                }
-
-                var msgContent = "";
-                msgContent += roleNeedFixes ? "Не найдена роль " : "";
-                msgContent += channelNeedFixes ? "Не найден канал " : "";
-
-                if (roleNeedFixes || channelNeedFixes)
-                    embed.Color = new DiscordColor("#FF0000");
-                else
-                    embed.Color = new DiscordColor("#00FF00");
-
-                var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
-
-                // first retrieve the interactivity module from the client
-                var interactivity = ctx.Client.GetInteractivityModule();
-
-                // list emoji
-                var listEmoji = DiscordEmoji.FromName(ctx.Client, ":scroll:");
-                // ok emoji
-                var okEmoji = DiscordEmoji.FromName(ctx.Client, ":tools:");
-
-                await message.CreateReactionAsync(listEmoji);
-                if (roleNeedFixes || channelNeedFixes)
-                    await message.CreateReactionAsync(okEmoji);
-
-                // wait for a reaction
-                var em = await interactivity.WaitForMessageReactionAsync(xe => xe.Name == okEmoji.Name || xe.Name == listEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
-
-                try
-                {
-                    //Чистим реакции, они больше не кликабельны
-                    await message.DeleteAllReactionsAsync();
-
-                    //Список пользователей
-                    if (em.Emoji.Name == listEmoji.Name)
-                    {
-                        List<string> members = new List<string>();
-                        await ctx.Channel.TriggerTypingAsync();
-                        ship.Members.ToList().ForEach(m => members.Add($"<@{m.Value.Id}> | {m.Value.Type} | {m.Value.Status}"));
-
-                        var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа.");
-
-                        await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
-                    }
-
-                    //Починка корабля
-                    else if (em.Emoji.Name == okEmoji.Name && (roleNeedFixes || channelNeedFixes))
-                    {
-                        //Create Role if needed
-                        if (roleNeedFixes)
-                        {
-                            var role = await ctx.Guild.CreateRoleAsync($"☠{ship.Name}☠", null, null, false, true);
-                            //await shipOwner.GrantRoleAsync(role);
-                            ship.Members.Where(x => x.Value.Status).ToList()
-                                .ForEach(async x =>
-                                {
-                                    try
-                                    {
-                                        var member = await ctx.Guild.GetMemberAsync(x.Value.Id);
-                                        await member.GrantRoleAsync(role);
-                                        //await Task.Delay(500);
-                                    }
-                                    catch (NotFoundException)
-                                    {
-                                        ship.Members.Remove(x.Key);
-
-                                    }
-                                });
-                            ship.Role = role.Id;
-                        }
-
-                        //Create Channel if needed
-                        if (channelNeedFixes)
-                        {
-                            var channel = await ctx.Guild.CreateChannelAsync($"☠{ship.Name}☠", ChannelType.Voice,
-                                   ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
-
-                            var role = ctx.Channel.Guild.GetRole(ship.Role);
-                            await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
-                            await channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
-                            await channel.AddOverwriteAsync(ctx.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
-
-                            ship.Channel = channel.Id;
-                        }
-
-                        //Sync Role and Channel if needed
-                        if (roleNeedFixes && channelNeedFixes == false)
-                        {
-                            var role = ctx.Channel.Guild.GetRole(ship.Role);
-                            await ctx.Channel.Guild.GetChannel(ship.Channel).AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
-                        }
-
-                        //Save Data
-                        ShipList.Ships[ship.Name].SetChannel(ship.Channel);
-                        ShipList.Ships[ship.Name].SetRole(ship.Role);
-
-                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-                    }
-                }
-                catch
-                {
-                    await message.DeleteAllReactionsAsync();
-                }
-            });
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У пользователя есть корабль во владении! \n" +
+                                       $"Название корабля: {ownedShips.FirstOrDefault().Name}");
+            }
         }
 
     }
