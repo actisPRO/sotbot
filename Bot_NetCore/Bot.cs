@@ -676,7 +676,7 @@ namespace SeaOfThieves
                     if (e.Channel.Id == BotSettings.FindChannel ||
                         e.Channel.Id == BotSettings.FleetCreationChannel ||
                         e.Channel.Id == BotSettings.CodexReserveChannel)
-                        await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                        await e.Guild.GetChannel(BotSettings.AutoclearLogChannel)
                             .SendMessageAsync("**Удаление сообщения**\n" +
                                             $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
                                             $"**Канал:** {e.Channel}\n" +
