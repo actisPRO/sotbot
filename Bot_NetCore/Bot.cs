@@ -714,6 +714,7 @@ namespace SeaOfThieves
             {
                 if (role.Id != BotSettings.CodexRole &&
                     role.Id != BotSettings.FleetCodexRole &&
+                    role.Id != BotSettings.MuteRole &&
                     role.Id != e.Guild.EveryoneRole.Id)
                 {
                     rolesToSave.Add(role.Id);
