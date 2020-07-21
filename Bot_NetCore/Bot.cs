@@ -283,35 +283,42 @@ namespace SeaOfThieves
 
         private async void CheckExpiredReports(object sender, ElapsedEventArgs e)
         {
+            var guild = await Client.GetGuildAsync(BotSettings.Guild);
+
             //Check for expired bans
             var toUnban = from ban in BanList.BannedMembers.Values
                           where ban.UnbanDateTime.ToUniversalTime() <= DateTime.Now.ToUniversalTime()
                           select ban;
 
-            var guild = await Client.GetGuildAsync(BotSettings.Guild);
-            foreach (var ban in toUnban)
+            if (toUnban.Count() > 0)
             {
-                try
+                foreach (var ban in toUnban)
                 {
-                    await guild.UnbanMemberAsync(ban.Id);
-                }
-                catch (NotFoundException)
-                {
-                    //пользователь мог и не быть заблокирован через Discord
+                    try
+                    {
+                        await guild.UnbanMemberAsync(ban.Id);
+                    }
+                    catch (NotFoundException)
+                    {
+                        //пользователь мог и не быть заблокирован через Discord
+                    }
+
+                    ban.Unban();
+
+                    var user = await Client.GetUserAsync(ban.Id);
+                    await guild.GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
+                        "**Снятие Бана**\n\n" +
+                        $"**Модератор:** {Client.CurrentUser.Username}\n" +
+                        $"**Пользователь:** {user}\n" +
+                        $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
+
+                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
                 }
 
-                ban.Unban();
+                BanList.SaveToXML(BotSettings.BanXML);
 
-                await guild.GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
-                    "**Снятие Бана**\n\n" +
-                    $"**Модератор:** {Client.CurrentUser.Username}\n" +
-                    $"**Пользователь:** {await Client.GetUserAsync(ban.Id)}\n" +
-                    $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
+                Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Бан-лист был обновлён.", DateTime.Now);
             }
-
-            BanList.SaveToXML(BotSettings.BanXML);
-
-            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Бан-лист был обновлён.", DateTime.Now);
 
             //Check for expired mutes
             var count = ReportList.Mutes.Count;
