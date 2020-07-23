@@ -305,7 +305,7 @@ namespace SeaOfThieves.Commands
                 $"{Bot.BotSettings.OkEmoji} Вы успешно отклонили приглашение на корабль **{name}**!");
         }
 
-        [Command("kickout")]
+        [Command("kick")]
         [Description("Выгоняет участника с корабля")]
         public async Task Kick(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
