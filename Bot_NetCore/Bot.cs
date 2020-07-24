@@ -20,6 +20,7 @@ using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext.Exceptions;
 using System.Reflection;
+using Microsoft.VisualBasic.FileIO;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -164,6 +165,9 @@ namespace SeaOfThieves
             clearChannelMessages.Elapsed += ClearChannelMessagesOnElapsed;
             clearChannelMessages.AutoReset = true;
             clearChannelMessages.Enabled = true;
+
+            if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
+            if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
 
             await Task.Delay(-1);
         }
@@ -654,8 +658,12 @@ namespace SeaOfThieves
                 {
                     var attachment = e.Message.Attachments[0]; //проверить: не может быть больше 1 вложения в сообщении
                     client.DownloadFile(attachment.Url, attachment.FileName);
-                    await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(attachment.FileName, message);
+                    var logMessage = await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(attachment.FileName, message);
                     File.Delete(attachment.FileName);
+
+                    using (var fs = new FileStream("generated/attachments_messages.csv", FileMode.Append))
+                    using (var sw = new StreamWriter(fs))
+                        await sw.WriteLineAsync($"{e.Message.Id},{logMessage.Id}");
                 }
             }
 
@@ -707,11 +715,38 @@ namespace SeaOfThieves
                                             $"**Канал:** {e.Channel}\n" +
                                             $"**Содержимое: ```{e.Message.Content}```**");
                     else
+                    {
+                        using (TextFieldParser parser = new TextFieldParser("generated/attachments_messages.csv"))
+                        {
+                            parser.TextFieldType = FieldType.Delimited;
+                            parser.SetDelimiters(",");
+                            while (!parser.EndOfData)
+                            {
+                                string[] fields = parser.ReadFields();
+                                if (Convert.ToUInt64(fields[0]) == e.Message.Id)
+                                {
+                                    var attachment =
+                                        (await e.Guild.GetChannel(BotSettings.AttachmentsLog)
+                                            .GetMessageAsync(Convert.ToUInt64(fields[1]))).Attachments[0];
+                                    
+                                    var client = new WebClient();
+                                    client.DownloadFile(attachment.Url, attachment.FileName);
+                                    await e.Guild.GetChannel(BotSettings.FulllogChannel)
+                                        .SendFileAsync(attachment.FileName, "**Удаление сообщения**\n" +
+                                                          $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                                          $"**Канал:** {e.Channel}\n" +
+                                                          $"**Содержимое: ```{e.Message.Content}```**");
+                                    File.Delete(attachment.FileName);
+                                    return;
+                                }
+                            }
+                        }
                         await e.Guild.GetChannel(BotSettings.FulllogChannel)
-                                .SendMessageAsync("**Удаление сообщения**\n" +
-                                                $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                                $"**Канал:** {e.Channel}\n" +
-                                                $"**Содержимое: ```{e.Message.Content}```**");
+                            .SendMessageAsync("**Удаление сообщения**\n" +
+                                              $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
+                                              $"**Канал:** {e.Channel}\n" +
+                                              $"**Содержимое: ```{e.Message.Content}```**");
+                    }
                 }
                 catch (NullReferenceException)
                 {
