@@ -301,7 +301,45 @@ namespace SeaOfThieves.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет!");
         }
 
-        [Command("roleadd")]
+        [Command("friends")]
+        [Description("Выводит список друзей")]
+        public async Task Friends(CommandContext ctx)
+        {
+            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
+                return;
+            }
+
+            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+                return;
+            }
+
+            var i = 0;
+            var friendsMsg = "";
+            foreach (var friend in DonatorList.Donators[ctx.Member.Id].Friends)
+            {
+                DiscordMember discordMember = null;
+                try
+                {
+                    discordMember = await ctx.Guild.GetMemberAsync(friend);
+                }
+                catch (NotFoundException)
+                {
+                    continue;
+                }
+                i++;
+                friendsMsg += $"**{i}**. {discordMember.DisplayName}#{discordMember.Discriminator} \n";
+            }
+            await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
+                                   $"{friendsMsg}");
+        }
+
+            [Command("roleadd")]
         [Description("Выдает роль донатера.")]
         public async Task DRoleAdd(CommandContext ctx)
         {
