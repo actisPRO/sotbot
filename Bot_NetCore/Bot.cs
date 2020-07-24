@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Xml;
@@ -639,6 +640,22 @@ namespace SeaOfThieves
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                         $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил.",
                         DateTime.Now);
+                }
+            }
+
+            if (e.Message.Attachments.Count > 0 && !e.Message.Author.IsBot)
+            {
+                var message = $"**Автор:** {e.Message.Author}\n" +
+                              $"**Канал:**  {e.Message.Channel}\n" +
+                              $"**Сообщение:** {e.Message.Id}\n" +
+                              $"**Вложение:**\n";
+
+                using (var client = new WebClient())
+                {
+                    var attachment = e.Message.Attachments[0]; //проверить: не может быть больше 1 вложения в сообщении
+                    client.DownloadFile(attachment.Url, attachment.FileName);
+                    await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(attachment.FileName, message);
+                    File.Delete(attachment.FileName);
                 }
             }
 
@@ -1401,6 +1418,11 @@ namespace SeaOfThieves
         ///     ID канала-лога в который отправляются сообщения с ошибками.
         /// </summary>
         public ulong ErrorLog;
+
+        /// <summary>
+        ///     ID канала-лога вложений
+        /// </summary>
+        public ulong AttachmentsLog;
 
         /// <summary>
         /// </summary>
