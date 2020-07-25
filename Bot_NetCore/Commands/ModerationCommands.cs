@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
@@ -33,8 +35,46 @@ namespace SeaOfThieves.Commands
             }
 
             var messagesToDelete = await ctx.Channel.GetMessagesAsync(messages, ctx.Message.Id);
+
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
+
+            //Log deleted messages
+            Task taskA = new Task(async () => {
+                List<string> splitMessages = new List<string>();
+                var singleMessage = "";
+
+                var header = "**Удаление сообщений**\n";
+                //Группируем сообщения по 2000 символов
+                foreach (var msg in messagesToDelete)
+                {
+                    var message = $"**Автор:** {msg.Author.Username}#{msg.Author.Discriminator} ({msg.Author.Id})\n" +
+                                  $"**Канал:** {msg.Channel}\n" +
+                                  $"**Содержимое:** ```{msg.Content}```\n";
+
+                    //Проверка на длинну сообщения.
+                    if (singleMessage.Length + message.Length >= 2000 - header.Length)
+                    {
+                        splitMessages.Add(singleMessage);
+                        singleMessage = "";
+                    }
+                    singleMessage += message;
+                }
+                //Создаём последнее сообщение, если остался текст
+                if (singleMessage.Length > 0)
+                    splitMessages.Add(singleMessage);
+
+                //Публикуем сгруппированные сообщения раз в секунду
+                foreach (var message in splitMessages)
+                {
+                    Thread.Sleep(1000);
+
+                    await ctx.Guild.GetChannel(Bot.BotSettings.FulllogChannel)
+                            .SendMessageAsync(header + message);
+                }
+            });
+
+            taskA.Start();
 
             //await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено {messages} сообщений из канала!");
         }
