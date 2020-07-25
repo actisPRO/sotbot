@@ -762,12 +762,21 @@ namespace SeaOfThieves
             // Сохранение ролей участника
             var roles = e.Member.Roles;
             var rolesToSave = new List<ulong>();
+            var ignoredRoles = new List<ulong> //роли, которые не нужно сохранять при выходе
+            {
+                BotSettings.CodexRole,
+                BotSettings.FleetCodexRole,
+                BotSettings.EmissaryAthenaRole,
+                BotSettings.EmissaryGoldhoadersRole,
+                BotSettings.EmissaryReaperBonesRole,
+                BotSettings.EmissaryTradingCompanyRole,
+                BotSettings.EmissaryOrderOfSoulsRole,
+                e.Guild.EveryoneRole.Id,
+            };
+            
             foreach (var role in roles)
             {
-                if (role.Id != BotSettings.CodexRole &&
-                    role.Id != BotSettings.FleetCodexRole &&
-                    role.Id != BotSettings.MuteRole &&
-                    role.Id != e.Guild.EveryoneRole.Id)
+                if (!ignoredRoles.Contains(role.Id))
                 {
                     rolesToSave.Add(role.Id);
                 }
