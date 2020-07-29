@@ -420,7 +420,7 @@ namespace SeaOfThieves
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
 
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил.",
+                        $"Пользователь {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) подтвердил прочтение правил через реакцию.",
                         DateTime.Now);
                 }
 
@@ -642,7 +642,7 @@ namespace SeaOfThieves
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(BotSettings.PurgeCodexRole));
 
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил.",
+                        $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил через сообщение.",
                         DateTime.Now);
                 }
             }
