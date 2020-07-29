@@ -105,7 +105,7 @@ namespace SeaOfThieves.Commands
             List<string> members = new List<string>();
             var interactivity = ctx.Client.GetInteractivityModule();
 
-            var responceMsg = await ctx.RespondAsync("Загрузка пользователей...");
+            await ctx.Channel.TriggerTypingAsync();
 
             foreach (var member in ship.Members.Values)
             {
@@ -142,7 +142,6 @@ namespace SeaOfThieves.Commands
 
             var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа вашего корабля.");
 
-            await responceMsg.DeleteAsync();
             await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
         }
 
