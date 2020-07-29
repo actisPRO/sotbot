@@ -73,7 +73,8 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-            var responceMsg = await ctx.RespondAsync("Загрузка пользователей...");
+            await ctx.Channel.TriggerTypingAsync();
+
             try
             {
                 var interactivity = ctx.Client.GetInteractivityModule();
@@ -99,7 +100,6 @@ namespace SeaOfThieves.Commands
 
                 var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals, $"Список приглашенных пользователем {member.DisplayName}");
 
-                await responceMsg.DeleteAsync();
                 await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
             }
             catch (KeyNotFoundException)
