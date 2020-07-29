@@ -910,30 +910,46 @@ namespace SeaOfThieves
                                            .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
                 }
 
-                await e.Guild.GetChannel(BotSettings.UserlogChannel)
+                if (updatedInvite != null)
+                {
+
+                    await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
                         $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. " +
                         $"**Участников на сервере:** {e.Guild.MemberCount}.");
 
-                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.",
-                    DateTime.Now);
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.",
+                        DateTime.Now);
 
-                //Проверяем если пригласивший уже существует, если нет то создаем
-                if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
-                    Inviter.Create(updatedInvite.Inviter.Id);
+                    //Проверяем если пригласивший уже существует, если нет то создаем
+                    if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
+                        Inviter.Create(updatedInvite.Inviter.Id);
 
-                //Проверяем если пользователь был ранее приглашен другими и обновляем активность, если нет то вносим в список
-                if (InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.ContainsKey(e.Member.Id)))
-                    InviterList.Inviters.ToList().Where(x => x.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
-                        .ForEach(x => x.Value.UpdateReferral(e.Member.Id, true));
+                    //Проверяем если пользователь был ранее приглашен другими и обновляем активность, если нет то вносим в список
+                    if (InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.ContainsKey(e.Member.Id)))
+                        InviterList.Inviters.ToList().Where(x => x.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
+                            .ForEach(x => x.Value.UpdateReferral(e.Member.Id, true));
+                    else
+                        InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
+
+                    InviterList.SaveToXML(BotSettings.InviterXML);
+                    //Обновление статистики приглашений
+                    await LeaderboardCommands.UpdateLeaderboard(e.Guild);
+                }
                 else
-                    InviterList.Inviters[updatedInvite.Inviter.Id].AddReferral(e.Member.Id);
+                {
+                    await e.Guild.GetChannel(BotSettings.UserlogChannel)
+                        .SendMessageAsync(
+                            $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
+                            $"**Участников на сервере:** {e.Guild.MemberCount}. " +
+                            $"Приглашение не удалось определить.");
 
-                InviterList.SaveToXML(BotSettings.InviterXML);
-                //Обновление статистики приглашений
-                await LeaderboardCommands.UpdateLeaderboard(e.Guild);
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                        $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
+                        DateTime.Now);
+                }
             }
             catch (Exception ex)
             {
@@ -956,7 +972,8 @@ namespace SeaOfThieves
                 var message = "**Ошибка при логгинге инвайта**\n" +
                               $"**Пользователь:** {e.Member}\n" +
                               $"**Исключение:** {ex.GetType()}:{ex.Message}\n" +
-                              $"**Трассировка стека:** \n```{ex.StackTrace}```";
+                              $"**Трассировка стека:** \n```{ex.StackTrace}```\n" +
+                              $"{ex}";
 
                 await errChannel.SendMessageAsync(message);
             }
