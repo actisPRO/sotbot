@@ -103,7 +103,7 @@ namespace SeaOfThieves.Commands
             }
 
             List<string> members = new List<string>();
-            var interactivity = ctx.Client.GetInteractivityModule();
+            var interactivity = ctx.Client.GetInteractivity();
 
             await ctx.Channel.TriggerTypingAsync();
 
@@ -142,7 +142,7 @@ namespace SeaOfThieves.Commands
 
             var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа вашего корабля.");
 
-            await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
         }
 
         [Command("yes")]
@@ -317,8 +317,8 @@ namespace SeaOfThieves.Commands
 
             name = "☠" + name + "☠";
 
-            await ctx.Guild.UpdateRoleAsync(ctx.Guild.GetRole(ship.Role), name);
-            await ctx.Guild.GetChannel(ship.Channel).ModifyAsync(name);
+            await ctx.Guild.GetRole(ship.Role).ModifyAsync(x => x.Name = name);
+            await ctx.Guild.GetChannel(ship.Channel).ModifyAsync(x => x.Name = name);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
         }
@@ -387,7 +387,7 @@ namespace SeaOfThieves.Commands
             ship.Delete();
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-            await ctx.Guild.DeleteRoleAsync(role);
+            await role.DeleteAsync();
             await channel.DeleteAsync();
 
             var doc = XDocument.Load("actions.xml");
@@ -497,7 +497,7 @@ namespace SeaOfThieves.Commands
                         DateTime.Now);
                     try
                     {
-                        await ctx.Guild.DeleteRoleAsync(ctx.Guild.GetRole(ship.Role));
+                        await ctx.Guild.GetRole(ship.Role).DeleteAsync();
                     }
                     catch (NotFoundException)
                     {
@@ -609,8 +609,8 @@ namespace SeaOfThieves.Commands
             embed.AddField("Канал в памяти", ship.Channel.ToString(), true);
             try
             {
-                var channel = ctx.Channel.Guild.Channels.FirstOrDefault(x => x.Id == ship.Channel);
-                embed.AddField("Канал", $"{channel.Id} \n {channel.Name}", true);
+                var channel = ctx.Channel.Guild.Channels.FirstOrDefault(x => x.Value.Id == ship.Channel);
+                embed.AddField("Канал", $"{channel.Value.Id} \n {channel.Value.Name}", true);
             }
             catch (NullReferenceException)
             {
@@ -630,7 +630,7 @@ namespace SeaOfThieves.Commands
             var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
 
             // first retrieve the interactivity module from the client
-            var interactivity = ctx.Client.GetInteractivityModule();
+            var interactivity = ctx.Client.GetInteractivity();
 
             // list emoji
             var listEmoji = DiscordEmoji.FromName(ctx.Client, ":scroll:");
@@ -642,7 +642,7 @@ namespace SeaOfThieves.Commands
                 await message.CreateReactionAsync(okEmoji);
 
             // wait for a reaction
-            var em = await interactivity.WaitForMessageReactionAsync(xe => xe.Name == okEmoji.Name || xe.Name == listEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
+            var em = await interactivity.WaitForReactionAsync(xe => xe.Emoji.Name == okEmoji.Name || xe.Emoji.Name == listEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
 
             try
             {
@@ -650,7 +650,7 @@ namespace SeaOfThieves.Commands
                 await message.DeleteAllReactionsAsync();
 
                 //Список пользователей
-                if (em.Emoji.Name == listEmoji.Name)
+                if (em.Result.Emoji.Name == listEmoji.Name)
                 {
                     List<string> members = new List<string>();
                     await ctx.Channel.TriggerTypingAsync();
@@ -658,11 +658,11 @@ namespace SeaOfThieves.Commands
 
                     var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа.");
 
-                    await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
                 }
 
                 //Починка корабля
-                else if (em.Emoji.Name == okEmoji.Name && (roleNeedFixes || channelNeedFixes))
+                else if (em.Result.Emoji.Name == okEmoji.Name && (roleNeedFixes || channelNeedFixes))
                 {
                     //Create Role if needed
                     if (roleNeedFixes)
@@ -691,7 +691,7 @@ namespace SeaOfThieves.Commands
                     if (channelNeedFixes)
                     {
                         var channel = await ctx.Guild.CreateChannelAsync($"☠{ship.Name}☠", ChannelType.Voice,
-                               ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), Bot.BotSettings.Bitrate);
+                               ctx.Guild.GetChannel(Bot.BotSettings.PrivateCategory), bitrate: Bot.BotSettings.Bitrate);
 
                         var role = ctx.Channel.Guild.GetRole(ship.Role);
                         await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
