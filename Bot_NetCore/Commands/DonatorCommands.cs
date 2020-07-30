@@ -239,7 +239,7 @@ namespace SeaOfThieves.Commands
             }
 
             var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
-            role.ModifyAsync(x => x.Name = newName);
+            await role.ModifyAsync(x => x.Name = newName);
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
         }
