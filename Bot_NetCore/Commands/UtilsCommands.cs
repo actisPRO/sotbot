@@ -44,7 +44,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task PrintRoles(CommandContext ctx)
         {
-            foreach (var role in ctx.Guild.Roles)
+            foreach (var role in ctx.Guild.Roles.Values)
                 await ctx.Guild.GetChannel(Bot.BotSettings.RolesChannel)
                     .SendMessageAsync($"• **{role.Name}** `{role.Id}`");
         }
@@ -70,7 +70,7 @@ namespace SeaOfThieves.Commands
             try
             {
                 var embed = new DiscordEmbedBuilder();
-                embed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
+                embed.WithAuthor($"{member.Username}#{member.Discriminator}", iconUrl: member.AvatarUrl);
                 embed.AddField("ID", member.Id.ToString(), true);
                 embed.WithColor(DiscordColor.Blurple);
 
@@ -198,7 +198,7 @@ namespace SeaOfThieves.Commands
         {
             var channel = ctx.Guild.GetChannel(Bot.BotSettings.DonatorChannel);
 
-            await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100, channel.LastMessageId));
+            await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100));
             await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
 
             var fso = File.Open("donators_messages.txt", FileMode.OpenOrCreate);
@@ -292,9 +292,18 @@ namespace SeaOfThieves.Commands
             //Обновляем общий канал и его позицию, если изменена (Позиция 1)
             var fleetLobby = ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby);
             if (ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby).Position != 1)
-                await fleetLobby.ModifyAsync(name: "Общий", position: 1, user_limit: 99);
+                await fleetLobby.ModifyAsync(x =>
+                {
+                    x.Name = "Общий";
+                    x.Position = 1;
+                    x.Userlimit = 99;
+                });
             else
-                await fleetLobby.ModifyAsync(name: "Общий", user_limit: 99);
+                await fleetLobby.ModifyAsync(x =>
+                {
+                    x.Name = "Общий";
+                    x.Userlimit = 99;
+                });
 
             //Выбираем остальные каналы и сортуруем по ID.
             var channels = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children
@@ -313,9 +322,18 @@ namespace SeaOfThieves.Commands
 
                 //Обновляем канал и позицию в списке, если изменена (Позиция i + 2)
                 if (fleetChannel.Position != i + 2)
-                    await fleetChannel.ModifyAsync(name: $"Рейд#{(i % 5) + 1} - №{fleetNum}", position: i + 2, user_limit: Bot.BotSettings.FleetUserLimiter);
+                    await fleetChannel.ModifyAsync(x =>
+                    {
+                        x.Name = $"Рейд#{(i % 5) + 1} - №{fleetNum}";
+                        x.Position = i + 2;
+                        x.Userlimit = Bot.BotSettings.FleetUserLimiter;
+                    });
                 else
-                    await fleetChannel.ModifyAsync(name: $"Рейд#{(i % 5) + 1} - №{fleetNum}", user_limit: Bot.BotSettings.FleetUserLimiter);
+                    await fleetChannel.ModifyAsync(x =>
+                    {
+                        x.Name = $"Рейд#{(i % 5) + 1} - №{fleetNum}";
+                        x.Userlimit = Bot.BotSettings.FleetUserLimiter;
+                    });
                 i++;
             }
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
@@ -345,7 +363,7 @@ namespace SeaOfThieves.Commands
             throw new IOException("Test exception.");
         }
 
-        [Command("rainbow")]
+        /*[Command("rainbow")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task Rainbow(CommandContext ctx)
         {
@@ -376,7 +394,7 @@ namespace SeaOfThieves.Commands
         {
             keepRainbow = false;
             return Task.CompletedTask;
-        }
+        }*/
 
         [Command("time")]
         public async Task Time(CommandContext ctx)
@@ -389,7 +407,7 @@ namespace SeaOfThieves.Commands
         [Hidden]
         public async Task ShowSettings(CommandContext ctx)
         {
-            var interactivity = ctx.Client.GetInteractivityModule();
+            var interactivity = ctx.Client.GetInteractivity();
 
             List<string> settings = new List<string>();
 
@@ -401,7 +419,7 @@ namespace SeaOfThieves.Commands
 
             var settingsPagination = Utility.GeneratePagesInEmbeds(settings, "**Текущие настройки бота**");
 
-            await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
         }
 
         [Command("emissarymessage")]
@@ -440,7 +458,7 @@ namespace SeaOfThieves.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task GiveCodexRoleToEveryone(CommandContext ctx)
         {
-            var members = await ctx.Guild.GetAllMembersAsync();
+            var members = (await ctx.Guild.GetAllMembersAsync()).ToList();
             for (int i = 0; i < members.Count; ++i)
             {
                 Console.WriteLine("Member " + i);
