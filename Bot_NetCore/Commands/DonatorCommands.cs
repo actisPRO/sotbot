@@ -14,7 +14,7 @@ namespace SeaOfThieves.Commands
     [Aliases("d")]
     [Description("Команды доната\n" +
                  "!help [Команда] для описания команды")]
-    public class DonatorCommands
+    public class DonatorCommands : BaseCommandModule
     {
         [Command("setprice")]
         [RequirePermissions(Permissions.Administrator)]
@@ -85,7 +85,7 @@ namespace SeaOfThieves.Commands
             {
                 var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
                 res.SetRole(role.Id);
-                await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
                 await member.GrantRoleAsync(role);
                 message += $"• `{Bot.BotSettings.Prefix}donator color hex-код-цвета` — изменяет цвет вашего ника.\n";
             }
@@ -155,7 +155,7 @@ namespace SeaOfThieves.Commands
 
             try
             {
-                await ctx.Guild.RevokeRoleAsync(member, ctx.Guild.GetRole(Bot.BotSettings.DonatorRole),
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole),
                     "Donator deletion");
                 await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[member.Id].ColorRole));
             }
@@ -199,8 +199,8 @@ namespace SeaOfThieves.Commands
             }
 
             var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
-            await ctx.Guild.UpdateRoleAsync(role, color: discordColor);
-            await ctx.Guild.UpdateRolePositionAsync(role, ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+            await role.ModifyAsync(x => x.Color = discordColor);
+            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен цвет донатера!");
         }
@@ -238,8 +238,8 @@ namespace SeaOfThieves.Commands
                 throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
             }
 
-            await ctx.Guild.UpdateRoleAsync
-                (ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole), newName);
+            var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
+            role.ModifyAsync(x => x.Name = newName);
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
         }
