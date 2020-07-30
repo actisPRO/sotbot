@@ -13,7 +13,7 @@ using DSharpPlus.Interactivity;
 
 namespace SeaOfThieves.Commands
 {
-    public class PublicCommands
+    public class PublicCommands : BaseCommandModule
     {
         [Command("create")]
         [Aliases("c")]
@@ -87,7 +87,7 @@ namespace SeaOfThieves.Commands
             var created = await ctx.Guild.CreateChannelAsync(
                 $"{channelSymbol} {name} {ctx.User.Username}",
                 ChannelType.Voice, ctx.Guild.GetChannel(Bot.BotSettings.AutocreateCategory),
-                Bot.BotSettings.Bitrate, slots);
+                bitrate: Bot.BotSettings.Bitrate, userLimit: slots);
 
             try
             {
@@ -141,7 +141,7 @@ namespace SeaOfThieves.Commands
             //Эмоции голосования
             var emoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
 
-            var interactivity = ctx.Client.GetInteractivityModule();
+            var interactivity = ctx.Client.GetInteractivity();
 
             //Упираюсь в лимит DSharpPlus, в данной версии не известно сколько пользователей в канале
             //Так что считаем что канал полный
@@ -160,7 +160,7 @@ namespace SeaOfThieves.Commands
                 Description = "Участники канала могут проголосовать за кик пользователя."
             };
 
-            embed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
+            embed.WithAuthor($"{member.Username}#{member.Discriminator}", iconUrl: member.AvatarUrl);
             embed.WithFooter($"Голосование закончится через 60 сек. Нужно {votesNeeded} голос(а).");
             var msg = await ctx.RespondAsync(embed: embed);
 
@@ -189,7 +189,7 @@ namespace SeaOfThieves.Commands
                 Title = $"Голосование за кик с канала окончено!"
             };
 
-            resultEmbed.WithAuthor($"{member.Username}#{member.Discriminator}", icon_url: member.AvatarUrl);
+            resultEmbed.WithAuthor($"{member.Username}#{member.Discriminator}", iconUrl: member.AvatarUrl);
 
             if (member.VoiceState?.Channel == null ||
                 member.VoiceState?.Channel != null &&
@@ -213,7 +213,7 @@ namespace SeaOfThieves.Commands
                 resultEmbed.WithColor(new DiscordColor("FF0000"));
             }
 
-            await msg.ModifyAsync(embed: resultEmbed);
+            await msg.ModifyAsync(embed: resultEmbed.Build());
         }
     }
 }
