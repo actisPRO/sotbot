@@ -17,7 +17,7 @@ namespace SeaOfThieves.Commands
     [Group("private")]
     [Description("Команды приватных кораблей \n" +
                  "!help [Команда] для описания команды")]
-    public class PrivateCommands
+    public class PrivateCommands : BaseCommandModule
     {
         [Command("new")]
         [Description("Отправляет запрос на создание приватного корабля.")]
