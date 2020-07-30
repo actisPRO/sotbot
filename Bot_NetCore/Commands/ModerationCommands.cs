@@ -15,7 +15,7 @@ using SeaOfThieves.Misc;
 
 namespace SeaOfThieves.Commands
 {
-    public class ModerationCommands
+    public class ModerationCommands : BaseCommandModule
     {
         [Command("clearchannel")]
         [Aliases("cc")]
@@ -34,7 +34,7 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var messagesToDelete = await ctx.Channel.GetMessagesAsync(messages, ctx.Message.Id);
+            var messagesToDelete = await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, messages);
 
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
@@ -96,7 +96,7 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var messagesToDelete = await ctx.Channel.GetMessagesAsync(messages, startFrom);
+            var messagesToDelete = await ctx.Channel.GetMessagesBeforeAsync(startFrom, messages);
             foreach (var message in messagesToDelete) await ctx.Channel.DeleteMessageAsync(message);
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
@@ -531,7 +531,7 @@ namespace SeaOfThieves.Commands
                 //user can block the bot
             }
 
-            await guild.RemoveMemberAsync(member, reason);
+            await member.RemoveAsync(reason);
             await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Кик**\n\n" +
              $"**От:** {moderator}\n" +
