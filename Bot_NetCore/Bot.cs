@@ -20,6 +20,7 @@ using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext.Exceptions;
 using System.Reflection;
+using DSharpPlus.Interactivity.Enums;
 using Microsoft.VisualBasic.FileIO;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -54,12 +55,12 @@ namespace SeaOfThieves
         /// <summary>
         ///     Модуль команд.
         /// </summary>
-        public CommandsNextModule Commands { get; set; }
+        public CommandsNextExtension Commands { get; set; }
 
         /// <summary>
         ///     Модуль взаимодействия.
         /// </summary>
-        public InteractivityModule Interactivity { get; set; }
+        public InteractivityExtension Interactivity { get; set; }
 
         /// <summary>
         ///     Структура с настройками бота.
@@ -111,7 +112,7 @@ namespace SeaOfThieves
 
             var ccfg = new CommandsNextConfiguration
             {
-                StringPrefix = BotSettings.Prefix,
+                StringPrefixes = new [] { BotSettings.Prefix },
                 EnableDms = false,
                 CaseSensitive = false,
                 EnableMentionPrefix = true,
@@ -122,8 +123,9 @@ namespace SeaOfThieves
 
             var icfg = new InteractivityConfiguration
             {
-                PaginationBehaviour = TimeoutBehaviour.Delete,
-                PaginationTimeout = TimeSpan.FromMinutes(2)
+                PaginationBehaviour = PaginationBehaviour.WrapAround,
+                PaginationDeletion = PaginationDeletion.DeleteEmojis,
+                Timeout = TimeSpan.FromMinutes(2)
             };
 
             Interactivity = Client.UseInteractivity(icfg);
@@ -333,7 +335,8 @@ namespace SeaOfThieves
                     ReportList.Mutes.Remove(x.Id);
                     try
                     {
-                        await guild.RevokeRoleAsync(await guild.GetMemberAsync(x.Id), guild.GetRole(BotSettings.MuteRole), "Unmuted");
+                        var user = await guild.GetMemberAsync(x.Id);
+                        await user.RevokeRoleAsync(guild.GetRole(BotSettings.MuteRole), "Unmuted");
                     }
                     catch (NotFoundException)
                     {
@@ -536,7 +539,7 @@ namespace SeaOfThieves
                         var name = ship.Name;
                         var role = await e.Channel.Guild.CreateRoleAsync($"☠{name}☠", null, null, false, true);
                         var channel = await e.Channel.Guild.CreateChannelAsync($"☠{name}☠", ChannelType.Voice,
-                            e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), BotSettings.Bitrate);
+                            e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), bitrate: BotSettings.Bitrate);
 
                         await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
                         await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
@@ -1094,15 +1097,15 @@ namespace SeaOfThieves
                     if (e.Channel.Id == BotSettings.AutocreateSloop) //Шлюп
                         created = await e.Guild.CreateChannelAsync(
                             $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
-                            e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 2);
+                            e.Guild.GetChannel(BotSettings.AutocreateCategory), bitrate: BotSettings.Bitrate, userLimit: 2);
                     else if (e.Channel.Id == BotSettings.AutocreateBrigantine) // Бригантина
                         created = await e.Guild.CreateChannelAsync(
                             $"{channelSymbol} Бриг {e.User.Username}", ChannelType.Voice,
-                            e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 3);
+                            e.Guild.GetChannel(BotSettings.AutocreateCategory), bitrate: BotSettings.Bitrate, userLimit: 3);
                     else // Галеон
                         created = await e.Guild.CreateChannelAsync(
                             $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
-                            e.Guild.GetChannel(BotSettings.AutocreateCategory), BotSettings.Bitrate, 4);
+                            e.Guild.GetChannel(BotSettings.AutocreateCategory), bitrate: BotSettings.Bitrate, userLimit: 4);
 
                     var member = await e.Guild.GetMemberAsync(e.User.Id);
 
@@ -1123,13 +1126,13 @@ namespace SeaOfThieves
                 // удалим пустые каналы
 
                 var autocreatedChannels = new List<DiscordChannel>(); // это все автосозданные каналы
-                foreach (var channel in e.Guild.Channels)
+                foreach (var channel in e.Guild.Channels.Values)
                     if (channel.Type == ChannelType.Voice
                         && channel.ParentId == BotSettings.AutocreateCategory)
                         autocreatedChannels.Add(channel);
 
                 var notEmptyChannels = new List<DiscordChannel>(); // это все НЕ пустые каналы
-                foreach (var voiceState in e.Guild.VoiceStates) notEmptyChannels.Add(voiceState.Channel);
+                foreach (var voiceState in e.Guild.VoiceStates.Values) notEmptyChannels.Add(voiceState.Channel);
 
                 var forDeletionChannels = autocreatedChannels.Except(notEmptyChannels); // это пустые каналы
                 foreach (var channel in forDeletionChannels) await channel.DeleteAsync(); // мы их удаляем
@@ -1164,7 +1167,7 @@ namespace SeaOfThieves
                 DateTime.Now); // и еще немного ЧСВ
 
             var member = await e.Client.Guilds[BotSettings.Guild].GetMemberAsync(e.Client.CurrentUser.Id);
-            await member.ModifyAsync($"SeaOfThieves {BotSettings.Version}");
+            await member.ModifyAsync(x => x.Nickname = $"SeaOfThieves {BotSettings.Version}");
 
             var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
             Invites = guildInvites.ToList();
