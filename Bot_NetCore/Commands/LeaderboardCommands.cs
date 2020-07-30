@@ -17,7 +17,7 @@ namespace SeaOfThieves.Commands
     [Group("leaderboard")]
     [Description("Команды лидерборда\n" +
                  "!help [Команда] для описания команды")]
-    public class LeaderboardCommands
+    public class LeaderboardCommands : BaseCommandModule
     {
         [Command("create")]
         [Description("Команда для создания/обновления лидерборда")]
@@ -38,7 +38,7 @@ namespace SeaOfThieves.Commands
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
-            var interactivity = ctx.Client.GetInteractivityModule();
+            var interactivity = ctx.Client.GetInteractivity();
 
             List<string> inviters = new List<string>();
 
@@ -60,7 +60,7 @@ namespace SeaOfThieves.Commands
 
             var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters, "Полный список рефералов");
 
-            await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
         }
 
         [Command("listinvites")]
@@ -77,7 +77,7 @@ namespace SeaOfThieves.Commands
 
             try
             {
-                var interactivity = ctx.Client.GetInteractivityModule();
+                var interactivity = ctx.Client.GetInteractivity();
 
                 var inviter = InviterList.Inviters[member.Id].Referrals.Values.Where(x => x.Active).ToList()
                     .OrderByDescending(x => x.Date.Month);
@@ -100,7 +100,7 @@ namespace SeaOfThieves.Commands
 
                 var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals, $"Список приглашенных пользователем {member.DisplayName}");
 
-                await interactivity.SendPaginatedMessage(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
             }
             catch (KeyNotFoundException)
             {
