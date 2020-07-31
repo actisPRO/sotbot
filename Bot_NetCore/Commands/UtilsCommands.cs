@@ -419,7 +419,10 @@ namespace SeaOfThieves.Commands
 
             var settingsPagination = Utility.GeneratePagesInEmbeds(settings, "**Текущие настройки бота**");
 
-            await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            if (settingsPagination.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            else
+                await ctx.RespondAsync(embed: settingsPagination.First().Embed);
         }
 
         [Command("emissarymessage")]

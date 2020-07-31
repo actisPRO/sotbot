@@ -15,6 +15,7 @@ using SeaOfThieves.Entities;
 namespace SeaOfThieves.Commands
 {
     [Group("leaderboard")]
+    [Aliases("lb")]
     [Description("Команды лидерборда\n" +
                  "!help [Команда] для описания команды")]
     public class LeaderboardCommands : BaseCommandModule
@@ -60,7 +61,10 @@ namespace SeaOfThieves.Commands
 
             var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters, "Полный список рефералов");
 
-            await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            if (inviters_pagination.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            else
+                await ctx.RespondAsync(embed: inviters_pagination.First().Embed);
         }
 
         [Command("listinvites")]
@@ -100,7 +104,10 @@ namespace SeaOfThieves.Commands
 
                 var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals, $"Список приглашенных пользователем {member.DisplayName}");
 
-                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                if (referrals_pagination.Count() > 1)
+                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                else
+                    await ctx.RespondAsync(embed: referrals_pagination.First().Embed);
             }
             catch (KeyNotFoundException)
             {
