@@ -121,20 +121,18 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            //В DSharpPlus 3.2.3 нету параметра Users в классе DiscordChannel.
-            //Так что проверяем по пользователям на их присутствие в канале
             var channel = member.VoiceState?.Channel;
 
             if (channel == null ||                               //Пользователь не в канале
-               channel.Id != ctx.Member.VoiceState?.Channel.Id) //Оба пользователя не из одного и того же канала
+               channel.Id != ctx.Member.VoiceState?.Channel.Id)  //Оба пользователя не из одного и того же канала
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не найден или не в вашем канале!");
                 return;
             }
 
-            if (channel.ParentId != Bot.BotSettings.AutocreateCategory)      //Не канал автосоздания
+            if (channel.Users.Count() > 2)      //Не канал автосоздания
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете проголосовать только в канале автосоздания!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете проголосовать в канале в котором только 2 пользователя!");
                 return;
             }
 
@@ -143,14 +141,13 @@ namespace SeaOfThieves.Commands
 
             var interactivity = ctx.Client.GetInteractivity();
 
-            //Упираюсь в лимит DSharpPlus, в данной версии не известно сколько пользователей в канале
-            //Так что считаем что канал полный
-            var votesNeeded = channel.UserLimit switch
+            //Подсчёт нужных голосов
+            var votesNeeded = channel.Users.Count() switch
             {
                 4 => 3, //Галеон
                 3 => 2, //Бриг
-                2 => 2, //Шлюп - 2 Так как будут бегать по каналам и абузить. Легче пересоздать канал
-                _ => Math.Round((channel.UserLimit - 1) * 0.5 + 1, MidpointRounding.AwayFromZero) //Остальные каналы 50% + 1 голосов
+                2 => 2, //Шлюп - 2 Так как будут бегать по каналам и абузить. Легче пересоздать канал. Этот вариант исключён выше
+                _ => Math.Round((channel.Users.Count() - 1) * 0.5 + 1, MidpointRounding.AwayFromZero) //Остальные каналы 50% + 1 голосов
             };
 
             //Embed голосования
