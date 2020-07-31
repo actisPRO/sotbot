@@ -1649,6 +1649,8 @@ namespace SeaOfThieves
         ///     Путь до файла с голосованиями.
         /// </summary>
         public string VotesXML;
+
+        public ulong VotesChannel;
     }
 
     public enum CommandType
