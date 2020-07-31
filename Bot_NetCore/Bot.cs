@@ -132,6 +132,7 @@ namespace SeaOfThieves
 
             Commands.RegisterCommands(Assembly.GetExecutingAssembly());
 
+            //Ивенты
             Client.Ready += ClientOnReady;
             Client.GuildMemberAdded += ClientOnGuildMemberAdded;
             Client.GuildMemberRemoved += ClientOnGuildMemberRemoved;
@@ -139,9 +140,14 @@ namespace SeaOfThieves
             Client.VoiceStateUpdated += ClientOnVoiceStateUpdated;
             Client.MessageCreated += ClientOnMessageCreated;
             Client.MessageReactionAdded += ClientOnMessageReactionAdded;
-            //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
-            Client.UnknownEvent += ClientOnUnknownEvent;
+            Client.InviteCreated += ClientOnInviteCreated;
+            Client.InviteDeleted += ClientOnInviteDeleted;
             Client.ClientErrored += ClientOnErrored;
+
+            //Не используются
+            //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
+
+            //Логгер
             Client.DebugLogger.LogMessageReceived += DebugLoggerOnLogMessageReceived;
 #if DEBUG
             Client.ClientErrored += args =>
@@ -1145,15 +1151,21 @@ namespace SeaOfThieves
         }
 
         /// <summary>
-        ///     Проверка на создание/удаление инвайтов
+        ///     Проверка на создание инвайтов
         /// </summary>
-        private async Task ClientOnUnknownEvent(UnknownEventArgs e)
+        private async Task ClientOnInviteCreated(InviteCreateEventArgs e)
         {
-            if (e.EventName == "INVITE_CREATE" || e.EventName == "INVITE_DELETE")
-            {
-                var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
-                Invites = guildInvites.ToList();
-            }
+            var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
+            Invites = guildInvites.ToList();
+        }
+
+        /// <summary>
+        ///     Проверка на удаление инвайтов
+        /// </summary>
+        private async Task ClientOnInviteDeleted(InviteDeleteEventArgs e)
+        {
+            var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
+            Invites = guildInvites.ToList();
         }
 
         /// <summary>
