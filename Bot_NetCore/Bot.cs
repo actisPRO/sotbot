@@ -799,7 +799,10 @@ namespace SeaOfThieves
             
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
-                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). **Участников на сервере:** {e.Guild.MemberCount}.");
+                    $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}).");
+
+            //Обновляем статус бота
+            await UpdateMembersCountAsync(e.Client, e.Guild.MemberCount);
 
             //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
             if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
@@ -925,8 +928,7 @@ namespace SeaOfThieves
                     await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
-                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. " +
-                        $"**Участников на сервере:** {e.Guild.MemberCount}.");
+                        $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. ");
 
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                         $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.",
@@ -952,7 +954,6 @@ namespace SeaOfThieves
                     await e.Guild.GetChannel(BotSettings.UserlogChannel)
                         .SendMessageAsync(
                             $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
-                            $"**Участников на сервере:** {e.Guild.MemberCount}. " +
                             $"Приглашение не удалось определить.");
 
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
@@ -965,7 +966,6 @@ namespace SeaOfThieves
                 await e.Guild.GetChannel(BotSettings.UserlogChannel)
                     .SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
-                        $"**Участников на сервере:** {e.Guild.MemberCount}." +
                         $"При попытке отследить инвайт произошла ошибка.");
 
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
@@ -986,6 +986,9 @@ namespace SeaOfThieves
 
                 await errChannel.SendMessageAsync(message);
             }
+
+            //Обновляем статус бота
+            await UpdateMembersCountAsync(e.Client, e.Guild.MemberCount);
         }
 
         /// <summary>
@@ -1178,11 +1181,25 @@ namespace SeaOfThieves
             e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", "Made by Actis",
                 DateTime.Now); // и еще немного ЧСВ
 
-            var member = await e.Client.Guilds[BotSettings.Guild].GetMemberAsync(e.Client.CurrentUser.Id);
+            var guild = e.Client.Guilds[BotSettings.Guild];
+
+            var member = await guild.GetMemberAsync(e.Client.CurrentUser.Id);
             await member.ModifyAsync(x => x.Nickname = $"SeaOfThieves {BotSettings.Version}");
 
-            var guildInvites = await e.Client.Guilds[BotSettings.Guild].GetInvitesAsync();
+            var guildInvites = await guild.GetInvitesAsync();
             Invites = guildInvites.ToList();
+        }
+
+
+        /// <summary>
+        ///     Обновляет статус бота, отображая к.во участников на сервере.
+        /// </summary>
+        /// <param name="client">Клиент бота</param>
+        /// <param name="number">Число пользователей на сервере</param>
+        /// <returns></returns>
+        public async Task UpdateMembersCountAsync(DiscordClient client, int number)
+        {
+            await client.UpdateStatusAsync(new DiscordActivity($"за {number} пользователями", ActivityType.Watching));
         }
 
 
