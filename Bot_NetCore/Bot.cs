@@ -90,9 +90,7 @@ namespace SeaOfThieves
             ReportList.ReadFromXML(BotSettings.ReportsXML);
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
-
-            DonatorList.SaveToXML(BotSettings.DonatorXML); // Если вдруг формат был изменен, перезапишем XML-файлы.
-            UserList.SaveToXML(BotSettings.WarningsXML);
+            Vote.Read(BotSettings.VotesXML);
 
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -1629,6 +1627,11 @@ namespace SeaOfThieves
         ///     Путь до файла с ценами на донат.
         /// </summary>
         public string PriceListXML;
+        
+        /// <summary>
+        ///     Путь до файла с голосованиями.
+        /// </summary>
+        public string VotesXML;
     }
 
     public enum CommandType
