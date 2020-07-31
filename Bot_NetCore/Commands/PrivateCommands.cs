@@ -15,6 +15,7 @@ using SeaOfThieves.Entities;
 namespace SeaOfThieves.Commands
 {
     [Group("private")]
+    [Aliases("p")]
     [Description("Команды приватных кораблей \n" +
                  "!help [Команда] для описания команды")]
     public class PrivateCommands : BaseCommandModule
@@ -142,7 +143,10 @@ namespace SeaOfThieves.Commands
 
             var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа вашего корабля.");
 
-            await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            if (members_pagination.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            else
+                await ctx.RespondAsync(embed: members_pagination.First().Embed);
         }
 
         [Command("yes")]
@@ -658,7 +662,10 @@ namespace SeaOfThieves.Commands
 
                     var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа.");
 
-                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    if (members_pagination.Count() > 1)
+                        await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    else
+                        await ctx.RespondAsync(embed: members_pagination.First().Embed);
                 }
 
                 //Починка корабля

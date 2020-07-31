@@ -105,7 +105,6 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("purge")]
-        [Aliases("p")]
         [Hidden]
         public async Task Purge(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
@@ -576,6 +575,7 @@ namespace SeaOfThieves.Commands
     }
 
     [Group("force")]
+    [Aliases("f")]
     [Description("Модерация участников покинувших сервер")]
     [Hidden]
     public class ForceModerationCommands
@@ -619,7 +619,6 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("purge")]
-        [Aliases("p")]
         [Hidden]
         public async Task Purge(CommandContext ctx, ulong memberId, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
