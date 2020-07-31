@@ -185,6 +185,13 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
+            //Проверка на кик модератора капитаном рейда
+            if (Bot.IsModerator(member) && isFleetCaptain)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не можете исключить данного пользователя! <@&514282258958385152>");
+                return;
+            }
+
             var durationTimeSpan = Utility.TimeSpanParse(duration);
 
             if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
