@@ -215,5 +215,17 @@ namespace SeaOfThieves.Commands
 
             await msg.ModifyAsync(embed: resultEmbed.Build());
         }
+
+
+        [Command("createfleet")]
+        [Aliases("cf")]
+        [Description("Создаёт голосование для создания рейда")]
+        public void CreateFleet(CommandContext ctx,
+            [Description("Количество кораблей")] int ships,
+            [Description("Слоты на корабле")] int slots,
+            [RemainingText, Description("Примечание")] string notes)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
