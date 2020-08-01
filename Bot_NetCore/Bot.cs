@@ -530,8 +530,52 @@ namespace SeaOfThieves
 
                 return;
             }
+            
+            //Проверка на голосование
+            if (e.Message.Channel.Id == BotSettings.VotesChannel)
+            {
+                var vote = Vote.Votes[e.Message.Id];
+                
+                await e.Message.DeleteReactionAsync(e.Emoji, e.User);
 
-            //then check if it is private ship confirmation message
+                // Проверка на окончание голосования
+                if (DateTime.Now > vote.End)
+                {
+                    return;
+                }
+
+                // Проверка на предыдущий голос
+                if (vote.Voters.Contains(e.User.Id))
+                {
+                    return;
+                }
+                
+                vote.Voters.Add(e.User.Id);
+                var total = vote.Voters.Count;
+                
+                if (e.Emoji.Name == ":white_check_mark:" || e.Emoji.Name == "✅")
+                    ++vote.Yes;
+                else ++vote.No;
+
+                var builder = new DiscordEmbedBuilder();
+                builder.ClearFields();
+                builder.AddField("Участники", Convert.ToString(total), true);
+                var yesPercent = (int) Math.Round((double) (100 * vote.Yes) / total);
+                builder.AddField("За",
+                    total == 0 ? "0" : $"{vote.Yes} ({yesPercent}%)", true); 
+                builder.AddField("Против",
+                    total == 0 ? "0" : $"{vote.No} ({100 - yesPercent}%)", true);
+                builder.WithFooter($"Голосование будет завершено {vote.End.ToString("HH:mm:ss dd.MM.yyyy")}. ID голосования: {vote.Id}");
+                builder.Title = vote.Topic;
+                
+                Vote.Votes[e.Message.Id] = vote;
+                Vote.Save(BotSettings.VotesXML);
+
+                await e.Message.ModifyAsync(embed: builder.Build());
+                await (await e.Guild.GetMemberAsync(e.User.Id)).SendMessageAsync($"{BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
+            }
+
+            //then check if it is a private ship confirmation message
             foreach (var ship in ShipList.Ships.Values)
             {
                 if (ship.Status) continue;
@@ -603,6 +647,7 @@ namespace SeaOfThieves
                     }
                 }
             }
+            
         }
 
         /// <summary>

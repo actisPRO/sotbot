@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
@@ -35,14 +36,16 @@ namespace SeaOfThieves.Commands
             embed.AddField("Участники", "0", true);
             embed.AddField("За", "0", true);
             embed.AddField("Против", "0", true);
-            embed.WithFooter($"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}. ID: {id}");
+            embed.WithFooter($"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}. ID голосования: {id}.");
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
             
-            var vote = new Vote(topic, end, message.Id, ctx.Member.Id, id);
+            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
             Vote.Save(Bot.BotSettings.VotesXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
         }
     }
 }
