@@ -171,11 +171,41 @@ namespace SeaOfThieves
             clearChannelMessages.Elapsed += ClearChannelMessagesOnElapsed;
             clearChannelMessages.AutoReset = true;
             clearChannelMessages.Enabled = true;
+            
+            var clearVotes = new Timer(5000);
+            clearVotes.Elapsed += ClearVotesOnElapsed;
+            clearVotes.AutoReset = true;
+            clearVotes.Enabled = true;
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
 
             await Task.Delay(-1);
+        }
+
+        private async void ClearVotesOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            foreach (var vote in Vote.Votes.Values)
+            {
+                if (DateTime.Now > vote.End)
+                {
+                    var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
+                        .GetMessageAsync(vote.Message);
+                    if (message.Reactions.Count == 0) continue;
+                    
+                    var embed = new DiscordEmbedBuilder();
+                    embed.Title = vote.Topic;
+                    embed.Description = "Голосование завершено!";
+                    embed.AddField("Участники", vote.Voters.Count.ToString(), true);
+                    var yesPercentage = (int) Math.Round((double) (100 * vote.Yes) / vote.Voters.Count);
+                    embed.AddField("За", $"{vote.Yes} ({yesPercentage}%)", true);
+                    embed.AddField("Против", $"{vote.No} ({100 - yesPercentage}%)", true);
+                    embed.WithFooter($"ID голосования: {vote.Id}.");
+
+                    await message.ModifyAsync(embed: embed.Build());
+                    await message.DeleteAllReactionsAsync();
+                }
+            }
         }
 
         private Task ClientOnErrored(ClientErrorEventArgs e)
@@ -565,8 +595,9 @@ namespace SeaOfThieves
                     total == 0 ? "0" : $"{vote.Yes} ({yesPercent}%)", true); 
                 builder.AddField("Против",
                     total == 0 ? "0" : $"{vote.No} ({100 - yesPercent}%)", true);
-                builder.WithFooter($"Голосование будет завершено {vote.End.ToString("HH:mm:ss dd.MM.yyyy")}. ID голосования: {vote.Id}");
+                builder.WithFooter($"ID голосования: {vote.Id}");
                 builder.Title = vote.Topic;
+                builder.Description = $"Голосование будет завершено {vote.End.ToString("HH:mm:ss dd.MM.yyyy")}.";
                 
                 Vote.Votes[e.Message.Id] = vote;
                 Vote.Save(BotSettings.VotesXML);

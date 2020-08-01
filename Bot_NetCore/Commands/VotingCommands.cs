@@ -33,10 +33,11 @@ namespace SeaOfThieves.Commands
             
             var embed = new DiscordEmbedBuilder();
             embed.Title = topic;
+            embed.Description = $"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}.";
             embed.AddField("Участники", "0", true);
             embed.AddField("За", "0", true);
             embed.AddField("Против", "0", true);
-            embed.WithFooter($"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}. ID голосования: {id}.");
+            embed.WithFooter($"ID голосования: {id}.");
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
