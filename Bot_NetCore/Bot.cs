@@ -111,7 +111,7 @@ namespace SeaOfThieves
 
             var ccfg = new CommandsNextConfiguration
             {
-                StringPrefixes = new [] { BotSettings.Prefix },
+                StringPrefixes = new[] { BotSettings.Prefix },
                 EnableDms = false,
                 CaseSensitive = false,
                 EnableMentionPrefix = true,
@@ -153,7 +153,7 @@ namespace SeaOfThieves
             {
                 Console.WriteLine(args.Exception.InnerException);
                 return Task.CompletedTask;
-            }; 
+            };
 #endif
 
             Commands.CommandErrored += CommandsOnCommandErrored;
@@ -166,13 +166,13 @@ namespace SeaOfThieves
             checkExpiredReports.Elapsed += CheckExpiredReports;
             checkExpiredReports.AutoReset = true;
             checkExpiredReports.Enabled = true;
-            
+
             //Таймер который каждую минуту проверяет истекшие сообщения в каналах
             var clearChannelMessages = new Timer(60000);
             clearChannelMessages.Elapsed += ClearChannelMessagesOnElapsed;
             clearChannelMessages.AutoReset = true;
             clearChannelMessages.Enabled = true;
-            
+
             var clearVotes = new Timer(5000);
             clearVotes.Elapsed += ClearVotesOnElapsed;
             clearVotes.AutoReset = true;
@@ -193,12 +193,12 @@ namespace SeaOfThieves
                     var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
                         .GetMessageAsync(vote.Message);
                     if (message.Reactions.Count == 0) continue;
-                    
+
                     var embed = new DiscordEmbedBuilder();
                     embed.Title = vote.Topic;
                     embed.Description = "Голосование завершено!";
                     embed.AddField("Участники", vote.Voters.Count.ToString(), true);
-                    var yesPercentage = (int) Math.Round((double) (100 * vote.Yes) / vote.Voters.Count);
+                    var yesPercentage = (int)Math.Round((double)(100 * vote.Yes) / vote.Voters.Count);
                     embed.AddField("За", $"{vote.Yes} ({yesPercentage}%)", true);
                     embed.AddField("Против", $"{vote.No} ({100 - yesPercentage}%)", true);
                     embed.WithFooter($"ID голосования: {vote.Id}.");
@@ -561,12 +561,12 @@ namespace SeaOfThieves
 
                 return;
             }
-            
+
             //Проверка на голосование
             if (e.Message.Channel.Id == BotSettings.VotesChannel)
             {
                 var vote = Vote.Votes[e.Message.Id];
-                
+
                 await e.Message.DeleteReactionAsync(e.Emoji, e.User);
 
                 // Проверка на окончание голосования
@@ -580,10 +580,10 @@ namespace SeaOfThieves
                 {
                     return;
                 }
-                
+
                 vote.Voters.Add(e.User.Id);
                 var total = vote.Voters.Count;
-                
+
                 if (e.Emoji.Name == ":white_check_mark:" || e.Emoji.Name == "✅")
                     ++vote.Yes;
                 else ++vote.No;
@@ -591,15 +591,15 @@ namespace SeaOfThieves
                 var builder = new DiscordEmbedBuilder();
                 builder.ClearFields();
                 builder.AddField("Участники", Convert.ToString(total), true);
-                var yesPercent = (int) Math.Round((double) (100 * vote.Yes) / total);
+                var yesPercent = (int)Math.Round((double)(100 * vote.Yes) / total);
                 builder.AddField("За",
-                    total == 0 ? "0" : $"{vote.Yes} ({yesPercent}%)", true); 
+                    total == 0 ? "0" : $"{vote.Yes} ({yesPercent}%)", true);
                 builder.AddField("Против",
                     total == 0 ? "0" : $"{vote.No} ({100 - yesPercent}%)", true);
                 builder.WithFooter($"ID голосования: {vote.Id}");
                 builder.Title = vote.Topic;
                 builder.Description = $"Голосование будет завершено {vote.End.ToString("HH:mm:ss dd.MM.yyyy")}.";
-                
+
                 Vote.Votes[e.Message.Id] = vote;
                 Vote.Save(BotSettings.VotesXML);
 
@@ -679,7 +679,7 @@ namespace SeaOfThieves
                     }
                 }
             }
-            
+
         }
 
         /// <summary>
@@ -771,7 +771,7 @@ namespace SeaOfThieves
                     {
                         case "w":
                             await e.Message.DeleteAsync();
-                            RunCommand((DiscordClient) e.Client, CommandType.Warn, args, e.Message);
+                            RunCommand((DiscordClient)e.Client, CommandType.Warn, args, e.Message);
                             return;
                         default:
                             return;
@@ -812,7 +812,7 @@ namespace SeaOfThieves
                                     var attachment =
                                         (await e.Guild.GetChannel(BotSettings.AttachmentsLog)
                                             .GetMessageAsync(Convert.ToUInt64(fields[1]))).Attachments[0];
-                                    
+
                                     var client = new WebClient();
                                     client.DownloadFile(attachment.Url, attachment.FileName);
                                     await e.Guild.GetChannel(BotSettings.FulllogChannel)
@@ -857,7 +857,7 @@ namespace SeaOfThieves
                 BotSettings.EmissaryOrderOfSoulsRole,
                 e.Guild.EveryoneRole.Id,
             };
-            
+
             foreach (var role in roles)
             {
                 if (!ignoredRoles.Contains(role.Id))
@@ -871,7 +871,7 @@ namespace SeaOfThieves
                 UsersLeftList.Users[e.Member.Id] = new UserLeft(e.Member.Id, rolesToSave);
                 UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
             }
-            
+
             await e.Guild.GetChannel(BotSettings.UserlogChannel)
                 .SendMessageAsync(
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}).");
@@ -959,11 +959,11 @@ namespace SeaOfThieves
                                                 "Если у тебя есть какие-то вопросы, не стесняйся писать администрации.\n\n" +
                                                 "**Удачной игры!**");
             }
-            catch(UnauthorizedException)
+            catch (UnauthorizedException)
             {
                 //Пользователь заблокировал бота
             }
-          
+
             // Выдача ролей, которые были у участника перед выходом.
             if (UsersLeftList.Users.ContainsKey(e.Member.Id))
             {
@@ -972,17 +972,17 @@ namespace SeaOfThieves
                     try
                     {
                         await e.Member.GrantRoleAsync(e.Guild.GetRole(role));
-                    }    
+                    }
                     catch (NotFoundException)
                     {
-                        
+
                     }
                 }
 
                 UsersLeftList.Users.Remove(e.Member.Id);
                 UsersLeftList.SaveToXML(BotSettings.UsersLeftXML);
             }
-          
+
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
@@ -990,7 +990,7 @@ namespace SeaOfThieves
                 var updatedInvite = guildInvites.ToList().Find(g => invites.Find(i => i.Code == g.Code).Uses < g.Uses);
 
                 //Если не удалось определить инвайт, значит его нет в новых так как к.во использований ограничено и он был удален
-                if(updatedInvite == null)
+                if (updatedInvite == null)
                 {
                     updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
                                            .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.UtcNow))      //Проверяем если он не истёк
@@ -1010,7 +1010,7 @@ namespace SeaOfThieves
                         DateTime.Now);
 
                     //Проверяем если пригласивший уже существует, если нет то создаем
-                    if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id)) 
+                    if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id))
                         Inviter.Create(updatedInvite.Inviter.Id);
 
                     //Проверяем если пользователь был ранее приглашен другими и обновляем активность, если нет то вносим в список
@@ -1280,7 +1280,7 @@ namespace SeaOfThieves
                                             .Where(x => x.Type == ChannelType.Voice)
                                             .Where(x => x.Users.Count() > 0)
                                             .Count() == 0;
-                    
+
                     //Удаляем каналы и категорию
                     if (fleetIsEmpty)
                     {
@@ -1351,7 +1351,7 @@ namespace SeaOfThieves
             using (var fs = new FileStream("settings.xml", FileMode.Open))
             {
                 var reader = XmlReader.Create(fs);
-                BotSettings = (Settings) serializer.Deserialize(reader);
+                BotSettings = (Settings)serializer.Deserialize(reader);
             }
         }
 
@@ -1715,7 +1715,7 @@ namespace SeaOfThieves
         ///     Id роли капитана рейда.
         /// </summary>
         public ulong FleetCaptainRole;
-      
+
         /// <summary>
         ///     Id роли бана принятия правил.
         /// </summary>
@@ -1770,7 +1770,7 @@ namespace SeaOfThieves
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;
-      
+
         /// <summary>
         ///     Id канала с созданием рейда.
         /// </summary>
@@ -1785,7 +1785,7 @@ namespace SeaOfThieves
         ///     Путь до файла с ценами на донат.
         /// </summary>
         public string PriceListXML;
-        
+
         /// <summary>
         ///     Путь до файла с голосованиями.
         /// </summary>
