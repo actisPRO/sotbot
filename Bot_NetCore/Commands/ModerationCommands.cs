@@ -615,7 +615,7 @@ namespace SeaOfThieves.Commands
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Бан**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
-                $"**Пользователь:** <@{memberId}>\n" +
+                $"**Пользователь:** {memberId}\n" +
                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                 $"**Разблокировка:** {unbanDate} UTC | {Utility.FormatTimespan(durationTimeSpan)}\n" +
                 $"**ID бана:** {banId}\n" +
@@ -663,7 +663,7 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** <@{memberId}>\n" +
+                 $"**Кому:** {memberId}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
@@ -709,7 +709,7 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил рейда**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** <@{memberId}>\n" +
+                 $"**Кому:** {memberId}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
@@ -758,7 +758,7 @@ namespace SeaOfThieves.Commands
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Мут**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** <@{memberId}>\n" +
+                 $"**Кому:** {memberId}\n" +
                  $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
@@ -786,7 +786,7 @@ namespace SeaOfThieves.Commands
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Предупреждение**\n\n" +
              $"**От:** {ctx.User}\n" +
-             $"**Кому:** <@{memberId}>\n" +
+             $"**Кому:** {memberId}\n" +
              $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
              $"**ID предупреждения:** {id}\n" +
              $"**Количество предупреждений:** {UserList.Users[memberId].Warns.Count + 1}\n" +
