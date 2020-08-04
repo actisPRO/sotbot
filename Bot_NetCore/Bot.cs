@@ -22,6 +22,7 @@ using DSharpPlus.CommandsNext.Exceptions;
 using System.Reflection;
 using DSharpPlus.Interactivity.Enums;
 using Microsoft.VisualBasic.FileIO;
+using DSharpPlus.CommandsNext.Attributes;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -1099,6 +1100,37 @@ namespace SeaOfThieves
             if (e.Exception is InvalidOperationException)
             {
                 await e.Context.RespondAsync($"{BotSettings.ErrorEmoji} Не была найдена подкоманда.");
+                return;
+            }
+
+            if (e.Exception is ChecksFailedException)
+            {
+                var msg = $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: ";
+
+                var ex = e.Exception as ChecksFailedException;
+                foreach (var check in ex.FailedChecks)
+                    if (check is CooldownAttribute)
+                        msg += $"\n Подождите {Utility.FormatTimespan((check as CooldownAttribute).Reset)}.";
+                    else if (check is Require​Bot​Permissions​Attribute)
+                        msg += "\n У бота недостаточно прав.";
+                    else if (check is Require​Direct​Message​Attribute)
+                        msg += "\n Команда для приватных сообщений.";
+                    else if (check is Require​Guild​Attribute)
+                        msg += "\n Доступна только на определённом  сервере.";
+                    else if (check is Require​Nsfw​Attribute)
+                        msg += "\n Команда для использования только в NSFW канале.";
+                    else if (check is Require​Owner​Attribute)
+                        msg += "\n Команда только для владельца бота.";
+                    else if (check is Require​Permissions​Attribute)
+                        msg += "\n У вас нет доступа.";
+                    else if (check is Require​Prefixes​Attribute)
+                        msg += "\n Команда работает только с определённым префиксом.";
+                    else if (check is Require​Roles​Attribute)
+                        msg += "\n У вас нет доступа.";
+                    else if (check is Require​User​Permissions​Attribute)
+                        msg += "\n У вас нет доступа.";
+
+                await e.Context.RespondAsync(msg);
                 return;
             }
 
