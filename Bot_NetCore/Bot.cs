@@ -1069,10 +1069,10 @@ namespace SeaOfThieves
         /// <summary>
         ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
-        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)    
+        private async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
         {
             if (e.Exception is CommandNotFoundException) return;
-            
+
             if (e.Command.Name == "dgenlist" && e.Exception is NotFoundException) return; //костыль
 
             if (e.Exception is ArgumentException &&
@@ -1088,6 +1088,14 @@ namespace SeaOfThieves
             {
                 await e.Context.RespondAsync(
                     $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели не все параметры.");
+                return;
+            }
+
+            if (e.Exception is ArgumentNullException &&
+                e.Exception.Message == "Value cannot be null. (Parameter 'key').")
+            {
+                await e.Context.RespondAsync(
+                    $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели недопустимые параметры.");
                 return;
             }
 
