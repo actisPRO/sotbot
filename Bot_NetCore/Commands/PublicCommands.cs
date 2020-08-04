@@ -219,7 +219,7 @@ namespace SeaOfThieves.Commands
         [Command("createfleet")]
         [Aliases("cf")]
         [Description("Создаёт голосование для создания рейда")]
-        //[Cooldown(1, 300, CooldownBucketType.Guild)]
+        [Cooldown(1, 120, CooldownBucketType.Guild)]
         public async Task CreateFleetAsync(CommandContext ctx,
             [Description("Количество кораблей")] int nShips,
             [Description("Слоты на корабле (Бот добавляет +1 слот)")] int slots,
@@ -243,7 +243,7 @@ namespace SeaOfThieves.Commands
 
             var fleetCreationMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FleetCreationChannel).
                 SendMessageAsync($"**Создатель рейда**: {ctx.Member.Mention} \n\n" +
-                                 $"**Дата рейда**: {moscowTime.Day}/{moscowTime.Month} \n" +
+                                 $"**Дата рейда**: {moscowTime:dd\\/MM} \n" +
                                  $"**Время начала**: {timeOfDay} \n" +
                                  $"**Количество кораблей**: {nShips} \n" +
                                  $"**Примечание**: {notes}");
@@ -251,8 +251,7 @@ namespace SeaOfThieves.Commands
 
             if(pollNeeded)
             {
-                //TODO: Change pollTime
-                var pollTIme = new TimeSpan(0, 0, 5);
+                var pollTIme = new TimeSpan(0, 2, 0);
 
                 //Эмоции голосования
                 var emoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
@@ -301,7 +300,7 @@ namespace SeaOfThieves.Commands
 
                 if (votesCount >= votesNeeded)
                 {
-                    resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Каналы рейда созданы.");
+                    resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Каналы рейда создаются.");
                     resultEmbed.WithFooter("Результаты голосования будут удалены через 30 секунд.");
                     resultEmbed.WithColor(new DiscordColor("00FF00"));
                     pollSucceded = true;
@@ -333,7 +332,7 @@ namespace SeaOfThieves.Commands
                 //await ctx.RespondAsync(positions);
 
 
-                //TODO: Check permissions
+                //TODO: Check permissions - UPD: Seems to be ok
                 var channel = await ctx.Guild.CreateChannelAsync("рейд-текст", ChannelType.Text, fleetCategory);
                 for (int i = 0; i < nShips; i++)
                     await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
