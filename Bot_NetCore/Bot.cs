@@ -1225,6 +1225,31 @@ namespace SeaOfThieves
                 // пропускаем
             }
 
+            //Проверка на пустые рейды
+            if (e.Before != null && e.Before.Channel != null)
+            {
+                var leftChannel = e.Before.Channel;
+
+                //Пользователь вышел из автоматически созданных каналов рейда
+                if (leftChannel.Parent.Name.StartsWith("Рейд") &&
+                   leftChannel.ParentId != BotSettings.FleetCategory &&
+                   !leftChannel.Users.Contains(e.User))
+                {
+                    //Проверка всех каналов рейда на присутствие в них игроков
+                    var fleetIsEmpty = leftChannel.Parent.Children
+                                            .Where(x => x.Type == ChannelType.Voice)
+                                            .Where(x => x.Users.Count() > 0)
+                                            .Count() == 0;
+                    
+                    //Удаляем каналы и категорию
+                    if (fleetIsEmpty)
+                    {
+                        leftChannel.Parent.Children.ToList().ForEach(x => x.DeleteAsync());
+                        await Task.Delay(2000);
+                        await leftChannel.Parent.DeleteAsync();
+                    }
+                }
+            }
         }
 
         /// <summary>

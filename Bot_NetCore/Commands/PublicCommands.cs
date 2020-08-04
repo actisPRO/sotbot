@@ -4,12 +4,14 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
@@ -178,7 +180,7 @@ namespace SeaOfThieves.Commands
             foreach (var votedUser in votedUsers)
                 votedMembers.Add(await ctx.Guild.GetMemberAsync(votedUser.Id));
 
-            var votedCount = votedMembers.Where(x => x.VoiceState?.Channel.Id == channel.Id).Count();
+            var votesCount = votedMembers.Where(x => x.VoiceState?.Channel.Id == channel.Id).Count();
 
             //Результат
             var resultEmbed = new DiscordEmbedBuilder
@@ -195,10 +197,10 @@ namespace SeaOfThieves.Commands
                 resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Пользователь уже покинул канал.");
                 resultEmbed.WithColor(new DiscordColor("00FF00"));
             }
-            else if (votedCount >= votesNeeded)
+            else if (votesCount >= votesNeeded)
             {
                 resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал.");
-                resultEmbed.WithFooter($"Голосов за кик: { votedCount}");
+                resultEmbed.WithFooter($"Голосов за кик: {votesCount}");
                 resultEmbed.WithColor(new DiscordColor("00FF00"));
 
                 await member.PlaceInAsync(ctx.Guild.AfkChannel);
@@ -206,7 +208,7 @@ namespace SeaOfThieves.Commands
             else
             {
                 resultEmbed.WithDescription($"{Bot.BotSettings.ErrorEmoji} Недостаточно голосов.");
-                resultEmbed.WithFooter($"Голосов за кик: { votedCount}. Нужно {votesNeeded} голос(а).");
+                resultEmbed.WithFooter($"Голосов за кик: {votesCount}. Нужно {votesNeeded} голос(а).");
                 resultEmbed.WithColor(new DiscordColor("FF0000"));
             }
 
@@ -217,12 +219,135 @@ namespace SeaOfThieves.Commands
         [Command("createfleet")]
         [Aliases("cf")]
         [Description("Создаёт голосование для создания рейда")]
-        public void CreateFleet(CommandContext ctx,
-            [Description("Количество кораблей")] int ships,
-            [Description("Слоты на корабле")] int slots,
-            [RemainingText, Description("Примечание")] string notes)
+        //[Cooldown(1, 300, CooldownBucketType.Guild)]
+        public async Task CreateFleetAsync(CommandContext ctx,
+            [Description("Количество кораблей")] int nShips,
+            [Description("Слоты на корабле (Бот добавляет +1 слот)")] int slots,
+            [RemainingText, Description("Название рейда")] string notes)
         {
-            throw new NotImplementedException();
+            await ctx.Message.DeleteAsync();
+
+            if (nShips < 2 || nShips > 5 || slots < 2 || slots > 4)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимые параметры рейда!");
+                return;
+            }
+
+            //Проверка на капитана или модератора
+            var pollNeeded = !ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member);
+
+            var pollSucceded = false;
+
+            var moscowTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time"));
+            var timeOfDay = moscowTime.ToString("HH:mm");
+
+            var fleetCreationMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FleetCreationChannel).
+                SendMessageAsync($"**Создатель рейда**: {ctx.Member.Mention} \n\n" +
+                                 $"**Дата рейда**: {moscowTime.Day}/{moscowTime.Month} \n" +
+                                 $"**Время начала**: {timeOfDay} \n" +
+                                 $"**Количество кораблей**: {nShips} \n" +
+                                 $"**Примечание**: {notes}");
+
+
+            if(pollNeeded)
+            {
+                //TODO: Change pollTime
+                var pollTIme = new TimeSpan(0, 0, 5);
+
+                //Эмоции голосования
+                var emoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
+
+                var interactivity = ctx.Client.GetInteractivity();
+
+                //Подсчёт нужных голосов - 50% + 1 голосов
+                //TODO: Uncomment
+                var votesNeeded = Math.Round((nShips * slots - 1) * 0.5 + 1, MidpointRounding.AwayFromZero);
+
+                //Embed голосования
+                var embed = new DiscordEmbedBuilder
+                {
+                    Title = $"Голосование за создание рейда!",
+                    Description = "Все проголосовавшие должны находиться в Общем канале рейда."
+                };
+
+                embed.WithFooter($"Голосование закончится через {Utility.FormatTimespan(pollTIme)} сек. Нужно {votesNeeded} голос(а).");
+
+                await fleetCreationMessage.ModifyAsync(embed: embed.Build());
+
+                //Добавляем реакции к сообщению
+                await fleetCreationMessage.CreateReactionAsync(emoji);
+
+                //Собираем данные
+                var pollResult = await interactivity.CollectReactionsAsync(fleetCreationMessage, pollTIme);
+
+                //Обработка результатов
+                var votedUsers = await fleetCreationMessage.GetReactionsAsync(emoji);
+
+                //Чистим реакции
+                await fleetCreationMessage.DeleteAllReactionsAsync();
+
+                //Каст из DiscordUser в DiscordMember для проверки активного канала
+                var votedMembers = new List<DiscordMember>();
+                foreach (var votedUser in votedUsers)
+                    votedMembers.Add(await ctx.Guild.GetMemberAsync(votedUser.Id));
+
+                var votesCount = votedMembers.Where(x => x.VoiceState?.Channel.Id == Bot.BotSettings.FleetLobby).Count();
+
+                //Результат
+                var resultEmbed = new DiscordEmbedBuilder
+                {
+                    Title = $"Голосование окончено! Голосов за: {votesCount}"
+                };
+
+                if (votesCount >= votesNeeded)
+                {
+                    resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Каналы рейда созданы.");
+                    resultEmbed.WithFooter("Результаты голосования будут удалены через 30 секунд.");
+                    resultEmbed.WithColor(new DiscordColor("00FF00"));
+                    pollSucceded = true;
+                }
+                else
+                {
+                    resultEmbed.WithDescription($"{Bot.BotSettings.ErrorEmoji} Недостаточно голосов.");
+                    resultEmbed.WithFooter("Сообщение будет удалено через 30 секунд.");
+                    resultEmbed.WithColor(new DiscordColor("FF0000"));
+                }
+
+                await fleetCreationMessage.DeleteAllReactionsAsync();
+                await fleetCreationMessage.ModifyAsync(embed: resultEmbed.Build());
+            }
+
+            //Если капитан или голосование успешное
+            if(pollNeeded == false || (pollNeeded && pollSucceded))
+            {
+                var rootFleetCategory = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory);
+
+                var fleetCategory = await rootFleetCategory.CloneAsync(); //await ctx.Guild.CreateChannelCategoryAsync($"Рейд {notes}");
+                                                                          //var positions = $"Created pos: **{newFleet.Position}** ";
+                await fleetCategory.ModifyAsync(x =>
+                {
+                    x.Name = $"Рейд {notes}";
+                    x.Position = rootFleetCategory.Position + 1;
+                });
+                //positions += $"New pos: **{newFleet.Position}** Root pos: **{rootFleetCategory.Position}**";
+                //await ctx.RespondAsync(positions);
+
+
+                //TODO: Check permissions
+                var channel = await ctx.Guild.CreateChannelAsync("рейд-текст", ChannelType.Text, fleetCategory);
+                for (int i = 0; i < nShips; i++)
+                    await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+            }
+
+            //Чистим голосование после создания рейда
+            if(pollNeeded && pollSucceded)
+            {
+                Thread.Sleep(30000);
+                if (pollSucceded)
+                    await fleetCreationMessage.ModifyEmbedSuppressionAsync(true);
+                else
+                    await fleetCreationMessage.DeleteAsync();
+            }
         }
     }
 }
