@@ -19,7 +19,7 @@ namespace SeaOfThieves.Commands
         [Command("setprice")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task DonatorSetPrice(CommandContext ctx, string name, int newPrice)
+        public async Task SetPrice(CommandContext ctx, string name, int newPrice)
         {
             if (!PriceList.Prices.ContainsKey(DateTime.Today))
             {
@@ -55,7 +55,7 @@ namespace SeaOfThieves.Commands
         [Command("getprices")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task DonatorGetPrices(CommandContext ctx)
+        public async Task GetPrices(CommandContext ctx)
         {
             var lastDate = PriceList.GetLastDate(DateTime.Now);
             var prices = PriceList.Prices[lastDate];
@@ -74,7 +74,7 @@ namespace SeaOfThieves.Commands
         [Command("add")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task DonatorAdd(CommandContext ctx, DiscordMember member, int balance)
+        public async Task Add(CommandContext ctx, DiscordMember member, int balance)
         {
             var res = new Donator(member.Id, 0, DateTime.Today, balance);
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
@@ -108,7 +108,7 @@ namespace SeaOfThieves.Commands
         [Command("balance")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task DBalance(CommandContext ctx, DiscordMember member, int newBalance)
+        public async Task Balance(CommandContext ctx, DiscordMember member, int newBalance)
         {
             if (!DonatorList.Donators.ContainsKey(member.Id))
             {
@@ -145,7 +145,7 @@ namespace SeaOfThieves.Commands
         [Aliases("rm")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
-        public async Task DonatorRemove(CommandContext ctx, DiscordMember member)
+        public async Task Remove(CommandContext ctx, DiscordMember member)
         {
             if (!DonatorList.Donators.ContainsKey(member.Id))
             {
@@ -171,7 +171,7 @@ namespace SeaOfThieves.Commands
         
         [Command("color")]
         [Description("Устанавливает донатерский цвет. Формат: 000000")]
-        public async Task DColor(CommandContext ctx, string color)
+        public async Task Color(CommandContext ctx, string color)
         {
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
@@ -207,7 +207,7 @@ namespace SeaOfThieves.Commands
 
         [Command("rename")]
         [Description("Измененяет название роли донатера.")]
-        public async Task DRename(CommandContext ctx, [RemainingText] string newName)
+        public async Task Rename(CommandContext ctx, [RemainingText] string newName)
         {
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
@@ -246,7 +246,7 @@ namespace SeaOfThieves.Commands
 
         [Command("friend")]
         [Description("Добавляет вашему другу цвет донатера (ваш)")]
-        public async Task DFriend(CommandContext ctx, DiscordMember member)
+        public async Task Friend(CommandContext ctx, DiscordMember member)
         {
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
@@ -277,8 +277,10 @@ namespace SeaOfThieves.Commands
 
         [Command("unfriend")]
         [Description("Убирает цвет у друга")]
-        public async Task DUnFriend(CommandContext ctx, DiscordMember member)
+        public async Task Unfriend(CommandContext ctx, DiscordMember member)
         {
+            //Убрал
+            /*
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
@@ -292,13 +294,23 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
+            */
 
-            await member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
+            if (DonatorList.Donators[member.Id].Friends.Contains(ctx.Member.Id))
+            {
+                DonatorList.Donators[member.Id].RemoveFriend(ctx.Member.Id);
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[member.Id].ColorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
+            }
 
-            DonatorList.Donators[ctx.Member.Id].RemoveFriend(member.Id);
+            if (DonatorList.Donators[ctx.Member.Id].Friends.Contains(member.Id))
+            {
+                DonatorList.Donators[ctx.Member.Id].RemoveFriend(member.Id);
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
+            }
+
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
-
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет!");
         }
 
         [Command("friends")]
@@ -339,9 +351,9 @@ namespace SeaOfThieves.Commands
                                    $"{friendsMsg}");
         }
 
-            [Command("roleadd")]
+        [Command("roleadd")]
         [Description("Выдает роль донатера.")]
-        public async Task DRoleAdd(CommandContext ctx)
+        public async Task RoleAdd(CommandContext ctx)
         {
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
@@ -363,7 +375,7 @@ namespace SeaOfThieves.Commands
 
         [Command("rolerm")]
         [Description("Убирает роль донатера.")]
-        public async Task DRoleRm(CommandContext ctx)
+        public async Task RoleRemove(CommandContext ctx)
         {
             if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
             {
