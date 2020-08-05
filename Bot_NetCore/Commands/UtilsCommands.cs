@@ -16,7 +16,7 @@ using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
-    public class UtilsCommands
+    public class UtilsCommands : BaseCommandModule
     {
         public bool keepRainbow;
 
