@@ -221,13 +221,14 @@ namespace SeaOfThieves.Commands
         [Description("Создаёт голосование для создания рейда")]
         [Cooldown(1, 120, CooldownBucketType.Guild)]
         public async Task CreateFleetAsync(CommandContext ctx,
-            [Description("Количество кораблей")] int nShips,
-            [Description("Слоты на корабле (Бот добавляет +1 слот)")] int slots,
+            [Description("Количество кораблей [1 - 5]")] int nShips,
+            [Description("Слоты на корабле (Бот добавляет +1 слот) [2 - 25]")] int slots,
             [RemainingText, Description("Название рейда")] string notes)
         {
             await ctx.Message.DeleteAsync();
 
-            if (nShips < 2 || nShips > 5 || slots < 2 || slots > 4)
+            if (nShips < 1 || nShips > 5 || 
+                slots < 2 || slots > 25)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимые параметры рейда!");
                 return;
