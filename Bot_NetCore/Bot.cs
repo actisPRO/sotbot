@@ -1218,13 +1218,20 @@ namespace SeaOfThieves
                                 if (membersLookingForTeam.Contains(user.Id))
                                     possibleChannels.Add(ship);
 
+                    var m = await e.Guild.GetMemberAsync(e.User.Id);
                     if (possibleChannels.Count == 0)
                     {
-                        var m = await e.Guild.GetMemberAsync(e.User.Id);
                         await m.PlaceInAsync(e.Guild.GetChannel(BotSettings.WaitingRoom));
                         await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Не удалось найти подходящий корабль.");
                         return;
                     }
+                    
+                    var random = new Random();
+                    var rShip = random.Next(0, possibleChannels.Count);
+
+                    await m.PlaceInAsync(possibleChannels[rShip]);
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {m.Username}#{m.Discriminator} успешно воспользовался поиском корабля!", DateTime.Now);
+                    return;
                 }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
