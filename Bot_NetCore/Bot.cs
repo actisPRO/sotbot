@@ -1238,6 +1238,41 @@ namespace SeaOfThieves
                         $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
                         DateTime.Now.ToUniversalTime());
                 }
+                else if (e.Channel.Id == BotSettings.FindShip)
+                {
+                    var shipCategory = e.Guild.GetChannel(BotSettings.AutocreateCategory);
+
+                    var membersLookingForTeam = new List<ulong>();
+                    foreach (var message in (await e.Guild.GetChannel(BotSettings.FindChannel).GetMessagesAsync(100)))
+                    {
+                        if (message.Pinned) continue; // автор закрепленного сообщения не должен учитываться
+                        if (membersLookingForTeam.Contains(message.Author.Id)) continue; // автор сообщения уже мог быть добавлен в лист
+                        
+                        membersLookingForTeam.Add(message.Author.Id);
+                    }
+                    
+                    var possibleChannels = new List<DiscordChannel>();
+                    foreach (var ship in shipCategory.Children)
+                        if (ship.Users.Count() < ship.UserLimit)                        
+                            foreach (var user in ship.Users)
+                                if (membersLookingForTeam.Contains(user.Id))
+                                    possibleChannels.Add(ship);
+
+                    var m = await e.Guild.GetMemberAsync(e.User.Id);
+                    if (possibleChannels.Count == 0)
+                    {
+                        await m.PlaceInAsync(e.Guild.GetChannel(BotSettings.WaitingRoom));
+                        await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Не удалось найти подходящий корабль.");
+                        return;
+                    }
+                    
+                    var random = new Random();
+                    var rShip = random.Next(0, possibleChannels.Count);
+
+                    await m.PlaceInAsync(possibleChannels[rShip]);
+                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {m.Username}#{m.Discriminator} успешно воспользовался поиском корабля!", DateTime.Now);
+                    return;
+                }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
             {
@@ -1792,6 +1827,11 @@ namespace SeaOfThieves
         public string VotesXML;
 
         public ulong VotesChannel;
+
+        /// <summary>
+        ///     ID канала "Найти корабль"
+        /// </summary>
+        public ulong FindShip;
     }
 
     public enum CommandType
