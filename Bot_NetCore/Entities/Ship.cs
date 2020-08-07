@@ -9,13 +9,14 @@ namespace SeaOfThieves.Entities
 {
     public class Ship
     {
-        private Ship(string name, ulong role, ulong channel, ulong creationMessage)
+        private Ship(string name, ulong role, ulong channel, ulong creationMessage, DateTime lastUsed)
         {
             Name = name;
             Status = false;
             Role = role;
             Channel = channel;
             CreationMessage = creationMessage;
+            LastUsed = lastUsed;
             Members = new Dictionary<ulong, ShipMember>();
         }
 
@@ -24,13 +25,15 @@ namespace SeaOfThieves.Entities
         public ulong Role { get; internal set; }
         public ulong Channel { get; internal set; }
         public ulong CreationMessage { get; internal set; }
+        
+        public DateTime LastUsed { get; set; }
         public Dictionary<ulong, ShipMember> Members { get; }
 
-        public static Ship Create(string name, ulong role, ulong channel, ulong creationMessage)
+        public static Ship Create(string name, ulong role, ulong channel, ulong creationMessage, DateTime lastUsed)
         {
             if (ShipList.Ships.ContainsKey(name)) throw new ShipExistsException();
 
-            var created = new Ship(name, role, channel, creationMessage);
+            var created = new Ship(name, role, channel, creationMessage, lastUsed);
 
             ShipList.Update(name, created);
             return ShipList.Ships[name];
@@ -90,6 +93,12 @@ namespace SeaOfThieves.Entities
             else
                 throw new MemberNotFoundException();
 
+            ShipList.Update(Name, this);
+        }
+
+        public void SetLastUsed(DateTime dateTime)
+        {
+            LastUsed = dateTime;
             ShipList.Update(Name, this);
         }
 

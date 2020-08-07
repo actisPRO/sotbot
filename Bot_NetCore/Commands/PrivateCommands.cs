@@ -43,7 +43,7 @@ namespace SeaOfThieves.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
-            var ship = Ship.Create(name, 0, 0, message.Id);
+            var ship = Ship.Create(name, 0, 0, message.Id, DateTime.Now);
             ship.AddMember(ctx.Member.Id, MemberType.Owner);
 
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
