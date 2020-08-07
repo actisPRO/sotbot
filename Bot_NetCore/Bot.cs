@@ -1119,23 +1119,23 @@ namespace SeaOfThieves
                 foreach (var check in ex.FailedChecks)
                     if (check is CooldownAttribute)
                         msg += $"\n Подождите {Utility.FormatTimespan((check as CooldownAttribute).Reset)}.";
-                    else if (check is Require​Bot​Permissions​Attribute)
+                    else if (check is RequireBotPermissionsAttribute)
                         msg += "\n У бота недостаточно прав.";
-                    else if (check is Require​Direct​Message​Attribute)
+                    else if (check is RequireOwnerAttribute)
                         msg += "\n Команда для приватных сообщений.";
-                    else if (check is Require​Guild​Attribute)
+                    else if (check is RequireGuildAttribute)
                         msg += "\n Доступна только на определённом  сервере.";
-                    else if (check is Require​Nsfw​Attribute)
+                    else if (check is RequireNsfwAttribute)
                         msg += "\n Команда для использования только в NSFW канале.";
-                    else if (check is Require​Owner​Attribute)
+                    else if (check is RequireOwnerAttribute)
                         msg += "\n Команда только для владельца бота.";
-                    else if (check is Require​Permissions​Attribute)
+                    else if (check is RequirePermissionsAttribute)
                         msg += "\n У вас нет доступа.";
-                    else if (check is Require​Prefixes​Attribute)
+                    else if (check is RequirePrefixesAttribute)
                         msg += "\n Команда работает только с определённым префиксом.";
-                    else if (check is Require​Roles​Attribute)
+                    else if (check is RequireRolesAttribute)
                         msg += "\n У вас нет доступа.";
-                    else if (check is Require​User​Permissions​Attribute)
+                    else if (check is RequireUserPermissionsAttribute)
                         msg += "\n У вас нет доступа.";
 
                 await e.Context.RespondAsync(msg);
