@@ -175,15 +175,64 @@ namespace SeaOfThieves
             clearChannelMessages.AutoReset = true;
             clearChannelMessages.Enabled = true;
 
-            var clearVotes = new Timer(5000);
+            var clearVotes = new Timer(60000);
             clearVotes.Elapsed += ClearVotesOnElapsed;
             clearVotes.AutoReset = true;
             clearVotes.Enabled = true;
+            
+            var deleteShips = new Timer(5000);
+            deleteShips.Elapsed += DeleteShipsOnElapsed;
+            deleteShips.AutoReset = true;
+            deleteShips.Enabled = true;
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
 
             await Task.Delay(-1);
+        }
+
+        private async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            foreach (var ship in ShipList.Ships.Values)
+            {
+                if ((DateTime.Now - ship.LastUsed).Days >= 3)
+                {
+                    var role = Client.Guilds[BotSettings.Guild].GetRole(ship.Role);
+                    var channel = Client.Guilds[BotSettings.Guild].GetChannel(ship.Channel);
+
+                    DiscordMember owner = null;
+                    foreach (var member in ship.Members.Values)
+                        if (member.Type == MemberType.Owner)
+                        {
+                            owner = await Client.Guilds[BotSettings.Guild].GetMemberAsync(member.Id);
+                            break;
+                        }
+                    
+                    ship.Delete();
+                    ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+
+                    await role.DeleteAsync();
+                    await channel.DeleteAsync();
+                    
+                    var doc = XDocument.Load("actions.xml");
+                    foreach (var action in doc.Element("actions").Elements("action"))
+                        if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
+                            action.Remove();
+                    doc.Save("actions.xml");
+
+                    if (owner != null)
+                        await owner.SendMessageAsync(
+                            "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
+                            "не планируете пользоваться этой функцией**");
+                    
+                    await Client.Guilds[BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                        "**Удаление корабля**\n\n" +
+                        $"**Модератор:** {Client.CurrentUser}\n" +
+                        $"**Корабль:** {ship.Name}\n" +
+                        $"**Владелец:** {owner}\n" +
+                        $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC");
+                }
+            }
         }
 
         private async void ClearVotesOnElapsed(object sender, ElapsedEventArgs e)
