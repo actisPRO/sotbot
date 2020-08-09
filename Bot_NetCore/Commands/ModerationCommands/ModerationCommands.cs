@@ -312,6 +312,72 @@ namespace SeaOfThieves.Commands
                                    $"Снятие через: {Utility.FormatTimespan(mute.ReportDuration)}!");
         }
 
+        [Command("voicemute")]
+        [Aliases("vm")]
+        [Hidden]
+        public async Task VoiceMute(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана")
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var voiceMute = new MemberReport(member.Id,
+                DateTime.Now,
+                Utility.TimeSpanParse(duration),
+                ctx.Member.Id,
+                reason);
+
+            if (voiceMute.ReportDuration.TotalSeconds < 1)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
+                return;
+            }
+
+            //Возможна только одна блокировка, если уже существует то перезаписываем
+            if (!ReportList.VoiceMutes.ContainsKey(member.Id))
+                ReportList.VoiceMutes.Add(member.Id, voiceMute);
+            else
+                ReportList.VoiceMutes[member.Id].UpdateReport(DateTime.Now,
+                    Utility.TimeSpanParse(duration),
+                    ctx.Member.Id,
+                    reason);
+
+            //Сохраняем в файл
+            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+
+            //Выдаем роль мута
+            await member.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
+
+            //Отправка сообщения в лс
+            try
+            {
+                await member.SendMessageAsync(
+                    $"**Вам выдан мут в голосовом чате**\n\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(voiceMute.ReportDuration)}\n" +
+                    $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
+                    $"**Причина:** {reason}");
+            }
+            catch (UnauthorizedException)
+            {
+                //user can block the bot
+            }
+
+            //Отправка в журнал
+            await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                "**Мут в голосовом чате**\n\n" +
+                 $"**От:** {ctx.Member}\n" +
+                 $"**Кому:** {member}\n" +
+                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(voiceMute.ReportDuration)}\n" +
+                 $"**Причина:** {reason}");
+
+            //Ответное сообщение в чат
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут в голосовом чате {member.Mention}. " +
+                                   $"Снятие через: {Utility.FormatTimespan(voiceMute.ReportDuration)}!");
+        }
+
         [Command("warn")]
         [Aliases("w")]
         [Hidden]

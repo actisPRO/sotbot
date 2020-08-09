@@ -7,6 +7,7 @@ namespace Bot_NetCore.Entities
     public static class ReportList
     {
         public static Dictionary<ulong, MemberReport> Mutes = new Dictionary<ulong, MemberReport>();
+        public static Dictionary<ulong, MemberReport> VoiceMutes = new Dictionary<ulong, MemberReport>();
         public static Dictionary<ulong, MemberReport> CodexPurges = new Dictionary<ulong, MemberReport>();
         public static Dictionary<ulong, MemberReport> FleetPurges = new Dictionary<ulong, MemberReport>();
 
@@ -20,6 +21,10 @@ namespace Bot_NetCore.Entities
             foreach (var mute in Mutes)
                 rElement.Add(СreateXElement(mute.Value));
 
+            var vmElement = new XElement("VoiceMutes");
+            foreach (var voiceMute in VoiceMutes)
+                vmElement.Add(СreateXElement(voiceMute.Value));
+
             var cElement = new XElement("CodexPurges");
             foreach (var codexPurge in CodexPurges)
                 cElement.Add(СreateXElement(codexPurge.Value));
@@ -29,6 +34,7 @@ namespace Bot_NetCore.Entities
                 fElement.Add(СreateXElement(fleetPurge.Value));
 
             root.Add(rElement);
+            root.Add(vmElement);
             root.Add(cElement);
             root.Add(fElement);
 
@@ -40,13 +46,18 @@ namespace Bot_NetCore.Entities
         {
             var doc = XDocument.Load(fileName);
 
-            foreach (var mute in doc.Element("Reports").Element("Mutes").Elements("Report"))
+            var root = doc.Element("Reports");
+
+            foreach (var mute in root.Element("Mutes").Elements("Report"))
                 Mutes.Add(GetMemberFromXElement(mute).Id, GetMemberFromXElement(mute));
 
-            foreach (var codexPurge in doc.Element("Reports").Element("CodexPurges").Elements("Report"))
+            foreach (var voiceMute in root.Element("VoiceMutes").Elements("Report"))
+                VoiceMutes.Add(GetMemberFromXElement(voiceMute).Id, GetMemberFromXElement(voiceMute));
+
+            foreach (var codexPurge in root.Element("CodexPurges").Elements("Report"))
                 CodexPurges.Add(GetMemberFromXElement(codexPurge).Id, GetMemberFromXElement(codexPurge));
 
-            foreach (var fleetPurge in doc.Element("Reports").Element("FleetPurges").Elements("Report"))
+            foreach (var fleetPurge in root.Element("FleetPurges").Elements("Report"))
                 FleetPurges.Add(GetMemberFromXElement(fleetPurge).Id, GetMemberFromXElement(fleetPurge));
         }
 

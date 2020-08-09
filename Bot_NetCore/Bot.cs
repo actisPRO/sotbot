@@ -380,6 +380,25 @@ namespace SeaOfThieves
                 });
             if (count != ReportList.Mutes.Count)
                 ReportList.SaveToXML(BotSettings.ReportsXML);
+
+            //Check for expired voice mutes
+            count = ReportList.VoiceMutes.Count;
+            ReportList.VoiceMutes.Values.Where(x => x.Expired()).ToList()
+                .ForEach(async x =>
+                {
+                    ReportList.VoiceMutes.Remove(x.Id);
+                    try
+                    {
+                        var user = await guild.GetMemberAsync(x.Id);
+                        await user.RevokeRoleAsync(guild.GetRole(BotSettings.VoiceMuteRole), "Unmuted");
+                    }
+                    catch (NotFoundException)
+                    {
+                        //Пользователь не найден
+                    }
+                });
+            if (count != ReportList.VoiceMutes.Count)
+                ReportList.SaveToXML(BotSettings.ReportsXML);
         }
 
         private async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
@@ -940,8 +959,28 @@ namespace SeaOfThieves
                 await e.Member.GrantRoleAsync(e.Guild.GetRole(BotSettings.MuteRole));
             }
 
+            //Проверка на voice mute
+            if (ReportList.VoiceMutes.ContainsKey(e.Member.Id) && !ReportList.VoiceMutes[e.Member.Id].Expired())
+            {
+                //Отправка сообщения в лс
+                try
+                {
+                    await e.Member.SendMessageAsync(
+                        $"**Вам выдан голосовой мут на данном сервере**\n\n" +
+                        $"**Снятие через:** {Utility.FormatTimespan(ReportList.VoiceMutes[e.Member.Id].getRemainingTime())}\n" +
+                        $"**Причина:** {ReportList.VoiceMutes[e.Member.Id].Reason}");
+                }
+                catch (UnauthorizedException)
+                {
+                    //user can block the bot
+                }
+
+                //Выдаем роль мута
+                await e.Member.GrantRoleAsync(e.Guild.GetRole(BotSettings.VoiceMuteRole));
+            }
+
             //Проверка на purge
-            if (ReportList.CodexPurges.ContainsKey(e.Member.Id) && !ReportList.Mutes[e.Member.Id].Expired())
+            if (ReportList.CodexPurges.ContainsKey(e.Member.Id) && !ReportList.CodexPurges[e.Member.Id].Expired())
                 await e.Member.GrantRoleAsync(e.Guild.GetRole(BotSettings.PurgeCodexRole));
 
 
@@ -1760,6 +1799,11 @@ namespace SeaOfThieves
         ///     Id роли мута.
         /// </summary>
         public ulong MuteRole;
+
+        /// <summary>
+        ///     Id роли голосового мута.
+        /// </summary>
+        public ulong VoiceMuteRole;
 
         /// <summary>
         /// Id сообщения эмиссарства.
