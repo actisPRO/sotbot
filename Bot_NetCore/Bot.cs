@@ -636,22 +636,16 @@ namespace SeaOfThieves
                     if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":white_check_mark:"))
                     {
                         var name = ship.Name;
-                        var role = await e.Channel.Guild.CreateRoleAsync($"☠{name}☠", null, null, false, true);
                         var channel = await e.Channel.Guild.CreateChannelAsync($"☠{name}☠", ChannelType.Voice,
                             e.Channel.Guild.GetChannel(BotSettings.PrivateCategory), bitrate: BotSettings.Bitrate);
 
-                        await channel.AddOverwriteAsync(role, Permissions.UseVoice, Permissions.None);
-                        await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole), Permissions.AccessChannels, Permissions.None);
-                        await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None,
-                            Permissions.UseVoice);
+                        var member = await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
 
-                        var member =
-                            await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
-
-                        await member.GrantRoleAsync(role);
+                        await channel.AddOverwriteAsync(member, Permissions.UseVoice);
+                        await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(BotSettings.CodexRole), Permissions.AccessChannels);
+                        await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
 
                         ShipList.Ships[name].SetChannel(channel.Id);
-                        ShipList.Ships[name].SetRole(role.Id);
                         ShipList.Ships[name].SetStatus(true);
                         ShipList.Ships[name].SetMemberStatus(member.Id, true);
 
@@ -1157,7 +1151,7 @@ namespace SeaOfThieves
                 var ex = e.Exception as ChecksFailedException;
                 foreach (var check in ex.FailedChecks)
                     if (check is CooldownAttribute)
-                        msg += $"\n Подождите {Utility.FormatTimespan((check as CooldownAttribute).Reset)}.";
+                        msg += $"\n Подождите {Utility.FormatTimespan((check as CooldownAttribute).Reset)} после последнего запуска команды.";
                     else if (check is Require​Bot​Permissions​Attribute)
                         msg += "\n У бота недостаточно прав.";
                     else if (check is Require​Direct​Message​Attribute)
