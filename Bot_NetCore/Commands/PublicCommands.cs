@@ -225,7 +225,7 @@ namespace SeaOfThieves.Commands
             [Description("Слоты на корабле (Бот добавляет +1 слот) [2 - 25]")] int slots,
             [RemainingText, Description("Название рейда")] string notes)
         {
-            await ctx.Message.DeleteAsync();
+            notes = notes.Substring(0, Math.Min(notes.Length, 25));
 
             if (nShips < 1 || nShips > 5 || 
                 slots < 2 || slots > 25)
@@ -260,7 +260,6 @@ namespace SeaOfThieves.Commands
                 var interactivity = ctx.Client.GetInteractivity();
 
                 //Подсчёт нужных голосов - 50% + 1 голосов
-                //TODO: Uncomment
                 var votesNeeded = Math.Round((nShips * slots - 1) * 0.5 + 1, MidpointRounding.AwayFromZero);
 
                 //Embed голосования
@@ -334,7 +333,7 @@ namespace SeaOfThieves.Commands
 
 
                 //TODO: Check permissions - UPD: Seems to be ok
-                var channel = await ctx.Guild.CreateChannelAsync("рейд-текст", ChannelType.Text, fleetCategory);
+                var channel = await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
                 for (int i = 0; i < nShips; i++)
                     await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
             }
