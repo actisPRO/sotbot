@@ -66,7 +66,7 @@ namespace SeaOfThieves.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
                 return;
             }
-            
+
             try
             {
                 var embed = new DiscordEmbedBuilder();
@@ -106,7 +106,7 @@ namespace SeaOfThieves.Commands
 
                 //Правила
                 var codex = "Не принял";
-                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole)) 
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
                     codex = "Принял";
                 else if (ReportList.CodexPurges.ContainsKey(member.Id))
                     if (ReportList.CodexPurges[member.Id].Expired())
@@ -143,8 +143,88 @@ namespace SeaOfThieves.Commands
             }
         }
 
-        [Command("updateDonatorMessageLegacy")]
+        [Command("whois")]
+        [Hidden]
+        public async Task WhoIs(CommandContext ctx, DiscordUser user)
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            try
+            {
+                var embed = new DiscordEmbedBuilder();
+                embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
+                embed.WithColor(DiscordColor.Blurple);
+
+                embed.AddField("ID", user.Id.ToString(), true);
+                embed.AddField("Статус", "Покинул сервер", true);
+
+                embed.AddField("Имя на сервере", user.Username);
+
+                //Предупреждения
+                var warnings = 0;
+                if (UserList.Users.ContainsKey(user.Id)) warnings = UserList.Users[user.Id].Warns.Count;
+                embed.AddField("Предупреждения", warnings.ToString(), true);
+
+                //Донат
+                var donate = 0;
+                if (DonatorList.Donators.ContainsKey(user.Id)) donate = (int)DonatorList.Donators[user.Id].Balance;
+                embed.AddField("Донат", donate.ToString(), true);
+
+                //Приватный корабль
+                var privateShip = "Нет";
+                foreach (var ship in ShipList.Ships.Values)
+                    foreach (var shipMember in ship.Members.Values)
+                        if (shipMember.Type == MemberType.Owner && shipMember.Id == user.Id)
+                        {
+                            privateShip = ship.Name;
+                            break;
+                            ;
+                        }
+
+                embed.AddField("Владелец приватного корабля", privateShip);
+
+                //Правила
+                var codex = "Нет данных";
+                if (ReportList.CodexPurges.ContainsKey(user.Id))
+                    if (ReportList.CodexPurges[user.Id].Expired())
+                        codex = "Не принял*";
+                    else
+                        codex = Utility.FormatTimespan(ReportList.CodexPurges[user.Id].getRemainingTime());
+                embed.AddField("Правила", codex, true);
+
+                //Правила рейда
+                var fleetCodex = "Нет данных";
+                if (ReportList.FleetPurges.ContainsKey(user.Id))
+                    if (ReportList.FleetPurges[user.Id].Expired())
+                        fleetCodex = "Не принял*";
+                    else
+                        fleetCodex = Utility.FormatTimespan(ReportList.FleetPurges[user.Id].getRemainingTime());
+                embed.AddField("Правила рейда", fleetCodex, true);
+
+                //Мут
+                var mute = "Нет";
+                if (ReportList.Mutes.ContainsKey(user.Id))
+                    if (!ReportList.Mutes[user.Id].Expired())
+                        mute = Utility.FormatTimespan(ReportList.Mutes[user.Id].getRemainingTime());
+                embed.AddField("Мут", mute, true);
+
+                embed.WithFooter("(*) Не принял после разблокировки");
+
+                await ctx.RespondAsync(embed: embed.Build());
+            }
+            catch (NotFoundException)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не найден.");
+            }
+        }
+
+            [Command("updateDonatorMessageLegacy")]
         [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
         public async Task UpdateDonatorMessageLegacy(CommandContext ctx)
         {
             var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
@@ -194,6 +274,7 @@ namespace SeaOfThieves.Commands
 
         [Command("dgenlist")]
         [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
         public async Task GenerateDonatorMessage(CommandContext ctx)
         {
             var channel = ctx.Guild.GetChannel(Bot.BotSettings.DonatorChannel);
@@ -311,7 +392,7 @@ namespace SeaOfThieves.Commands
                             x.Id != Bot.BotSettings.FleetChillChannel &&
                             x.Id != Bot.BotSettings.FleetLobby)
                 .OrderBy(x => x.Id);
-            
+
             //Сбрасываем остальные каналы.
             int i = 0;
             int fleetNum = 0;
@@ -358,6 +439,7 @@ namespace SeaOfThieves.Commands
 
         [Command("throw")]
         [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
         public Task Throw(CommandContext ctx)
         {
             throw new IOException("Test exception.");
@@ -459,6 +541,7 @@ namespace SeaOfThieves.Commands
 
         [Command("privatemigration")]
         [RequirePermissions(Permissions.Administrator)]
+        [Hidden]
         public async Task PrivateShipsMigration(CommandContext ctx)
         {
             foreach (var ship in ShipList.Ships.Values)
