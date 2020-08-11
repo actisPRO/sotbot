@@ -457,22 +457,17 @@ namespace SeaOfThieves.Commands
 
         }
 
-        [Command("gcte")]
+        [Command("privatemigration")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task GiveCodexRoleToEveryone(CommandContext ctx)
+        public async Task PrivateShipsMigration(CommandContext ctx)
         {
-            var members = (await ctx.Guild.GetAllMembersAsync()).ToList();
-            for (int i = 0; i < members.Count; ++i)
+            foreach (var ship in ShipList.Ships.Values)
             {
-                Console.WriteLine("Member " + i);
-                try
+                foreach (var member in ship.Members.Values)
                 {
-                    await members[i].GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole));
+                    await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(await ctx.Guild.GetMemberAsync(member.Id), Permissions.UseVoice);
                 }
-                catch (Exception)
-                {
-                    
-                }
+                Thread.Sleep(1000);
             }
         }
     }

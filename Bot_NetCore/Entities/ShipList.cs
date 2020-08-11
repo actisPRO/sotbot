@@ -50,7 +50,6 @@ namespace SeaOfThieves.Entities
                 var shipE = new XElement("ship", new XAttribute("name", ship.Name),
                     new XAttribute("status", ship.Status));
 
-                shipE.Add(new XElement("role", ship.Role));
                 shipE.Add(new XElement("channel", ship.Channel));
                 shipE.Add(new XElement("creationMessage", ship.CreationMessage));
 
@@ -86,30 +85,23 @@ namespace SeaOfThieves.Entities
                     {
                     }
 
-                    var ship = Ship.Create(shipE.Attribute("name").Value, Convert.ToUInt64(shipE.Element("role").Value),
-                        Convert.ToUInt64(shipE.Element("channel").Value), Convert.ToUInt64(creationMessage));
+                    var ship = Ship.Create(
+                            shipE.Attribute("name").Value,
+                            Convert.ToUInt64(shipE.Element("channel").Value), 
+                            Convert.ToUInt64(creationMessage)
+                        );
 
                     ship.Status = Convert.ToBoolean(shipE.Attribute("status").Value);
 
                     foreach (var memberE in shipE.Elements("member"))
                     {
-                        MemberType type;
-                        switch (memberE.Attribute("type").Value.ToLower())
+                        var type = (memberE.Attribute("type").Value.ToLower()) switch
                         {
-                            case "member":
-                                type = MemberType.Member;
-                                break;
-                            case "officer":
-                                type = MemberType.Officer;
-                                break;
-                            case "owner":
-                                type = MemberType.Owner;
-                                break;
-                            default:
-                                type = MemberType.Member;
-                                break;
-                        }
-
+                            "member" => MemberType.Member,
+                            "officer" => MemberType.Officer,
+                            "owner" => MemberType.Owner,
+                            _ => MemberType.Member,
+                        };
                         ship.AddMember(Convert.ToUInt64(memberE.Value), type,
                             Convert.ToBoolean(memberE.Attribute("status").Value));
                     }

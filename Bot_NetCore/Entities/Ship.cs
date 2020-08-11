@@ -9,11 +9,10 @@ namespace SeaOfThieves.Entities
 {
     public class Ship
     {
-        private Ship(string name, ulong role, ulong channel, ulong creationMessage)
+        private Ship(string name, ulong channel, ulong creationMessage)
         {
             Name = name;
             Status = false;
-            Role = role;
             Channel = channel;
             CreationMessage = creationMessage;
             Members = new Dictionary<ulong, ShipMember>();
@@ -21,16 +20,15 @@ namespace SeaOfThieves.Entities
 
         public string Name { get; internal set; }
         public bool Status { get; internal set; }
-        public ulong Role { get; internal set; }
         public ulong Channel { get; internal set; }
         public ulong CreationMessage { get; internal set; }
         public Dictionary<ulong, ShipMember> Members { get; }
 
-        public static Ship Create(string name, ulong role, ulong channel, ulong creationMessage)
+        public static Ship Create(string name, ulong channel, ulong creationMessage)
         {
             if (ShipList.Ships.ContainsKey(name)) throw new ShipExistsException();
 
-            var created = new Ship(name, role, channel, creationMessage);
+            var created = new Ship(name, channel, creationMessage);
 
             ShipList.Update(name, created);
             return ShipList.Ships[name];
@@ -90,12 +88,6 @@ namespace SeaOfThieves.Entities
             else
                 throw new MemberNotFoundException();
 
-            ShipList.Update(Name, this);
-        }
-
-        public void SetRole(ulong id)
-        {
-            Role = id;
             ShipList.Update(Name, this);
         }
 
