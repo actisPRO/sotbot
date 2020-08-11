@@ -977,6 +977,19 @@ namespace SeaOfThieves
             if (ReportList.CodexPurges.ContainsKey(e.Member.Id) && !ReportList.CodexPurges[e.Member.Id].Expired())
                 await e.Member.GrantRoleAsync(e.Guild.GetRole(BotSettings.PurgeCodexRole));
 
+            //Выдача доступа к приватным кораблям
+            try
+            {
+                var ships = ShipList.Ships.Values.Where(x => x.Members.ContainsKey(e.Member.Id));
+                foreach (var ship in ships)
+                    await e.Guild.GetChannel(ship.Channel).AddOverwriteAsync(e.Member, Permissions.UseVoice);
+            }
+            catch (Exception ex)
+            {
+                e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
+                   $"Ошибка при выдаче доступа к приватному кораблю. \n{ex.Message}\n{ex.StackTrace}",
+                   DateTime.Now); ;
+            }
 
             var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
             var guildInvites = await e.Guild.GetInvitesAsync(); //Запрашиваем новый список инвайтов
