@@ -239,21 +239,34 @@ namespace SeaOfThieves
             {
                 if (DateTime.UtcNow.AddHours(3) > vote.End)
                 {
-                    var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
-                        .GetMessageAsync(vote.Message);
-                    if (message.Reactions.Count == 0) continue;
+                    try
+                    {
+                        var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
+                            .GetMessageAsync(vote.Message);
+                        if (message.Reactions.Count == 0) continue;
 
-                    var embed = new DiscordEmbedBuilder();
-                    embed.Title = vote.Topic;
-                    embed.Description = "Голосование завершено!";
-                    embed.AddField("Участники", vote.Voters.Count.ToString(), true);
-                    var yesPercentage = (int)Math.Round((double)(100 * vote.Yes) / vote.Voters.Count);
-                    embed.AddField("За", $"{vote.Yes} ({yesPercentage}%)", true);
-                    embed.AddField("Против", $"{vote.No} ({100 - yesPercentage}%)", true);
-                    embed.WithFooter($"ID голосования: {vote.Id}.");
+                        var embed = new DiscordEmbedBuilder();
+                        embed.Title = vote.Topic;
+                        embed.Description = "Голосование завершено!";
+                        embed.AddField("Участники", vote.Voters.Count.ToString(), true);
+                        var yesPercentage = (int)Math.Round((double)(100 * vote.Yes) / vote.Voters.Count);
+                        embed.AddField("За", $"{vote.Yes} ({yesPercentage}%)", true);
+                        embed.AddField("Против", $"{vote.No} ({100 - yesPercentage}%)", true);
+                        embed.WithFooter($"ID голосования: {vote.Id}.");
 
-                    await message.ModifyAsync(embed: embed.Build());
-                    await message.DeleteAllReactionsAsync();
+                        await message.ModifyAsync(embed: embed.Build());
+                        await message.DeleteAllReactionsAsync();
+                    }
+                    catch(NotFoundException)
+                    {
+                        //Do nothing, message not found
+                    }
+                    catch(Exception ex)
+                    {
+                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
+                            $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
+                            DateTime.Now);
+                    }
                 }
             }
         }
