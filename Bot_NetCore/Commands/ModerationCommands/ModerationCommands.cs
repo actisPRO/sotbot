@@ -19,7 +19,7 @@ namespace SeaOfThieves.Commands
     {
         [Command("clearchannel")]
         [Aliases("cc")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task ClearChannel(CommandContext ctx, int messages)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -81,7 +81,7 @@ namespace SeaOfThieves.Commands
 
         [Command("clearchannelstartfrom")]
         [Aliases("ccsf")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task ClearChannelStartFrom(CommandContext ctx, ulong startFrom, int messages)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -105,7 +105,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("purge")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Purge(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -173,7 +173,7 @@ namespace SeaOfThieves.Commands
 
         [Command("fleetpurge")]
         [Aliases("fp")]
-        [Hidden]
+        [Description("Блокирует доступ к каналам рейда. (Для @Капитан Рейда)")]
         public async Task FleetPurge(CommandContext ctx, DiscordMember member, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member); //Только капитаны рейда, модераторы не учитываются
@@ -248,7 +248,7 @@ namespace SeaOfThieves.Commands
 
         [Command("mute")]
         [Aliases("m")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Mute(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -314,7 +314,7 @@ namespace SeaOfThieves.Commands
 
         [Command("voicemute")]
         [Aliases("vm")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task VoiceMute(CommandContext ctx, DiscordMember member, string duration, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -380,7 +380,7 @@ namespace SeaOfThieves.Commands
 
         [Command("warn")]
         [Aliases("w")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Warn(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -395,7 +395,7 @@ namespace SeaOfThieves.Commands
 
         [Command("wlist")]
         [Aliases("wl")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task WList(CommandContext ctx, DiscordUser member)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -427,7 +427,7 @@ namespace SeaOfThieves.Commands
 
         [Command("unwarn")]
         [Aliases("uw")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Unwarn(CommandContext ctx, DiscordMember member, string id)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -488,7 +488,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("kick")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Kick(CommandContext ctx, DiscordMember member, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -502,7 +502,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("ban")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Ban(CommandContext ctx, DiscordUser member, string duration = "1d", [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -556,7 +556,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("unban")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Unban(CommandContext ctx, DiscordUser member)
         {
             if (!Bot.IsModerator(ctx.Member))
