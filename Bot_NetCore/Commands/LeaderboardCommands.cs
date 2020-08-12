@@ -145,7 +145,7 @@ namespace SeaOfThieves.Commands
             var embed = new DiscordEmbedBuilder
             {
                 Color = new DiscordColor("#FF0066"),
-                Title = $"Топ рефералов за {DateTime.UtcNow.ToString("MMMM", new CultureInfo("ru-RU"))}",
+                Title = $"Топ рефералов за {DateTime.Now.ToString("MMMM", new CultureInfo("ru-RU"))}",
             };
 
             int i = 1;

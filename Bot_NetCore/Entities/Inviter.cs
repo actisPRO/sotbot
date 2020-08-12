@@ -65,7 +65,7 @@ namespace Bot_NetCore.Entities
         private void UpdateActiveReferrals()
         {
             ActiveCount = Referrals.Where(x => x.Value.Active == true).ToList().Count;
-            CurrentMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == DateTime.UtcNow.Month).ToList().Count;
+            CurrentMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == DateTime.Now.Month).ToList().Count;
         }
 
         public void UpdateState(bool state)
@@ -87,7 +87,7 @@ namespace Bot_NetCore.Entities
         {
             Id = id;
             Active = state;
-            Date = date ?? DateTime.UtcNow.Date;
+            Date = date ?? DateTime.Now.Date;
         }
 
         public ulong Id { get; }

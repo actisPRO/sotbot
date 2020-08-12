@@ -162,7 +162,7 @@ namespace SeaOfThieves.Commands
                 "**Блокировка принятия правил**\n\n" +
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {member}\n" +
-                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Дата:** {DateTime.Now}\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
@@ -237,7 +237,7 @@ namespace SeaOfThieves.Commands
                 "**Блокировка принятия правил рейда**\n\n" +
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {member}\n" +
-                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Дата:** {DateTime.Now}\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
@@ -303,7 +303,7 @@ namespace SeaOfThieves.Commands
                 "**Мут**\n\n" +
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {member}\n" +
-                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Дата:** {DateTime.Now}\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
@@ -369,7 +369,7 @@ namespace SeaOfThieves.Commands
                 "**Мут в голосовом чате**\n\n" +
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {member}\n" +
-                 $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                 $"**Дата:** {DateTime.Now}\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(voiceMute.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
@@ -472,7 +472,7 @@ namespace SeaOfThieves.Commands
                 "**Снятие предупреждения**\n\n" +
                 $"**Администратор:** {ctx.Member}\n" +
                 $"**Пользователь:** {member}\n" +
-                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+                $"**Дата:** {DateTime.Now}\n" +
                 $"**ID предупреждения:** {id}\n" +
                 $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n");
 
@@ -519,18 +519,18 @@ namespace SeaOfThieves.Commands
                 return;
             }
 
-            var unbanDate = DateTime.Now.ToUniversalTime().Add(durationTimeSpan);
+            var unbanDate = DateTime.Now.Add(durationTimeSpan);
 
             var banId = RandomString.NextString(6);
 
-            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now.ToUniversalTime(), ctx.Member.Id, reason, banId);
+            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
             BanList.SaveToXML(Bot.BotSettings.BanXML);
 
             try
             {
                 var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
                 await guildMember.SendMessageAsync(
-                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** на **{Utility.FormatTimespan(durationTimeSpan)}** до **{unbanDate} UTC **. " +
+                    $"Вы были заблокированы на сервере **{ctx.Guild.Name}** на **{Utility.FormatTimespan(durationTimeSpan)}** до **{unbanDate} **. " +
                     $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
                 await guildMember.BanAsync(0, reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
             }
@@ -546,8 +546,8 @@ namespace SeaOfThieves.Commands
                 "**Бан**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
-                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
-                $"**Разблокировка:** {unbanDate} UTC | {Utility.FormatTimespan(durationTimeSpan)}\n" +
+                $"**Дата:** {DateTime.Now}\n" +
+                $"**Разблокировка:** {unbanDate} | {Utility.FormatTimespan(durationTimeSpan)}\n" +
                 $"**ID бана:** {banId}\n" +
                 $"**Причина:** {reason}\n");
 
@@ -579,7 +579,7 @@ namespace SeaOfThieves.Commands
                 "**Снятие бана**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Пользователь:** {await ctx.Client.GetUserAsync(member.Id)}\n" +
-                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
+                $"**Дата:** {DateTime.Now}\n");
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снят бан c {member.Mention}!");
         }
@@ -608,7 +608,7 @@ namespace SeaOfThieves.Commands
             ("**Кик**\n\n" +
              $"**От:** {moderator}\n" +
              $"**Кому:** {member}\n" +
-             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+             $"**Дата:** {DateTime.Now}\n" +
              $"**Причина:** {reason}");
         }
 
@@ -623,7 +623,7 @@ namespace SeaOfThieves.Commands
             ("**Предупреждение**\n\n" +
              $"**От:** {moderator}\n" +
              $"**Кому:** {member}\n" +
-             $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n" +
+             $"**Дата:** {DateTime.Now}\n" +
              $"**ID предупреждения:** {id}\n" +
              $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count + 1}\n" +
              $"**Причина:** {reason}");
@@ -631,7 +631,7 @@ namespace SeaOfThieves.Commands
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
 
-            UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now.ToUniversalTime(), reason, id, message.Id);
+            UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now, reason, id, message.Id);
             UserList.SaveToXML(Bot.BotSettings.WarningsXML);
 
             try
