@@ -12,13 +12,11 @@ namespace SeaOfThieves.Commands
 {
     [Group("donator")]
     [Aliases("d")]
-    [Description("Команды доната\n" +
-                 "!help [Команда] для описания команды")]
+    [Description("Команды доната.")]
     public class DonatorCommands : BaseCommandModule
     {
         [Command("setprice")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task SetPrice(CommandContext ctx, string name, int newPrice)
         {
             if (!PriceList.Prices.ContainsKey(DateTime.Today))
@@ -54,7 +52,6 @@ namespace SeaOfThieves.Commands
         
         [Command("getprices")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task GetPrices(CommandContext ctx)
         {
             var lastDate = PriceList.GetLastDate(DateTime.Now);
@@ -73,7 +70,6 @@ namespace SeaOfThieves.Commands
         
         [Command("add")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task Add(CommandContext ctx, DiscordMember member, int balance)
         {
             var res = new Donator(member.Id, 0, DateTime.Today, balance);
@@ -107,7 +103,6 @@ namespace SeaOfThieves.Commands
 
         [Command("balance")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task Balance(CommandContext ctx, DiscordMember member, int newBalance)
         {
             if (!DonatorList.Donators.ContainsKey(member.Id))
@@ -144,7 +139,6 @@ namespace SeaOfThieves.Commands
         [Command("remove")]
         [Aliases("rm")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task Remove(CommandContext ctx, DiscordMember member)
         {
             if (!DonatorList.Donators.ContainsKey(member.Id))
@@ -397,7 +391,6 @@ namespace SeaOfThieves.Commands
 
         [Command("sethidden")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task SetHidden(CommandContext ctx, DiscordMember member, bool hidden = true)
         {
             if (!DonatorList.Donators.ContainsKey(member.Id))

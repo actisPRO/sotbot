@@ -16,14 +16,13 @@ namespace SeaOfThieves.Commands
 {
     [Group("leaderboard")]
     [Aliases("lb")]
-    [Description("Команды лидерборда\n" +
-                 "!help [Команда] для описания команды")]
+    [Description("Команды лидерборда.")]
+    [RequirePermissions(Permissions.KickMembers)]
     public class LeaderboardCommands : BaseCommandModule
     {
         [Command("create")]
         [Description("Команда для создания/обновления лидерборда")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task Create(CommandContext ctx)
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
@@ -34,7 +33,6 @@ namespace SeaOfThieves.Commands
         [Command("showall")]
         [Description("Выводит список всех пригласивших, в том числе и спрятанных")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task ShowAll(CommandContext ctx)
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
@@ -69,7 +67,6 @@ namespace SeaOfThieves.Commands
 
         [Command("listinvites")]
         [Description("Выводит список приглашенных пользователем участников")]
-        [Hidden]
         public async Task ListInvites(CommandContext ctx, DiscordMember member)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -118,7 +115,6 @@ namespace SeaOfThieves.Commands
         [Command("updatemember")]
         [Description("Обновляет статус отображения пользователя в leaderboard")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task UpdateMember(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));

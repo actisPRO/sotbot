@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using SeaOfThieves.Entities;
@@ -12,11 +13,11 @@ namespace SeaOfThieves.Commands
     [Group("force")]
     [Aliases("f")]
     [Description("Модерация участников покинувших сервер")]
-    [Hidden]
+    [RequirePermissions(Permissions.KickMembers)]
     public class ForceModerationCommands
     {
         [Command("ban")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Ban(CommandContext ctx, ulong memberId, string duration = "1d", [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -54,7 +55,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("purge")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Purge(CommandContext ctx, ulong memberId, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -103,7 +104,7 @@ namespace SeaOfThieves.Commands
 
         [Command("fleetpurge")]
         [Aliases("fp")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task FleetPurge(CommandContext ctx, ulong memberId, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             //Проверка на модератора или капитана рейда
@@ -149,7 +150,7 @@ namespace SeaOfThieves.Commands
 
         [Command("mute")]
         [Aliases("m")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Mute(CommandContext ctx, ulong memberId, string duration, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -198,7 +199,7 @@ namespace SeaOfThieves.Commands
 
         [Command("warn")]
         [Aliases("w")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Warn(CommandContext ctx, ulong memberId, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))

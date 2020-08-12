@@ -19,7 +19,7 @@ namespace SeaOfThieves.Commands
     {
         [Command("create")]
         [Aliases("c")]
-        [Description("Создаёт новый корабль. Вы должны быть в голосовом канале, чтобы использовать это.")]
+        [Description("Создаёт новый корабль.")]
         public async Task Create(CommandContext ctx, [Description("Количество членов экипажа (от 2 до 4)")]
             int slots = 4)
         {

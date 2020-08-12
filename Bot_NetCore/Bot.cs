@@ -23,6 +23,7 @@ using System.Reflection;
 using DSharpPlus.Interactivity.Enums;
 using Microsoft.VisualBasic.FileIO;
 using DSharpPlus.CommandsNext.Attributes;
+using Bot_NetCore.Commands;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -114,8 +115,7 @@ namespace SeaOfThieves
                 StringPrefixes = new[] { BotSettings.Prefix },
                 EnableDms = false,
                 CaseSensitive = false,
-                EnableMentionPrefix = true,
-                EnableDefaultHelp = true
+                EnableMentionPrefix = true
             };
 
             Commands = Client.UseCommandsNext(ccfg);
@@ -130,6 +130,7 @@ namespace SeaOfThieves
             Interactivity = Client.UseInteractivity(icfg);
 
             Commands.RegisterCommands(Assembly.GetExecutingAssembly());
+            Commands.SetHelpFormatter<HelpFormatter>();
 
             //Ивенты
             Client.Ready += ClientOnReady;
@@ -142,6 +143,7 @@ namespace SeaOfThieves
             Client.InviteCreated += ClientOnInviteCreated;
             Client.InviteDeleted += ClientOnInviteDeleted;
             Client.ClientErrored += ClientOnErrored;
+
 
             //Не используются
             //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
@@ -1176,13 +1178,13 @@ namespace SeaOfThieves
                     else if (check is Require​Owner​Attribute)
                         msg += "\n Команда только для владельца бота.";
                     else if (check is Require​Permissions​Attribute)
-                        msg += "\n У вас нет доступа.";
+                        msg += "\n У вас нет доступа к этой команде!";
                     else if (check is Require​Prefixes​Attribute)
                         msg += "\n Команда работает только с определённым префиксом.";
                     else if (check is Require​Roles​Attribute)
-                        msg += "\n У вас нет доступа.";
+                        msg += "\n У вас нет доступа к этой команде!";
                     else if (check is Require​User​Permissions​Attribute)
-                        msg += "\n У вас нет доступа.";
+                        msg += "\n У вас нет доступа к этой команде!";
 
                 await e.Context.RespondAsync(msg);
                 return;

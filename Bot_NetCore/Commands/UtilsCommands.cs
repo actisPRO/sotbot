@@ -58,7 +58,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("whois")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task WhoIs(CommandContext ctx, DiscordMember member)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -144,7 +144,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("whois")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task WhoIs(CommandContext ctx, DiscordUser user)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -222,7 +222,7 @@ namespace SeaOfThieves.Commands
             }
         }
 
-            [Command("updateDonatorMessageLegacy")]
+        [Command("updateDonatorMessageLegacy")]
         [RequirePermissions(Permissions.Administrator)]
         [Hidden]
         public async Task UpdateDonatorMessageLegacy(CommandContext ctx)
@@ -356,69 +356,68 @@ namespace SeaOfThieves.Commands
             await ctx.Message.DeleteAsync();
         }
 
-        [Command("resetfleet")]
-        [Hidden]
-        public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
-        {
-            if (!Bot.IsModerator(ctx.Member) || ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole))) //Проверка на права модератора или роль капитана.
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
+        //[Command("resetfleet")]
+        //public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
+        //{
+        //    if (!Bot.IsModerator(ctx.Member) || ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole))) //Проверка на права модератора или роль капитана.
+        //    {
+        //        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+        //        return;
+        //    }
 
-            //Сбрасываем позицию канала Chill, если вдруг изменена (Позиция 0)
-            if (ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position != 0)
-                await ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).ModifyPositionAsync(0);
+        //    //Сбрасываем позицию канала Chill, если вдруг изменена (Позиция 0)
+        //    if (ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).Position != 0)
+        //        await ctx.Guild.GetChannel(Bot.BotSettings.FleetChillChannel).ModifyPositionAsync(0);
 
-            //Обновляем общий канал и его позицию, если изменена (Позиция 1)
-            var fleetLobby = ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby);
-            if (ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby).Position != 1)
-                await fleetLobby.ModifyAsync(x =>
-                {
-                    x.Name = "Общий";
-                    x.Position = 1;
-                    x.Userlimit = 99;
-                });
-            else
-                await fleetLobby.ModifyAsync(x =>
-                {
-                    x.Name = "Общий";
-                    x.Userlimit = 99;
-                });
+        //    //Обновляем общий канал и его позицию, если изменена (Позиция 1)
+        //    var fleetLobby = ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby);
+        //    if (ctx.Guild.GetChannel(Bot.BotSettings.FleetLobby).Position != 1)
+        //        await fleetLobby.ModifyAsync(x =>
+        //        {
+        //            x.Name = "Общий";
+        //            x.Position = 1;
+        //            x.Userlimit = 99;
+        //        });
+        //    else
+        //        await fleetLobby.ModifyAsync(x =>
+        //        {
+        //            x.Name = "Общий";
+        //            x.Userlimit = 99;
+        //        });
 
-            //Выбираем остальные каналы и сортуруем по ID.
-            var channels = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children
-                .Where(x => x.Type == ChannelType.Voice &&
-                            x.Id != Bot.BotSettings.FleetChillChannel &&
-                            x.Id != Bot.BotSettings.FleetLobby)
-                .OrderBy(x => x.Id);
+        //    //Выбираем остальные каналы и сортуруем по ID.
+        //    var channels = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory).Children
+        //        .Where(x => x.Type == ChannelType.Voice &&
+        //                    x.Id != Bot.BotSettings.FleetChillChannel &&
+        //                    x.Id != Bot.BotSettings.FleetLobby)
+        //        .OrderBy(x => x.Id);
 
-            //Сбрасываем остальные каналы.
-            int i = 0;
-            int fleetNum = 0;
-            foreach (var fleetChannel in channels)
-            {
-                if (i % 5 == 0)
-                    fleetNum++;
+        //    //Сбрасываем остальные каналы.
+        //    int i = 0;
+        //    int fleetNum = 0;
+        //    foreach (var fleetChannel in channels)
+        //    {
+        //        if (i % 5 == 0)
+        //            fleetNum++;
 
-                //Обновляем канал и позицию в списке, если изменена (Позиция i + 2)
-                if (fleetChannel.Position != i + 2)
-                    await fleetChannel.ModifyAsync(x =>
-                    {
-                        x.Name = $"Рейд#{(i % 5) + 1} - №{fleetNum}";
-                        x.Position = i + 2;
-                        x.Userlimit = Bot.BotSettings.FleetUserLimiter;
-                    });
-                else
-                    await fleetChannel.ModifyAsync(x =>
-                    {
-                        x.Name = $"Рейд#{(i % 5) + 1} - №{fleetNum}";
-                        x.Userlimit = Bot.BotSettings.FleetUserLimiter;
-                    });
-                i++;
-            }
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
-        }
+        //        //Обновляем канал и позицию в списке, если изменена (Позиция i + 2)
+        //        if (fleetChannel.Position != i + 2)
+        //            await fleetChannel.ModifyAsync(x =>
+        //            {
+        //                x.Name = $"Рейд#{(i % 5) + 1} - №{fleetNum}";
+        //                x.Position = i + 2;
+        //                x.Userlimit = Bot.BotSettings.FleetUserLimiter;
+        //            });
+        //        else
+        //            await fleetChannel.ModifyAsync(x =>
+        //            {
+        //                x.Name = $"Рейд#{(i % 5) + 1} - №{fleetNum}";
+        //                x.Userlimit = Bot.BotSettings.FleetUserLimiter;
+        //            });
+        //        i++;
+        //    }
+        //    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сброшены каналы рейда!");
+        //}
 
         [Command("codexmessage")]
         [RequirePermissions(Permissions.Administrator)]
@@ -439,7 +438,6 @@ namespace SeaOfThieves.Commands
 
         [Command("throw")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public Task Throw(CommandContext ctx)
         {
             throw new IOException("Test exception.");
@@ -479,6 +477,7 @@ namespace SeaOfThieves.Commands
         }*/
 
         [Command("time")]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task Time(CommandContext ctx)
         {
             await ctx.RespondAsync($"Текущее время на сервере: **{DateTime.Now}**.");
@@ -509,7 +508,7 @@ namespace SeaOfThieves.Commands
 
         [Command("emissarymessage")]
         [Description("Обновляет привязку к сообщению эмиссаров (вводится в канале с сообщением)")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task UpdateEmissaryMessage(CommandContext ctx, DiscordMessage message)
         {
             if (!Bot.IsModerator(ctx.Member))

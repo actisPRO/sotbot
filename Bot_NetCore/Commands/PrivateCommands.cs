@@ -16,8 +16,7 @@ namespace SeaOfThieves.Commands
 {
     [Group("private")]
     [Aliases("p")]
-    [Description("Команды приватных кораблей \n" +
-                 "!help [Команда] для описания команды")]
+    [Description("Команды приватных кораблей.")]
     public class PrivateCommands : BaseCommandModule
     {
         [Command("new")]
@@ -367,7 +366,6 @@ namespace SeaOfThieves.Commands
 
         [Command("adelete")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task ADelete(CommandContext ctx, [RemainingText] string name)
         {
             if (!ShipList.Ships.ContainsKey(name))
@@ -411,7 +409,6 @@ namespace SeaOfThieves.Commands
 
         [Command("apurgereq")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task APurgeRequest(CommandContext ctx, int days = 3, bool force = false,
             [RemainingText] string forceReason = "Не указана")
         {
@@ -485,7 +482,6 @@ namespace SeaOfThieves.Commands
 
         [Command("apurgestart")]
         [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
         public async Task APurgeStart(CommandContext ctx)
         {
             var doc = XDocument.Load("active.xml");
@@ -557,7 +553,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("shipinfo")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task ShipInfo(CommandContext ctx, [RemainingText]string name)
         {
             if (!Bot.IsModerator(ctx.Member))
@@ -637,7 +633,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("usershipinfo")]
-        [Hidden]
+        [RequirePermissions(Permissions.KickMembers)]
         public async Task UserShipInfo(CommandContext ctx, DiscordMember member)
         {
             if (!Bot.IsModerator(ctx.Member))
