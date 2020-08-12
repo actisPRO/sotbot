@@ -178,7 +178,7 @@ namespace SeaOfThieves
             clearVotes.AutoReset = true;
             clearVotes.Enabled = true;
             
-            var deleteShips = new Timer(5000);
+            var deleteShips = new Timer(60000 * 10);
             deleteShips.Elapsed += DeleteShipsOnElapsed;
             deleteShips.AutoReset = true;
             deleteShips.Enabled = true;
@@ -1321,6 +1321,18 @@ namespace SeaOfThieves
                     await m.PlaceInAsync(possibleChannels[rShip]);
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {m.Username}#{m.Discriminator} успешно воспользовался поиском корабля!", DateTime.Now);
                     return;
+                }
+                else if (e.Channel.ParentId == BotSettings.PrivateCategory)
+                {
+                    foreach (var ship in ShipList.Ships.Values)
+                    {
+                        if (ship.Channel == e.Channel.Id)
+                        {
+                            ship.SetLastUsed(DateTime.Now);
+                            ShipList.SaveToXML(BotSettings.ShipXML);
+                            break;
+                        }
+                    }
                 }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
