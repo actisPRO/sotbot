@@ -28,7 +28,7 @@ namespace SeaOfThieves.Commands
             }
 
             var timespan = Utility.TimeSpanParse(duration);
-            var end = DateTime.Now + timespan;
+            var end = DateTime.UtcNow.AddHours(3) + timespan;
             var id = RandomString.NextString(6);
             
             var embed = new DiscordEmbedBuilder();
