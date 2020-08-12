@@ -1225,13 +1225,13 @@ namespace SeaOfThieves
                     else if (check is RequireOwnerAttribute)
                         msg += "\n Команда только для владельца бота.";
                     else if (check is RequirePermissionsAttribute)
-                        msg += "\n У вас нет доступа.";
+                        msg += "\n У вас нет доступа к этой команде!";
                     else if (check is RequirePrefixesAttribute)
                         msg += "\n Команда работает только с определённым префиксом.";
                     else if (check is RequireRolesAttribute)
-                        msg += "\n У вас нет доступа.";
+                        msg += "\n У вас нет доступа к этой команде!";
                     else if (check is RequireUserPermissionsAttribute)
-                        msg += "\n У вас нет доступа.";
+                        msg += "\n У вас нет доступа к этой команде!";
 
                 await e.Context.RespondAsync(msg);
                 return;
