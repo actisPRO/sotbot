@@ -342,7 +342,7 @@ namespace SeaOfThieves
         {
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
 
-            var fileName = "logs/" + DateTime.Today.ToString("s");
+            var fileName = "logs/" + DateTime.Now.ToString("dd-MM-yyyy");
 
             var loglevel = "";
             switch (e.Level)
