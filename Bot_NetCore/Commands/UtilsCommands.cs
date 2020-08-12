@@ -539,7 +539,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("privatemigration")]
-        [RequirePermissions(Permissions.Administrator)]
+        [RequirePermissions(Permissions.KickMembers)]
         [Hidden]
         public async Task PrivateShipsMigration(CommandContext ctx)
         {
@@ -547,7 +547,15 @@ namespace SeaOfThieves.Commands
             {
                 foreach (var member in ship.Members.Values)
                 {
-                    await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(await ctx.Guild.GetMemberAsync(member.Id), Permissions.UseVoice);
+                    try
+                    {
+
+                        await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(await ctx.Guild.GetMemberAsync(member.Id), Permissions.UseVoice);
+                    }
+                    catch (Exception ex)
+                    {
+                        //Do nothing
+                    }
                 }
                 Thread.Sleep(1000);
             }
