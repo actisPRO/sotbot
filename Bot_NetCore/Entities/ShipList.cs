@@ -52,6 +52,7 @@ namespace SeaOfThieves.Entities
 
                 shipE.Add(new XElement("channel", ship.Channel));
                 shipE.Add(new XElement("creationMessage", ship.CreationMessage));
+                shipE.Add(new XElement("lastUsed", ship.LastUsed));
 
                 foreach (var member in ship.Members.Values)
                     shipE.Add(new XElement("member", member.Id, new XAttribute("type",
@@ -85,11 +86,13 @@ namespace SeaOfThieves.Entities
                     {
                     }
 
+                    var lastUsed = DateTime.Now;
+                    if (shipE.Element("lastUsed") != null) lastUsed = Convert.ToDateTime(shipE.Element("lastUsed").Value);
+
                     var ship = Ship.Create(
-                            shipE.Attribute("name").Value,
-                            Convert.ToUInt64(shipE.Element("channel").Value), 
-                            Convert.ToUInt64(creationMessage)
-                        );
+                        shipE.Attribute("name").Value, 
+                        Convert.ToUInt64(shipE.Element("channel").Value),
+                        Convert.ToUInt64(creationMessage), lastUsed);
 
                     ship.Status = Convert.ToBoolean(shipE.Attribute("status").Value);
 
