@@ -237,36 +237,37 @@ namespace SeaOfThieves
         {
             foreach (var vote in Vote.Votes.Values)
             {
-                if (DateTime.Now > vote.End)
+                try
                 {
-                    try
+                    if (DateTime.Now > vote.End)
                     {
                         var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
                             .GetMessageAsync(vote.Message);
                         if (message.Reactions.Count == 0) continue;
 
-                        var embed = new DiscordEmbedBuilder();
-                        embed.Title = vote.Topic;
-                        embed.Description = "Голосование завершено!";
-                        embed.AddField("Участники", vote.Voters.Count.ToString(), true);
-                        var yesPercentage = (int)Math.Round((double)(100 * vote.Yes) / vote.Voters.Count);
-                        embed.AddField("За", $"{vote.Yes} ({yesPercentage}%)", true);
-                        embed.AddField("Против", $"{vote.No} ({100 - yesPercentage}%)", true);
-                        embed.WithFooter($"ID голосования: {vote.Id}.");
+                        var author = await Client.Guilds[BotSettings.Guild].GetMemberAsync(vote.Author);
+                        var embed = Utility.GenerateVoteEmbed(
+                            author,
+                            vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                            vote.Topic, vote.End,
+                            vote.Voters.Count,
+                            vote.Yes,
+                            vote.No,
+                            vote.Id);
 
-                        await message.ModifyAsync(embed: embed.Build());
+                        await message.ModifyAsync(embed: embed);
                         await message.DeleteAllReactionsAsync();
                     }
-                    catch (NotFoundException)
-                    {
-                        //Do nothing, message not found
-                    }
-                    catch (Exception ex)
-                    {
-                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
-                            $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
-                            DateTime.Now);
-                    }
+                }
+                catch (NotFoundException)
+                {
+                    //Do nothing, message not found
+                }
+                catch (Exception ex)
+                {
+                    Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
+                        $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
+                        DateTime.Now);
                 }
             }
         }
