@@ -223,12 +223,12 @@ namespace SeaOfThieves
                             "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
                             "не планируете пользоваться этой функцией**");
                     
-                    await Client.Guilds[BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                    await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
                         "**Удаление корабля**\n\n" +
                         $"**Модератор:** {Client.CurrentUser}\n" +
                         $"**Корабль:** {ship.Name}\n" +
                         $"**Владелец:** {owner}\n" +
-                        $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC");
+                        $"**Дата:** {DateTime.Now}");
                 }
             }
         }
@@ -237,7 +237,7 @@ namespace SeaOfThieves
         {
             foreach (var vote in Vote.Votes.Values)
             {
-                if (DateTime.UtcNow.AddHours(3) > vote.End)
+                if (DateTime.Now > vote.End)
                 {
                     try
                     {
@@ -257,11 +257,11 @@ namespace SeaOfThieves
                         await message.ModifyAsync(embed: embed.Build());
                         await message.DeleteAllReactionsAsync();
                     }
-                    catch(NotFoundException)
+                    catch (NotFoundException)
                     {
                         //Do nothing, message not found
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
                             $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
@@ -303,7 +303,7 @@ namespace SeaOfThieves
                         var messages = await channel.Key.GetMessagesAsync();
                         var toDelete = messages.ToList()
                             .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
-                            .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+                            .Where(x => DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
 
                         if (toDelete.Count() > 0)
                         {
@@ -391,7 +391,7 @@ namespace SeaOfThieves
 
             //Check for expired bans
             var toUnban = from ban in BanList.BannedMembers.Values
-                          where ban.UnbanDateTime.ToUniversalTime() <= DateTime.Now.ToUniversalTime()
+                          where ban.UnbanDateTime <= DateTime.Now
                           select ban;
 
             if (toUnban.Count() > 0)
@@ -414,7 +414,7 @@ namespace SeaOfThieves
                         "**Снятие Бана**\n\n" +
                         $"**Модератор:** {Client.CurrentUser.Username}\n" +
                         $"**Пользователь:** {user}\n" +
-                        $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
+                        $"**Дата:** {DateTime.Now}\n");
 
                     Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
                 }
@@ -638,7 +638,7 @@ namespace SeaOfThieves
                 //Отправка в лог
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
                     $"{e.User.Username}#{e.User.Discriminator} получил новую роль эмиссарства.",
-                    DateTime.Now.ToUniversalTime());
+                    DateTime.Now);
 
                 return;
             }
@@ -984,7 +984,7 @@ namespace SeaOfThieves
                 try
                 {
                     await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
-                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime} UTC.");
+                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime}.");
                 }
                 catch (UnauthorizedException)
                 {
@@ -1101,7 +1101,7 @@ namespace SeaOfThieves
                 if (updatedInvite == null)
                 {
                     updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
-                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.UtcNow))      //Проверяем если он не истёк
+                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.Now))      //Проверяем если он не истёк
                                            .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
                 }
 
@@ -1344,7 +1344,7 @@ namespace SeaOfThieves
 
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                         $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
-                        DateTime.Now.ToUniversalTime());
+                        DateTime.Now);
                 }
                 else if (e.Channel.Id == BotSettings.FindShip)
                 {
