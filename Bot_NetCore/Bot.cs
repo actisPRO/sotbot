@@ -237,7 +237,7 @@ namespace SeaOfThieves
         {
             foreach (var vote in Vote.Votes.Values)
             {
-                if (DateTime.Now > vote.End)
+                if (DateTime.UtcNow.AddHours(3) > vote.End)
                 {
                     var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
                         .GetMessageAsync(vote.Message);
