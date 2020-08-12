@@ -197,7 +197,6 @@ namespace SeaOfThieves
             {
                 if ((DateTime.Now - ship.LastUsed).Days >= 3)
                 {
-                    var role = Client.Guilds[BotSettings.Guild].GetRole(ship.Role);
                     var channel = Client.Guilds[BotSettings.Guild].GetChannel(ship.Channel);
 
                     DiscordMember owner = null;
@@ -211,7 +210,6 @@ namespace SeaOfThieves
                     ship.Delete();
                     ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-                    await role.DeleteAsync();
                     await channel.DeleteAsync();
                     
                     var doc = XDocument.Load("actions.xml");
