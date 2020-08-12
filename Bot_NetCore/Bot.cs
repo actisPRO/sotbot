@@ -666,26 +666,25 @@ namespace SeaOfThieves
                 vote.Voters.Add(e.User.Id);
                 var total = vote.Voters.Count;
 
-                if (e.Emoji.Name == ":white_check_mark:" || e.Emoji.Name == "✅")
+                if (e.Emoji.GetDiscordName() == ":white_check_mark:")
                     ++vote.Yes;
                 else ++vote.No;
 
-                var builder = new DiscordEmbedBuilder();
-                builder.ClearFields();
-                builder.AddField("Участники", Convert.ToString(total), true);
-                var yesPercent = (int)Math.Round((double)(100 * vote.Yes) / total);
-                builder.AddField("За",
-                    total == 0 ? "0" : $"{vote.Yes} ({yesPercent}%)", true);
-                builder.AddField("Против",
-                    total == 0 ? "0" : $"{vote.No} ({100 - yesPercent}%)", true);
-                builder.WithFooter($"ID голосования: {vote.Id}");
-                builder.Title = vote.Topic;
-                builder.Description = $"Голосование будет завершено {vote.End.ToString("HH:mm:ss dd.MM.yyyy")}.";
+                var author = await e.Guild.GetMemberAsync(vote.Author);
+                var embed = Utility.GenerateVoteEmbed(
+                    author, 
+                    DiscordColor.Yellow, 
+                    vote.Topic, 
+                    vote.End,
+                    vote.Voters.Count, 
+                    vote.Yes, 
+                    vote.No, 
+                    vote.Id);
 
                 Vote.Votes[e.Message.Id] = vote;
                 Vote.Save(BotSettings.VotesXML);
 
-                await e.Message.ModifyAsync(embed: builder.Build());
+                await e.Message.ModifyAsync(embed: embed);
                 await (await e.Guild.GetMemberAsync(e.User.Id)).SendMessageAsync($"{BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
             }
 
