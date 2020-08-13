@@ -48,5 +48,31 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
         }
+
+        [Command("end")]
+        [Description("Прекращает голосование")]
+        public async Task VoteEnd(CommandContext ctx, string id)
+        {
+            foreach (var vote in Vote.Votes.Values)
+            {
+                if (vote.Id == id)
+                {
+                    if (vote.End > DateTime.Now)
+                    {
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Данное голосование уже завершено!");
+                        return;
+                    }
+                    
+                    Vote.Votes[vote.Message].End = DateTime.Now;
+                    Vote.Save(Bot.BotSettings.VotesXML);
+
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.OkEmoji} Голосование будет остановлено в течение минуты!");
+                    return;
+                }
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не было найдено голосование с указанным ID!");
+        }
     }
 }
