@@ -222,7 +222,7 @@ namespace SeaOfThieves.Commands
         [Cooldown(1, 120, CooldownBucketType.Guild)]
         public async Task CreateFleetAsync(CommandContext ctx,
             [Description("Количество кораблей [1 - 5]")] int nShips,
-            [Description("Слоты на корабле (Бот добавляет +1 слот) [2 - 25]")] int slots,
+            [Description("Слоты на корабле [2 - 25]")] int slots,
             [RemainingText, Description("Название рейда")] string notes)
         {
             notes = notes.Substring(0, Math.Min(notes.Length, 25));
@@ -239,7 +239,7 @@ namespace SeaOfThieves.Commands
 
             var pollSucceded = false;
 
-            var moscowTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time"));
+            var moscowTime = DateTime.Now;
             var timeOfDay = moscowTime.ToString("HH:mm");
 
             var fleetCreationMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FleetCreationChannel).
@@ -334,8 +334,9 @@ namespace SeaOfThieves.Commands
 
                 //TODO: Check permissions - UPD: Seems to be ok
                 var channel = await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
+                await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
                 for (int i = 0; i < nShips; i++)
-                    await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+                    await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots);
             }
 
             //Чистим голосование после создания рейда
