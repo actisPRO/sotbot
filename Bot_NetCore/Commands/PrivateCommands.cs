@@ -36,7 +36,7 @@ namespace SeaOfThieves.Commands
                 .SendMessageAsync("**Запрос на создание корабля**\n\n" +
                                   $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
                                   $"**Название:** {name}\n" +
-                                  $"**Время:** {DateTime.Now.ToUniversalTime()}\n\n" +
+                                  $"**Время:** {DateTime.Now}\n\n" +
                                   $"Используйте реакцию для подтверждения, или для отказа.");
 
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
@@ -404,7 +404,7 @@ namespace SeaOfThieves.Commands
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Корабль:** {name}\n" +
                 $"**Владелец:** {owner}\n" +
-                $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC");
+                $"**Дата:** {DateTime.Now}");
         }
 
         [Command("apurgereq")]

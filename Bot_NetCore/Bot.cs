@@ -176,10 +176,10 @@ namespace SeaOfThieves
             clearChannelMessages.Enabled = true;
 
             var clearVotes = new Timer(60000);
-            clearVotes.Elapsed += ClearVotesOnElapsed;
+            clearVotes.Elapsed += ClearAndRepairVotesOnElapsed;
             clearVotes.AutoReset = true;
             clearVotes.Enabled = true;
-
+            
             var deleteShips = new Timer(60000 * 10);
             deleteShips.Elapsed += DeleteShipsOnElapsed;
             deleteShips.AutoReset = true;
@@ -206,12 +206,12 @@ namespace SeaOfThieves
                             owner = await Client.Guilds[BotSettings.Guild].GetMemberAsync(member.Id);
                             break;
                         }
-
+                    
                     ship.Delete();
                     ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
                     await channel.DeleteAsync();
-
+                    
                     var doc = XDocument.Load("actions.xml");
                     foreach (var action in doc.Element("actions").Elements("action"))
                         if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
@@ -222,51 +222,61 @@ namespace SeaOfThieves
                         await owner.SendMessageAsync(
                             "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
                             "не планируете пользоваться этой функцией**");
-
-                    await Client.Guilds[BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                    
+                    await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
                         "**Удаление корабля**\n\n" +
                         $"**Модератор:** {Client.CurrentUser}\n" +
                         $"**Корабль:** {ship.Name}\n" +
                         $"**Владелец:** {owner}\n" +
-                        $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC");
+                        $"**Дата:** {DateTime.Now}");
                 }
             }
         }
 
-        private async void ClearVotesOnElapsed(object sender, ElapsedEventArgs e)
+        private async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
             foreach (var vote in Vote.Votes.Values)
             {
-                if (DateTime.UtcNow.AddHours(3) > vote.End)
+                try
                 {
-                    try
+                    var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
+                        .GetMessageAsync(vote.Message);
+                    if (DateTime.Now > vote.End)
                     {
-                        var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
-                            .GetMessageAsync(vote.Message);
                         if (message.Reactions.Count == 0) continue;
 
-                        var embed = new DiscordEmbedBuilder();
-                        embed.Title = vote.Topic;
-                        embed.Description = "Голосование завершено!";
-                        embed.AddField("Участники", vote.Voters.Count.ToString(), true);
-                        var yesPercentage = (int)Math.Round((double)(100 * vote.Yes) / vote.Voters.Count);
-                        embed.AddField("За", $"{vote.Yes} ({yesPercentage}%)", true);
-                        embed.AddField("Против", $"{vote.No} ({100 - yesPercentage}%)", true);
-                        embed.WithFooter($"ID голосования: {vote.Id}.");
+                        var author = await Client.Guilds[BotSettings.Guild].GetMemberAsync(vote.Author);
+                        var embed = Utility.GenerateVoteEmbed(
+                            author,
+                            vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                            vote.Topic, vote.End,
+                            vote.Voters.Count,
+                            vote.Yes,
+                            vote.No,
+                            vote.Id);
 
-                        await message.ModifyAsync(embed: embed.Build());
+                        await message.ModifyAsync(embed: embed);
                         await message.DeleteAllReactionsAsync();
                     }
-                    catch (NotFoundException)
+                    else
                     {
-                        //Do nothing, message not found
+                        if (message.Reactions.Count < 2)
+                        {
+                            await message.DeleteAllReactionsAsync();
+                            await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+                            await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
-                            $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
-                            DateTime.Now);
-                    }
+                }
+                catch (NotFoundException)
+                {
+                    //Do nothing, message not found
+                }
+                catch (Exception ex)
+                {
+                    Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
+                        $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
+                        DateTime.Now);
                 }
             }
         }
@@ -303,7 +313,7 @@ namespace SeaOfThieves
                         var messages = await channel.Key.GetMessagesAsync();
                         var toDelete = messages.ToList()
                             .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
-                            .Where(x => DateTimeOffset.UtcNow.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+                            .Where(x => DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
 
                         if (toDelete.Count() > 0)
                         {
@@ -330,11 +340,9 @@ namespace SeaOfThieves
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
-
-            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {command}",
+                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
                     DateTime.Now);
             return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
@@ -344,7 +352,7 @@ namespace SeaOfThieves
         {
             if (!Directory.Exists("logs")) Directory.CreateDirectory("logs");
 
-            var fileName = "logs/" + DateTime.Now.ToString("dd-MM-yyyy");
+            var fileName = "logs/" + DateTime.Today.ToString("yyyy-MM-dd");
 
             var loglevel = "";
             switch (e.Level)
@@ -393,7 +401,7 @@ namespace SeaOfThieves
 
             //Check for expired bans
             var toUnban = from ban in BanList.BannedMembers.Values
-                          where ban.UnbanDateTime.ToUniversalTime() <= DateTime.Now.ToUniversalTime()
+                          where ban.UnbanDateTime <= DateTime.Now
                           select ban;
 
             if (toUnban.Count() > 0)
@@ -416,7 +424,7 @@ namespace SeaOfThieves
                         "**Снятие Бана**\n\n" +
                         $"**Модератор:** {Client.CurrentUser.Username}\n" +
                         $"**Пользователь:** {user}\n" +
-                        $"**Дата:** {DateTime.Now.ToUniversalTime()} UTC\n");
+                        $"**Дата:** {DateTime.Now}\n");
 
                     Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
                 }
@@ -640,7 +648,7 @@ namespace SeaOfThieves
                 //Отправка в лог
                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
                     $"{e.User.Username}#{e.User.Discriminator} получил новую роль эмиссарства.",
-                    DateTime.Now.ToUniversalTime());
+                    DateTime.Now);
 
                 return;
             }
@@ -667,26 +675,25 @@ namespace SeaOfThieves
                 vote.Voters.Add(e.User.Id);
                 var total = vote.Voters.Count;
 
-                if (e.Emoji.Name == ":white_check_mark:" || e.Emoji.Name == "✅")
+                if (e.Emoji.GetDiscordName() == ":white_check_mark:")
                     ++vote.Yes;
                 else ++vote.No;
 
-                var builder = new DiscordEmbedBuilder();
-                builder.ClearFields();
-                builder.AddField("Участники", Convert.ToString(total), true);
-                var yesPercent = (int)Math.Round((double)(100 * vote.Yes) / total);
-                builder.AddField("За",
-                    total == 0 ? "0" : $"{vote.Yes} ({yesPercent}%)", true);
-                builder.AddField("Против",
-                    total == 0 ? "0" : $"{vote.No} ({100 - yesPercent}%)", true);
-                builder.WithFooter($"ID голосования: {vote.Id}");
-                builder.Title = vote.Topic;
-                builder.Description = $"Голосование будет завершено {vote.End.ToString("HH:mm:ss dd.MM.yyyy")}.";
+                var author = await e.Guild.GetMemberAsync(vote.Author);
+                var embed = Utility.GenerateVoteEmbed(
+                    author, 
+                    DiscordColor.Yellow, 
+                    vote.Topic, 
+                    vote.End,
+                    vote.Voters.Count, 
+                    vote.Yes, 
+                    vote.No, 
+                    vote.Id);
 
                 Vote.Votes[e.Message.Id] = vote;
                 Vote.Save(BotSettings.VotesXML);
 
-                await e.Message.ModifyAsync(embed: builder.Build());
+                await e.Message.ModifyAsync(embed: embed);
                 await (await e.Guild.GetMemberAsync(e.User.Id)).SendMessageAsync($"{BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
             }
 
@@ -986,7 +993,7 @@ namespace SeaOfThieves
                 try
                 {
                     await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
-                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime} UTC.");
+                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime}.");
                 }
                 catch (UnauthorizedException)
                 {
@@ -1103,7 +1110,7 @@ namespace SeaOfThieves
                 if (updatedInvite == null)
                 {
                     updatedInvite = invites.Where(p => guildInvites.All(p2 => p2.Code != p.Code))                       //Ищем удаленный инвайт
-                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.UtcNow))      //Проверяем если он не истёк
+                                           .Where(x => (x.CreatedAt.AddSeconds(x.MaxAge) < DateTimeOffset.Now))      //Проверяем если он не истёк
                                            .FirstOrDefault();                                                           //С такими условиями будет только один такой инвайт
                 }
 
@@ -1252,21 +1259,19 @@ namespace SeaOfThieves
                 return;
             }
 
-            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
-
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
                 $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
-                $"({e.Context.Member.Id}) пытался запустить команду {command}, но произошла ошибка.",
+                $"({e.Context.Member.Id}) пытался запустить команду {e.Command.Name}, но произошла ошибка.",
                 DateTime.Now);
 
             await e.Context.RespondAsync(
-                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{command}**! Попробуйте ещё раз, если " +
+                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз, если " +
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
             var errChannel = e.Context.Guild.GetChannel(BotSettings.ErrorLog);
 
-            var message = $"**Команда:** {command}\n" +
+            var message = $"**Команда:** {e.Command.Name}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
                           $"**Пользователь:** {e.Context.Member}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
@@ -1348,7 +1353,7 @@ namespace SeaOfThieves
 
                     e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                         $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
-                        DateTime.Now.ToUniversalTime());
+                        DateTime.Now);
                 }
                 else if (e.Channel.Id == BotSettings.FindShip)
                 {
@@ -1359,13 +1364,13 @@ namespace SeaOfThieves
                     {
                         if (message.Pinned) continue; // автор закрепленного сообщения не должен учитываться
                         if (membersLookingForTeam.Contains(message.Author.Id)) continue; // автор сообщения уже мог быть добавлен в лист
-
+                        
                         membersLookingForTeam.Add(message.Author.Id);
                     }
-
+                    
                     var possibleChannels = new List<DiscordChannel>();
                     foreach (var ship in shipCategory.Children)
-                        if (ship.Users.Count() < ship.UserLimit)
+                        if (ship.Users.Count() < ship.UserLimit)                        
                             foreach (var user in ship.Users)
                                 if (membersLookingForTeam.Contains(user.Id))
                                     possibleChannels.Add(ship);
@@ -1377,7 +1382,7 @@ namespace SeaOfThieves
                         await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Не удалось найти подходящий корабль.");
                         return;
                     }
-
+                    
                     var random = new Random();
                     var rShip = random.Next(0, possibleChannels.Count);
 

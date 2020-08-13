@@ -239,7 +239,7 @@ namespace SeaOfThieves.Commands
 
             var pollSucceded = false;
 
-            var moscowTime = DateTime.UtcNow.AddHours(3);
+            var moscowTime = DateTime.Now;
             var timeOfDay = moscowTime.ToString("HH:mm");
 
             var fleetCreationMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FleetCreationChannel).

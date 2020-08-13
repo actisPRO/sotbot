@@ -28,22 +28,18 @@ namespace SeaOfThieves.Commands
             }
 
             var timespan = Utility.TimeSpanParse(duration);
-            var end = DateTime.UtcNow.AddHours(3) + timespan;
+            var end = DateTime.Now + timespan;
             var id = RandomString.NextString(6);
-            
-            var embed = new DiscordEmbedBuilder();
-            embed.Title = topic;
-            embed.Description = $"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}.";
-            embed.AddField("Участники", "0", true);
-            embed.AddField("За", "0", true);
-            embed.AddField("Против", "0", true);
-            embed.WithFooter($"ID голосования: {id}.");
+
+            var vote = new Vote(topic, 0, 0, end, 0, ctx.Member.Id, id, new List<ulong>());
+
+            var embed = Utility.GenerateVoteEmbed(ctx.Member, DiscordColor.Yellow, topic, end, 0, 0, 0, id);
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
-            
-            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
+
+            vote.Message = message.Id;
             Vote.Save(Bot.BotSettings.VotesXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
