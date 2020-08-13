@@ -176,7 +176,7 @@ namespace SeaOfThieves
             clearChannelMessages.Enabled = true;
 
             var clearVotes = new Timer(60000);
-            clearVotes.Elapsed += ClearVotesOnElapsed;
+            clearVotes.Elapsed += ClearAndRepairVotesOnElapsed;
             clearVotes.AutoReset = true;
             clearVotes.Enabled = true;
             
@@ -233,16 +233,16 @@ namespace SeaOfThieves
             }
         }
 
-        private async void ClearVotesOnElapsed(object sender, ElapsedEventArgs e)
+        private async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
             foreach (var vote in Vote.Votes.Values)
             {
                 try
                 {
+                    var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
+                        .GetMessageAsync(vote.Message);
                     if (DateTime.Now > vote.End)
                     {
-                        var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
-                            .GetMessageAsync(vote.Message);
                         if (message.Reactions.Count == 0) continue;
 
                         var author = await Client.Guilds[BotSettings.Guild].GetMemberAsync(vote.Author);
@@ -257,6 +257,15 @@ namespace SeaOfThieves
 
                         await message.ModifyAsync(embed: embed);
                         await message.DeleteAllReactionsAsync();
+                    }
+                    else
+                    {
+                        if (message.Reactions.Count < 2)
+                        {
+                            await message.DeleteAllReactionsAsync();
+                            await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+                            await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
+                        }
                     }
                 }
                 catch (NotFoundException)
