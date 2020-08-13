@@ -40,6 +40,30 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
         }
+        
+        [Command("starteveryone")]
+        [Aliases("starte")]
+        [Description("Начинает голосование за/против")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task VoteStartEveryone(CommandContext ctx, [Description("Продолжительность голосования")] string duration, [Description("Тема голосования"), RemainingText] string topic)
+        {
+            var timespan = Utility.TimeSpanParse(duration);
+            var end = DateTime.Now + timespan;
+            var id = RandomString.NextString(6);
+
+            var vote = new Vote(topic, 0, 0, end, 0, ctx.Member.Id, id, new List<ulong>());
+
+            var embed = Utility.GenerateVoteEmbed(ctx.Member, DiscordColor.Yellow, topic, end, 0, 0, 0, id);
+
+            var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(ctx.Guild.EveryoneRole.Mention, embed: embed);
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
+
+            vote.Message = message.Id;
+            Vote.Save(Bot.BotSettings.VotesXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
+        }
 
         [Command("end")]
         [Description("Прекращает голосование")]
