@@ -179,7 +179,7 @@ namespace SeaOfThieves
             clearVotes.Elapsed += ClearVotesOnElapsed;
             clearVotes.AutoReset = true;
             clearVotes.Enabled = true;
-            
+
             var deleteShips = new Timer(60000 * 10);
             deleteShips.Elapsed += DeleteShipsOnElapsed;
             deleteShips.AutoReset = true;
@@ -206,12 +206,12 @@ namespace SeaOfThieves
                             owner = await Client.Guilds[BotSettings.Guild].GetMemberAsync(member.Id);
                             break;
                         }
-                    
+
                     ship.Delete();
                     ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
                     await channel.DeleteAsync();
-                    
+
                     var doc = XDocument.Load("actions.xml");
                     foreach (var action in doc.Element("actions").Elements("action"))
                         if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
@@ -222,7 +222,7 @@ namespace SeaOfThieves
                         await owner.SendMessageAsync(
                             "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
                             "не планируете пользоваться этой функцией**");
-                    
+
                     await Client.Guilds[BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                         "**Удаление корабля**\n\n" +
                         $"**Модератор:** {Client.CurrentUser}\n" +
@@ -257,11 +257,11 @@ namespace SeaOfThieves
                         await message.ModifyAsync(embed: embed.Build());
                         await message.DeleteAllReactionsAsync();
                     }
-                    catch(NotFoundException)
+                    catch (NotFoundException)
                     {
                         //Do nothing, message not found
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
                             $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
@@ -330,9 +330,11 @@ namespace SeaOfThieves
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
+
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {command}",
                     DateTime.Now);
             return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
@@ -1250,19 +1252,21 @@ namespace SeaOfThieves
                 return;
             }
 
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
                 $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
-                $"({e.Context.Member.Id}) пытался запустить команду {e.Command.Name}, но произошла ошибка.",
+                $"({e.Context.Member.Id}) пытался запустить команду {command}, но произошла ошибка.",
                 DateTime.Now);
 
             await e.Context.RespondAsync(
-                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз, если " +
+                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{command}**! Попробуйте ещё раз, если " +
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
             var errChannel = e.Context.Guild.GetChannel(BotSettings.ErrorLog);
 
-            var message = $"**Команда:** {e.Command.Name}\n" +
+            var message = $"**Команда:** {command}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
                           $"**Пользователь:** {e.Context.Member}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
@@ -1355,13 +1359,13 @@ namespace SeaOfThieves
                     {
                         if (message.Pinned) continue; // автор закрепленного сообщения не должен учитываться
                         if (membersLookingForTeam.Contains(message.Author.Id)) continue; // автор сообщения уже мог быть добавлен в лист
-                        
+
                         membersLookingForTeam.Add(message.Author.Id);
                     }
-                    
+
                     var possibleChannels = new List<DiscordChannel>();
                     foreach (var ship in shipCategory.Children)
-                        if (ship.Users.Count() < ship.UserLimit)                        
+                        if (ship.Users.Count() < ship.UserLimit)
                             foreach (var user in ship.Users)
                                 if (membersLookingForTeam.Contains(user.Id))
                                     possibleChannels.Add(ship);
@@ -1373,7 +1377,7 @@ namespace SeaOfThieves
                         await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Не удалось найти подходящий корабль.");
                         return;
                     }
-                    
+
                     var random = new Random();
                     var rShip = random.Next(0, possibleChannels.Count);
 
