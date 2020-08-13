@@ -7,6 +7,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 using SeaOfThieves.Misc;
 
 namespace SeaOfThieves.Commands
@@ -20,7 +21,7 @@ namespace SeaOfThieves.Commands
         [Command("start")]
         [Description("Начинает голосование за/против")]
         [RequirePermissions(Permissions.KickMembers)]
-        public async Task VoteStart(CommandContext ctx, [Description("Продолжительность голосования")] string duration, [Description("Тема голосования")] [RemainingText] string topic)
+        public async Task VoteStart(CommandContext ctx, [Description("Продолжительность голосования")] string duration, [Description("Тема голосования"), RemainingText] string topic)
         {
             var timespan = Utility.TimeSpanParse(duration);
             var end = DateTime.Now + timespan;
@@ -70,7 +71,36 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не было найдено голосование с указанным ID!");
         }
-        
-        
+
+        [Command("delete")]
+        [Description("Безопасно удаляет голосование")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task VoteDelete(CommandContext ctx, [Description("ID голосования")] string id)
+        {
+            foreach (var vote in Vote.Votes.Values)
+            {
+                if (vote.Id == id)
+                {
+                    try
+                    {
+                        var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel)
+                            .GetMessageAsync(vote.Message);
+                        await message.DeleteAsync();
+                    }
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+                    Vote.Votes.Remove(vote.Message);
+                    Vote.Save(Bot.BotSettings.VotesXML);
+
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.OkEmoji} Голосование было успешно удалено!");
+                    return;
+                }
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не было найдено голосование с указанным ID!");
+        }
     }
 }
