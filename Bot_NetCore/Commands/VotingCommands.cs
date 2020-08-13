@@ -27,14 +27,13 @@ namespace SeaOfThieves.Commands
             var end = DateTime.Now + timespan;
             var id = RandomString.NextString(6);
 
-            var vote = new Vote(topic, 0, 0, end, 0, ctx.Member.Id, id, new List<ulong>());
-
             var embed = Utility.GenerateVoteEmbed(ctx.Member, DiscordColor.Yellow, topic, end, 0, 0, 0, id);
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
+            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
             vote.Message = message.Id;
             Vote.Save(Bot.BotSettings.VotesXML);
 
@@ -51,15 +50,13 @@ namespace SeaOfThieves.Commands
             var end = DateTime.Now + timespan;
             var id = RandomString.NextString(6);
 
-            var vote = new Vote(topic, 0, 0, end, 0, ctx.Member.Id, id, new List<ulong>());
-
             var embed = Utility.GenerateVoteEmbed(ctx.Member, DiscordColor.Yellow, topic, end, 0, 0, 0, id);
 
-            var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(ctx.Guild.EveryoneRole.Mention, embed: embed);
+            var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync("@everyone", embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
-            vote.Message = message.Id;
+            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
             Vote.Save(Bot.BotSettings.VotesXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
@@ -74,7 +71,7 @@ namespace SeaOfThieves.Commands
             {
                 if (vote.Id == id)
                 {
-                    if (vote.End > DateTime.Now)
+                    if (vote.End < DateTime.Now)
                     {
                         await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Данное голосование уже завершено!");
                         return;
