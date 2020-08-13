@@ -158,7 +158,7 @@ namespace Bot_NetCore.Misc
         {
             var embed = new DiscordEmbedBuilder();
             embed.Title = topic;
-            embed.Description = end < DateTime.Now ? $"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}." : "Голосование завершено!";
+            embed.Description = end > DateTime.Now ? $"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}." : "Голосование завершено!";
             embed.Color = color;
             embed.WithAuthor(author.DisplayName + "#" + author.Discriminator, null, author.AvatarUrl);
             embed.AddField("Участники", participants.ToString(), true);
