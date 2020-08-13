@@ -20,7 +20,7 @@ namespace SeaOfThieves.Commands
         [Command("start")]
         [Description("Начинает голосование за/против")]
         [RequirePermissions(Permissions.KickMembers)]
-        public async Task VoteStart(CommandContext ctx, string duration, [RemainingText] string topic)
+        public async Task VoteStart(CommandContext ctx, [Description("Продолжительность голосования")] string duration, [Description("Тема голосования")] [RemainingText] string topic)
         {
             var timespan = Utility.TimeSpanParse(duration);
             var end = DateTime.Now + timespan;
@@ -47,7 +47,7 @@ namespace SeaOfThieves.Commands
         [Command("end")]
         [Description("Прекращает голосование")]
         [RequirePermissions(Permissions.KickMembers)]
-        public async Task VoteEnd(CommandContext ctx, string id)
+        public async Task VoteEnd(CommandContext ctx, [Description("ID голосования")] string id)
         {
             foreach (var vote in Vote.Votes.Values)
             {
@@ -70,5 +70,7 @@ namespace SeaOfThieves.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не было найдено голосование с указанным ID!");
         }
+        
+        
     }
 }
