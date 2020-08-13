@@ -340,9 +340,11 @@ namespace SeaOfThieves
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {command}",
                     DateTime.Now);
             return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
@@ -1259,19 +1261,21 @@ namespace SeaOfThieves
                 return;
             }
 
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
                 $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
-                $"({e.Context.Member.Id}) пытался запустить команду {e.Command.Name}, но произошла ошибка.",
+                $"({e.Context.Member.Id}) пытался запустить команду {command}, но произошла ошибка.",
                 DateTime.Now);
 
             await e.Context.RespondAsync(
-                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз, если " +
+                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{command}**! Попробуйте ещё раз, если " +
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
             var errChannel = e.Context.Guild.GetChannel(BotSettings.ErrorLog);
 
-            var message = $"**Команда:** {e.Command.Name}\n" +
+            var message = $"**Команда:** {command}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
                           $"**Пользователь:** {e.Context.Member}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
