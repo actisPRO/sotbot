@@ -272,90 +272,6 @@ namespace SeaOfThieves.Commands
             //Console.WriteLine("Message length: " + message.Length);
         }
 
-        [Command("dgenlist")]
-        [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
-        public async Task GenerateDonatorMessage(CommandContext ctx)
-        {
-            var channel = ctx.Guild.GetChannel(Bot.BotSettings.DonatorChannel);
-
-            await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100));
-            await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
-
-            var fso = File.Open("donators_messages.txt", FileMode.OpenOrCreate);
-            var sr = new StreamReader(fso);
-
-            var messageId = sr.ReadLine();
-            while (messageId != null)
-            {
-                try
-                {
-                    await channel.DeleteMessageAsync(await channel.GetMessageAsync(Convert.ToUInt64(messageId)));
-                }
-                catch (NotFoundException)
-                {
-                }
-
-                messageId = sr.ReadLine();
-            }
-
-            sr.Close();
-            fso.Close();
-
-            var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
-            foreach (var donator in DonatorList.Donators.Values)
-                if (!donator.Hidden)
-                    donators.Add(donator.Member, donator.Balance);
-
-            var ordered = donators.OrderBy(x => -x.Value);
-
-            var messageCount = ordered.Count() / 10;
-            if (ordered.Count() % 10 != 0) ++messageCount;
-
-            int position = 0, balance = int.MaxValue, str = 1;
-            var message = "";
-
-            var fs = File.Create("donators_messages.txt");
-            var sw = new StreamWriter(fs);
-
-            foreach (var el in ordered)
-            {
-                if (str % 10 == 0)
-                {
-                    var sendedMessage = await channel.SendMessageAsync(message);
-                    sw.WriteLine(sendedMessage.Id);
-                    message = "";
-                }
-
-                if ((int)Math.Floor(el.Value) < balance)
-                {
-                    ++position;
-                    balance = (int)Math.Floor(el.Value);
-                }
-
-                try
-                {
-                    var user = await ctx.Client.GetUserAsync(el.Key);
-                    message += $"**{position}.** {user.Username}#{user.Discriminator} - *{el.Value}₽*\n";
-                    ++str;
-                }
-                catch (NotFoundException)
-                {
-                }
-            }
-
-            if (str % 10 != 0)
-            {
-                var sendedMessage = await channel.SendMessageAsync(message);
-                sw.WriteLine(sendedMessage.Id);
-            }
-
-            sw.Close();
-            fs.Close();
-
-            await ctx.Message.DeleteAsync();
-        }
-
         //[Command("resetfleet")]
         //public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
         //{
@@ -536,29 +452,6 @@ namespace SeaOfThieves.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":crossed_swords:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
-        }
-
-        [Command("privatemigration")]
-        [RequirePermissions(Permissions.KickMembers)]
-        [Hidden]
-        public async Task PrivateShipsMigration(CommandContext ctx)
-        {
-            foreach (var ship in ShipList.Ships.Values)
-            {
-                foreach (var member in ship.Members.Values)
-                {
-                    try
-                    {
-
-                        await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(await ctx.Guild.GetMemberAsync(member.Id), Permissions.UseVoice);
-                    }
-                    catch (Exception ex)
-                    {
-                        //Do nothing
-                    }
-                }
-                Thread.Sleep(1000);
-            }
         }
     }
 }
