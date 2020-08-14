@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
@@ -390,6 +391,7 @@ namespace SeaOfThieves.Commands
         }
 
         [Command("sethidden")]
+        [Description("Скрывает пользователя в списке донатеров")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task SetHidden(CommandContext ctx, DiscordMember member, bool hidden = true)
         {
@@ -401,6 +403,64 @@ namespace SeaOfThieves.Commands
 
             DonatorList.Donators[member.Id].UpdateHidden(hidden);
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+        }
+
+        [Command("genlist")]
+        [Description("Генерирует список донатеров")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task GenerateList(CommandContext ctx)
+        {
+            var channel = ctx.Guild.GetChannel(Bot.BotSettings.DonatorChannel);
+
+            try
+            {
+                await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100));
+                await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
+            }
+            catch (ArgumentException)
+            {
+                // выбрасывается, если нет сообщений в канале
+            }
+            
+            var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
+            foreach (var donator in DonatorList.Donators.Values)
+                if (!donator.Hidden)
+                    donators.Add(donator.Member, donator.Balance);
+
+            var ordered = donators.OrderBy(x => -x.Value);
+            
+            int position = 0, balance = int.MaxValue, str = 1;
+            var message = "";
+                
+            foreach (var el in ordered)
+            {
+                if (str % 10 == 0)
+                {
+                    var sendedMessage = await channel.SendMessageAsync(message);
+                    message = "";
+                }
+
+                if ((int)Math.Floor(el.Value) < balance)
+                {
+                    ++position;
+                    balance = (int)Math.Floor(el.Value);
+                }
+
+                try
+                {
+                    var user = await ctx.Client.GetUserAsync(el.Key);
+                    message += $"**{position}.** {user.Username}#{user.Discriminator} — {el.Value}₽\n";
+                    ++str;
+                }
+                catch (NotFoundException)
+                {
+                }
+            }
+
+            if (str % 10 != 0)
+            {
+                var sendedMessage = await channel.SendMessageAsync(message);
+            }
         }
     }
 }

@@ -340,9 +340,11 @@ namespace SeaOfThieves
 
         private Task CommandsOnCommandExecuted(CommandExecutionEventArgs e)
         {
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {e.Command.Name}",
+                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {command}",
                     DateTime.Now);
             return Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }
@@ -825,9 +827,10 @@ namespace SeaOfThieves
                 using (var client = new WebClient())
                 {
                     var attachment = e.Message.Attachments[0]; //проверить: не может быть больше 1 вложения в сообщении
-                    client.DownloadFile(attachment.Url, attachment.FileName);
-                    var logMessage = await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(attachment.FileName, message);
-                    File.Delete(attachment.FileName);
+                    var file = $"generated/attachments/{attachment.FileName}";
+                    client.DownloadFile(attachment.Url, file);
+                    var logMessage = await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(file, message);
+                    File.Delete(file);
 
                     using (var fs = new FileStream("generated/attachments_messages.csv", FileMode.Append))
                     using (var sw = new StreamWriter(fs))
@@ -897,14 +900,16 @@ namespace SeaOfThieves
                                         (await e.Guild.GetChannel(BotSettings.AttachmentsLog)
                                             .GetMessageAsync(Convert.ToUInt64(fields[1]))).Attachments[0];
 
+                                    var file = $"generated/attachments/{attachment.FileName}";
+
                                     var client = new WebClient();
-                                    client.DownloadFile(attachment.Url, attachment.FileName);
+                                    client.DownloadFile(attachment.Url, file);
                                     await e.Guild.GetChannel(BotSettings.FulllogChannel)
-                                        .SendFileAsync(attachment.FileName, "**Удаление сообщения**\n" +
+                                        .SendFileAsync(file, "**Удаление сообщения**\n" +
                                                           $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
                                                           $"**Канал:** {e.Channel}\n" +
                                                           $"**Содержимое: ```{e.Message.Content}```**");
-                                    File.Delete(attachment.FileName);
+                                    File.Delete(file);
                                     return;
                                 }
                             }
@@ -1259,19 +1264,21 @@ namespace SeaOfThieves
                 return;
             }
 
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
                 $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
-                $"({e.Context.Member.Id}) пытался запустить команду {e.Command.Name}, но произошла ошибка.",
+                $"({e.Context.Member.Id}) пытался запустить команду {command}, но произошла ошибка.",
                 DateTime.Now);
 
             await e.Context.RespondAsync(
-                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{e.Command.Name}**! Попробуйте ещё раз, если " +
+                $"{BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{command}**! Попробуйте ещё раз, если " +
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
             var errChannel = e.Context.Guild.GetChannel(BotSettings.ErrorLog);
 
-            var message = $"**Команда:** {e.Command.Name}\n" +
+            var message = $"**Команда:** {command}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
                           $"**Пользователь:** {e.Context.Member}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +

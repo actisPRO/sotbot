@@ -340,7 +340,7 @@ namespace SeaOfThieves.Commands
             }
 
             //Чистим голосование после создания рейда
-            if(pollNeeded && pollSucceded)
+            if(pollNeeded || pollSucceded)
             {
                 Thread.Sleep(30000);
                 if (pollSucceded)
