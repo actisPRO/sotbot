@@ -825,9 +825,10 @@ namespace SeaOfThieves
                 using (var client = new WebClient())
                 {
                     var attachment = e.Message.Attachments[0]; //проверить: не может быть больше 1 вложения в сообщении
-                    client.DownloadFile(attachment.Url, attachment.FileName);
-                    var logMessage = await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(attachment.FileName, message);
-                    File.Delete(attachment.FileName);
+                    var file = $"generated/attachments/{attachment.FileName}";
+                    client.DownloadFile(attachment.Url, file);
+                    var logMessage = await e.Guild.GetChannel(BotSettings.AttachmentsLog).SendFileAsync(file, message);
+                    File.Delete(file);
 
                     using (var fs = new FileStream("generated/attachments_messages.csv", FileMode.Append))
                     using (var sw = new StreamWriter(fs))
@@ -897,14 +898,16 @@ namespace SeaOfThieves
                                         (await e.Guild.GetChannel(BotSettings.AttachmentsLog)
                                             .GetMessageAsync(Convert.ToUInt64(fields[1]))).Attachments[0];
 
+                                    var file = $"generated/attachments/{attachment.FileName}";
+
                                     var client = new WebClient();
-                                    client.DownloadFile(attachment.Url, attachment.FileName);
+                                    client.DownloadFile(attachment.Url, file);
                                     await e.Guild.GetChannel(BotSettings.FulllogChannel)
-                                        .SendFileAsync(attachment.FileName, "**Удаление сообщения**\n" +
+                                        .SendFileAsync(file, "**Удаление сообщения**\n" +
                                                           $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
                                                           $"**Канал:** {e.Channel}\n" +
                                                           $"**Содержимое: ```{e.Message.Content}```**");
-                                    File.Delete(attachment.FileName);
+                                    File.Delete(file);
                                     return;
                                 }
                             }
