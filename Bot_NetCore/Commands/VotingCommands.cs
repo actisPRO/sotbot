@@ -33,7 +33,6 @@ namespace Bot_NetCore.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
             var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
-            vote.Message = message.Id;
             Vote.Save(Bot.BotSettings.VotesXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
