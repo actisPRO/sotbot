@@ -136,7 +136,7 @@ namespace Bot_NetCore.Entities
                 var votersEl = new XElement("Voters");
                 foreach (var voter in vote.Voters)
                 {
-                    votersEl.Add(new XElement("Voter", voter, new XAttribute("vote", voter.Value)));
+                    votersEl.Add(new XElement("Voter", voter.Key, new XAttribute("vote", voter.Value)));
                 }
                 newEl.Add(votersEl);
                 
