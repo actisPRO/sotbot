@@ -143,7 +143,7 @@ namespace SeaOfThieves
             Client.InviteCreated += ClientOnInviteCreated;
             Client.InviteDeleted += ClientOnInviteDeleted;
             Client.ClientErrored += ClientOnErrored;
-
+            Client.GuildAvailable += ClientOnGuildAvailable;
 
             //Не используются
             //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
@@ -189,6 +189,11 @@ namespace SeaOfThieves
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
 
             await Task.Delay(-1);
+        }
+
+        private async Task ClientOnGuildAvailable(GuildCreateEventArgs e)
+        {
+            await UpdateMembersCountAsync(Client, e.Guild.MemberCount);
         }
 
         private async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
