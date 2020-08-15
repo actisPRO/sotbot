@@ -661,7 +661,7 @@ namespace Bot_NetCore
             //Проверка на голосование
             if (e.Message.Channel.Id == BotSettings.VotesChannel)
             {
-                var vote = Vote.Votes[e.Message.Id];
+                var vote = Vote.GetByMessageId(e.Message.Id);
 
                 await e.Message.DeleteReactionAsync(e.Emoji, e.User);
 
@@ -694,8 +694,7 @@ namespace Bot_NetCore
                     vote.Yes, 
                     vote.No, 
                     vote.Id);
-
-                Vote.Votes[e.Message.Id] = vote;
+                
                 Vote.Save(BotSettings.VotesXML);
 
                 await e.Message.ModifyAsync(embed: embed);
