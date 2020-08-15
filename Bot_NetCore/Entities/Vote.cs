@@ -17,7 +17,7 @@ namespace Bot_NetCore.Entities
         private DateTime _end;
         private ulong _message;
         private ulong _author;
-        private List<ulong> _voters;
+        private Dictionary<ulong, bool> _voters;
 
         public string Topic
         {
@@ -79,7 +79,7 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        public List<ulong> Voters
+        public Dictionary<ulong, bool> Voters
         {
             get => _voters;
             set
@@ -89,7 +89,7 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        public Vote(string topic, int yes, int no, DateTime end, ulong message, ulong author, string id, List<ulong> voters)
+        public Vote(string topic, int yes, int no, DateTime end, ulong message, ulong author, string id, Dictionary<ulong, bool> voters)
         {
             Id = id;
             
@@ -136,7 +136,7 @@ namespace Bot_NetCore.Entities
                 var votersEl = new XElement("Voters");
                 foreach (var voter in vote.Voters)
                 {
-                    votersEl.Add(new XElement("Voter", voter));
+                    votersEl.Add(new XElement("Voter", voter, new XAttribute("vote", voter.Value)));
                 }
                 newEl.Add(votersEl);
                 
@@ -154,12 +154,12 @@ namespace Bot_NetCore.Entities
 
             foreach (var voteEl in root.Elements())
             {
-                var voters = new List<ulong>();
-                foreach (var voterEl in voteEl.Element("Voters")?.Elements())
-                {
-                    voters.Add(Convert.ToUInt64(voterEl.Value));
-                }
+                var voters = new Dictionary<ulong, bool>();
                 
+                foreach (var voterEl in voteEl.Element("Voters")?.Elements())
+                    voters.Add(Convert.ToUInt64(voterEl.Value), 
+                        voteEl.Attribute("vote") != null ? Convert.ToBoolean(voteEl.Attribute("vote").Value) : false);
+
                 var vote = new Vote(voteEl.Element("Topic").Value, 
                     Convert.ToInt32(voteEl.Element("Yes").Value),
                     Convert.ToInt32(voteEl.Element("No").Value),
