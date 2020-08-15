@@ -672,17 +672,23 @@ namespace Bot_NetCore
                 }
 
                 // Проверка на предыдущий голос
-                if (vote.Voters.Contains(e.User.Id))
+                if (vote.Voters.ContainsKey(e.User.Id))
                 {
                     return;
                 }
 
-                vote.Voters.Add(e.User.Id);
-                var total = vote.Voters.Count;
-
                 if (e.Emoji.GetDiscordName() == ":white_check_mark:")
+                {
+                    vote.Voters.Add(e.User.Id, true);
                     ++vote.Yes;
-                else ++vote.No;
+                }
+                else
+                {
+                    vote.Voters.Add(e.User.Id, false);
+                    ++vote.No;
+                }
+                
+                var total = vote.Voters.Count;
 
                 var author = await e.Guild.GetMemberAsync(vote.Author);
                 var embed = Utility.GenerateVoteEmbed(
