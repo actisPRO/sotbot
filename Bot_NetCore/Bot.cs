@@ -244,7 +244,7 @@ namespace Bot_NetCore
                 {
                     var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
                         .GetMessageAsync(vote.Message);
-                    if (DateTime.Now > vote.End)
+                    if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
                     {
                         if (message.Reactions.Count == 0) continue;
 
@@ -261,7 +261,31 @@ namespace Bot_NetCore
                         await message.ModifyAsync(embed: embed);
                         await message.DeleteAllReactionsAsync();
                     }
-                    else
+                    else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
+                    {
+                        var author = await Client.Guilds[BotSettings.Guild].GetMemberAsync(vote.Author);
+                        var embed = Utility.GenerateVoteEmbed(
+                            author,
+                            vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                            vote.Topic, vote.End,
+                            vote.Voters.Count,
+                            vote.Yes,
+                            vote.No,
+                            vote.Id);
+
+                        var doc = new XDocument();
+                        var root = new XElement("Voters");
+                        foreach (var voter in vote.Voters)
+                            root.Add(new XElement("Voter", voter));
+                        doc.Add(root);
+                        doc.Save($"generated/voters-{vote.Id}.xml");
+
+                        var channel = Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesArchive);
+                        await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
+
+                        await message.DeleteAsync();
+                    }
+                    else if (DateTime.Now < vote.End) // починка голосования
                     {
                         if (message.Reactions.Count < 2)
                         {
@@ -1975,12 +1999,20 @@ namespace Bot_NetCore
         /// </summary>
         public string VotesXML;
 
+        /// <summary>
+        ///     ID канала с активными или недавно закончившимися голосованиями
+        /// </summary>
         public ulong VotesChannel;
 
         /// <summary>
         ///     ID канала "Найти корабль"
         /// </summary>
         public ulong FindShip;
+
+        /// <summary>
+        ///     ID канала с архивом голосований
+        /// </summary>
+        public ulong VotesArchive;
     }
 
     public enum CommandType
