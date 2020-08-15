@@ -1,34 +1,120 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using SeaOfThieves.Exceptions;
 
 namespace Bot_NetCore.Entities
 {
     public class Vote
     {
-        public static Dictionary<ulong, Vote> Votes = new Dictionary<ulong, Vote>();
+        public static Dictionary<string, Vote> Votes = new Dictionary<string, Vote>();
 
-        public string Topic;
-        public int Yes;
-        public int No;
-        public DateTime End;
-        public ulong Message;
-        public ulong Author;
-        public string Id;
-        public List<ulong> Voters;
+        public readonly string Id;
+
+        private string _topic;
+        private int _yes;
+        private int _no;
+        private DateTime _end;
+        private ulong _message;
+        private ulong _author;
+        private List<ulong> _voters;
+
+        public string Topic
+        {
+            get => _topic;
+            set
+            {
+                _topic = value;
+                Votes[Id]._topic = value;
+            }
+        }
+
+        public int Yes
+        {
+            get => _yes;
+            set
+            {
+                _yes = value;
+                Votes[Id]._yes = value;
+            }
+        }
+
+        public int No
+        {
+            get => _no;
+            set
+            {
+                _no = value;
+                Votes[Id]._no = value;
+            }
+        }
+
+        public DateTime End
+        {
+            get => _end;
+            set
+            {
+                _end = value;
+                Votes[Id]._end = value;
+            }
+        }
+
+        public ulong Message
+        {
+            get => _message;
+            set
+            {
+                _message = value;
+                Votes[Id]._message = value;
+            }
+        }
+
+        public ulong Author
+        {
+            get => _author;
+            set
+            {
+                _author = value;
+                Votes[Id]._author = value;
+            }
+        }
+
+        public List<ulong> Voters
+        {
+            get => _voters;
+            set
+            {
+                _voters = value;
+                Votes[Id]._voters = value;
+            }
+        }
 
         public Vote(string topic, int yes, int no, DateTime end, ulong message, ulong author, string id, List<ulong> voters)
         {
-            Topic = topic;
-            Yes = yes;
-            No = no;
-            End = end;
-            Message = message;
-            Author = author;
             Id = id;
-            Voters = voters;
             
-            Votes[message] = this;
+            _topic = topic;
+            _yes = yes;
+            _no = no;
+            _end = end;
+            _message = message;
+            _author = author;
+            _voters = voters;
+            
+            Votes[Id] = this;
+        }
+
+        public static Vote GetByMessageId(ulong messageId)
+        {
+            foreach (var vote in Votes.Values)
+            {
+                if (vote.Message == messageId)
+                {
+                    return vote;
+                }
+            }
+            
+            throw new NotFoundException("Vote not found!");
         }
 
         public static void Save(string fileName)

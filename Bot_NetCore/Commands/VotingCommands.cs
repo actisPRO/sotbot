@@ -76,7 +76,7 @@ namespace Bot_NetCore.Commands
                         return;
                     }
                     
-                    Vote.Votes[vote.Message].End = DateTime.Now;
+                    Vote.Votes[vote.Id].End = DateTime.Now;
                     Vote.Save(Bot.BotSettings.VotesXML);
 
                     await ctx.RespondAsync(
@@ -107,7 +107,7 @@ namespace Bot_NetCore.Commands
                     {
                         
                     }
-                    Vote.Votes.Remove(vote.Message);
+                    Vote.Votes.Remove(vote.Id);
                     Vote.Save(Bot.BotSettings.VotesXML);
 
                     await ctx.RespondAsync(
