@@ -193,8 +193,9 @@ namespace SeaOfThieves
 
         private async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
         {
-            foreach (var ship in ShipList.Ships.Values)
+            for (int i = 0; i < ShipList.Ships.Count; ++i)
             {
+                var ship = ShipList.Ships.Values.ToArray()[i];
                 if ((DateTime.Now - ship.LastUsed).Days >= 3)
                 {
                     var channel = Client.Guilds[BotSettings.Guild].GetChannel(ship.Channel);
