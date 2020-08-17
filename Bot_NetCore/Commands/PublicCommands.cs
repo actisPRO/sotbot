@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Bot_NetCore.Misc;
@@ -11,7 +10,6 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using SeaOfThieves.Entities;
 
 namespace SeaOfThieves.Commands
 {
@@ -219,7 +217,7 @@ namespace SeaOfThieves.Commands
         [Command("createfleet")]
         [Aliases("cf")]
         [Description("Создаёт голосование для создания рейда")]
-        [Cooldown(1, 120, CooldownBucketType.Guild)]
+        [Cooldown(1, 0, CooldownBucketType.Guild)]
         public async Task CreateFleetAsync(CommandContext ctx,
             [Description("Количество кораблей [1 - 5]")] int nShips,
             [Description("Слоты на корабле [2 - 25]")] int slots,
@@ -227,7 +225,7 @@ namespace SeaOfThieves.Commands
         {
             notes = notes.Substring(0, Math.Min(notes.Length, 25));
 
-            if (nShips < 1 || nShips > 5 || 
+            if (nShips < 1 || nShips > 10 || 
                 slots < 2 || slots > 25)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимые параметры рейда!");
@@ -243,12 +241,11 @@ namespace SeaOfThieves.Commands
             var timeOfDay = moscowTime.ToString("HH:mm");
 
             var fleetCreationMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FleetCreationChannel).
-                SendMessageAsync($"**Создатель рейда**: {ctx.Member.Mention} \n\n" +
-                                 $"**Дата рейда**: {moscowTime:dd\\/MM} \n" +
+                SendMessageAsync($"**Дата рейда**: {moscowTime:dd\\/MM} \n" +
                                  $"**Время начала**: {timeOfDay} \n" +
                                  $"**Количество кораблей**: {nShips} \n" +
-                                 $"**Примечание**: {notes}");
-
+                                 $"**Примечание**: {notes} \n\n" +
+                                 $"***Создатель рейда**: {ctx.Member.Mention}*");
 
             if(pollNeeded)
             {
@@ -333,10 +330,11 @@ namespace SeaOfThieves.Commands
 
 
                 //TODO: Check permissions - UPD: Seems to be ok
-                var channel = await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
+                await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
+                await ctx.Guild.CreateChannelAsync($"бронь-инвайты-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
                 for (int i = 0; i < nShips; i++)
-                    await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots);
+                    await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
             }
 
             //Чистим голосование после создания рейда

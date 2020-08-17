@@ -1460,8 +1460,8 @@ namespace SeaOfThieves
                     //Удаляем каналы и категорию
                     if (fleetIsEmpty)
                     {
-                        leftChannel.Parent.Children.ToList().ForEach(x => x.DeleteAsync());
-                        await Task.Delay(2000);
+                        foreach (var emptyChannel in leftChannel.Parent.Children)
+                            await emptyChannel.DeleteAsync();
                         await leftChannel.Parent.DeleteAsync();
                     }
                 }
