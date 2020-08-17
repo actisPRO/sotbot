@@ -247,8 +247,9 @@ namespace Bot_NetCore
 
         private async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
-            foreach (var vote in Vote.Votes.Values)
+            for (int i = 0; i < Vote.Votes.Count; ++i)
             {
+                var vote = Vote.Votes.Values.ToArray()[i];
                 try
                 {
                     var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
