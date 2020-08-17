@@ -14,7 +14,7 @@ namespace SeaOfThieves.Commands
     [Aliases("f")]
     [Description("Модерация участников покинувших сервер")]
     [RequirePermissions(Permissions.KickMembers)]
-    public class ForceModerationCommands
+    public class ForceModerationCommands : BaseCommandModule
     {
         [Command("ban")]
         [RequirePermissions(Permissions.KickMembers)]
