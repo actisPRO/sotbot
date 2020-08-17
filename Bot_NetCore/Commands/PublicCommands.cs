@@ -269,7 +269,7 @@ namespace SeaOfThieves.Commands
                     Description = "Все проголосовавшие должны находиться в Общем канале рейда."
                 };
 
-                embed.WithFooter($"Голосование закончится через {Utility.FormatTimespan(pollTIme)} сек. Нужно {votesNeeded} голос(а).");
+                embed.WithFooter($"Голосование закончится через {Utility.FormatTimespan(pollTIme)}. Нужно {votesNeeded} голос(а).");
 
                 await fleetCreationMessage.ModifyAsync(embed: embed.Build());
 
