@@ -6,7 +6,7 @@ using System.Xml.Linq;
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable UnusedMember.Global
 
-namespace SeaOfThieves.Entities
+namespace Bot_NetCore.Entities
 {
     public static class ShipList
     {

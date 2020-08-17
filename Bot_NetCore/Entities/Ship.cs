@@ -5,7 +5,7 @@ using System.Collections.Generic;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
-namespace SeaOfThieves.Entities
+namespace Bot_NetCore.Entities
 {
     public class Ship
     {

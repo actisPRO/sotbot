@@ -8,9 +8,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
-using SeaOfThieves.Misc;
 
-namespace SeaOfThieves.Commands
+namespace Bot_NetCore.Commands
 {
     [Group("vote")]
     [Aliases("v")]

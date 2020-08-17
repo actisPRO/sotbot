@@ -10,9 +10,9 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using SeaOfThieves.Entities;
+using Bot_NetCore.Entities;
 
-namespace SeaOfThieves.Commands
+namespace Bot_NetCore.Commands
 {
     [Group("private")]
     [Aliases("p")]

@@ -3,7 +3,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable RedundantBaseConstructorCall
 
-namespace SeaOfThieves.Entities
+namespace Bot_NetCore.Entities
 {
     public class ShipExistsException : Exception
     {

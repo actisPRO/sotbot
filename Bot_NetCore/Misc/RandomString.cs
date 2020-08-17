@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace SeaOfThieves.Misc
+namespace Bot_NetCore.Misc
 {
     public static class RandomString
     {

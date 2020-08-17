@@ -5,10 +5,8 @@ using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using SeaOfThieves.Entities;
-using SeaOfThieves.Misc;
 
-namespace SeaOfThieves.Commands
+namespace Bot_NetCore.Commands
 {
     [Group("force")]
     [Aliases("f")]

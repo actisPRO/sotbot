@@ -14,8 +14,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using SeaOfThieves.Commands;
-using SeaOfThieves.Entities;
+using Bot_NetCore.Commands;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext.Exceptions;
@@ -23,12 +22,11 @@ using System.Reflection;
 using DSharpPlus.Interactivity.Enums;
 using Microsoft.VisualBasic.FileIO;
 using DSharpPlus.CommandsNext.Attributes;
-using Bot_NetCore.Commands;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
 
-namespace SeaOfThieves
+namespace Bot_NetCore
 {
     /// <summary>
     ///     Основной класс бота

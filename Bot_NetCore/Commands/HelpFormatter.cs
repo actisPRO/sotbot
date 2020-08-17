@@ -6,7 +6,6 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.Entities;
-using SeaOfThieves;
 
 namespace Bot_NetCore.Commands
 {

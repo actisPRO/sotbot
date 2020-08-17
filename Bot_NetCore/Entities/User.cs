@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SeaOfThieves.Entities
+namespace Bot_NetCore.Entities
 {
     public class User
     {

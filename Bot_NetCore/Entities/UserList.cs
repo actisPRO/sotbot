@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
-using SeaOfThieves.Misc;
+using Bot_NetCore.Misc;
 
-namespace SeaOfThieves.Entities
+namespace Bot_NetCore.Entities
 {
     public static class UserList
     {

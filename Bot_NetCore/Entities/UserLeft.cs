@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
-namespace SeaOfThieves.Entities
+namespace Bot_NetCore.Entities
 {
     public class UserLeft
     {

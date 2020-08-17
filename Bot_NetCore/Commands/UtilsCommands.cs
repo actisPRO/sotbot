@@ -11,9 +11,8 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using SeaOfThieves.Entities;
 
-namespace SeaOfThieves.Commands
+namespace Bot_NetCore.Commands
 {
     public class UtilsCommands : BaseCommandModule
     {
