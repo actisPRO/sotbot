@@ -1241,7 +1241,8 @@ namespace Bot_NetCore
             if (e.Command.Name == "dgenlist" && e.Exception is NotFoundException) return; //костыль
 
             if (e.Exception is ArgumentException &&
-                e.Exception.Message.Contains("Could not convert specified value to given type."))
+                e.Exception.Message.Contains("Could not convert specified value to given type.") ||
+                e.Exception.Message == "Could not find a suitable overload for the command.")
             {
                 await e.Context.RespondAsync(
                     $"{BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных параметров.");
