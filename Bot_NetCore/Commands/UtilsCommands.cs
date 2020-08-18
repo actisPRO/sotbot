@@ -130,7 +130,7 @@ namespace Bot_NetCore.Commands
                     if (!ReportList.Mutes[member.Id].Expired())
                         mute = Utility.FormatTimespan(ReportList.Mutes[member.Id].getRemainingTime());
                 embed.AddField("Мут", mute, true);
-                
+
                 //Заметка
                 var note = "Отсутствует";
                 if (Note.Notes.ContainsKey(member.Id))
@@ -446,7 +446,7 @@ namespace Bot_NetCore.Commands
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
             //Обновляем настроки бота
-            if(Bot.BotSettings.EmissaryMessageId != message.Id)
+            if (Bot.BotSettings.EmissaryMessageId != message.Id)
                 Bot.EditSettings("EmissaryMessageId", message.Id.ToString());
 
             //Убираем все реакции с сообщения

@@ -1,8 +1,8 @@
-﻿using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
 
 namespace Bot_NetCore.Misc
 {
@@ -52,7 +52,7 @@ namespace Bot_NetCore.Misc
         //https://stackoverflow.com/questions/47702094/parse-the-string-26h44m3s-to-timespan-in-c-sharp
         public static TimeSpan TimeSpanParse(string input)
         {
-            var m = Regex.Match(input, @"^((?<days>\d+)d)?((?<hours>\d+)h)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$", 
+            var m = Regex.Match(input, @"^((?<days>\d+)d)?((?<hours>\d+)h)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.RightToLeft);
 
             int ds = m.Groups["days"].Success ? int.Parse(m.Groups["days"].Value) : 0;
@@ -98,7 +98,7 @@ namespace Bot_NetCore.Misc
                     cts = $"{time:%s}";
                     break;
             }
-            
+
             if (cts.EndsWith("1") && !cts.EndsWith("11"))
             {
                 switch (unit)
@@ -113,7 +113,7 @@ namespace Bot_NetCore.Misc
                         return $"{cts} день";
                 }
             }
-            else if ((cts.EndsWith("2") || cts.EndsWith("3") || cts.EndsWith("4")) && 
+            else if ((cts.EndsWith("2") || cts.EndsWith("3") || cts.EndsWith("4")) &&
                 !(cts.EndsWith("12") || cts.EndsWith("13") || cts.EndsWith("14")))
             {
                 switch (unit)
@@ -156,13 +156,13 @@ namespace Bot_NetCore.Misc
         public static DiscordEmbed GenerateVoteEmbed(DiscordMember author, DiscordColor color, string topic, DateTime end, int participants,
             int yes, int no, string id)
         {
-            var embed = new DiscordEmbedBuilder();                
+            var embed = new DiscordEmbedBuilder();
             embed.Description = end > DateTime.Now ? $"Голосование будет завершено {end.ToString("HH:mm:ss dd.MM.yyyy")}." : "Голосование завершено!";
             embed.Title = topic;
             embed.Color = color;
             embed.WithAuthor(author.DisplayName + "#" + author.Discriminator, null, author.AvatarUrl);
             if (participants != 0)
-            {            
+            {
                 embed.AddField("Участники", participants.ToString(), true);
                 var yesPercentage = (int)Math.Round((double)(100 * yes) / participants);
                 embed.AddField("За", $"{yes} ({yesPercentage}%)", true);

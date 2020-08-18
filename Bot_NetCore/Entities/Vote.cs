@@ -92,7 +92,7 @@ namespace Bot_NetCore.Entities
         public Vote(string topic, int yes, int no, DateTime end, ulong message, ulong author, string id, Dictionary<ulong, bool> voters)
         {
             Id = id;
-            
+
             _topic = topic;
             _yes = yes;
             _no = no;
@@ -100,7 +100,7 @@ namespace Bot_NetCore.Entities
             _message = message;
             _author = author;
             _voters = voters;
-            
+
             Votes[Id] = this;
         }
 
@@ -113,7 +113,7 @@ namespace Bot_NetCore.Entities
                     return vote;
                 }
             }
-            
+
             throw new NotFoundException("Vote not found!");
         }
 
@@ -139,10 +139,10 @@ namespace Bot_NetCore.Entities
                     votersEl.Add(new XElement("Voter", voter.Key, new XAttribute("vote", voter.Value)));
                 }
                 newEl.Add(votersEl);
-                
+
                 root.Add(newEl);
             }
-            
+
             doc.Add(root);
             doc.Save(fileName);
         }
@@ -155,12 +155,12 @@ namespace Bot_NetCore.Entities
             foreach (var voteEl in root.Elements())
             {
                 var voters = new Dictionary<ulong, bool>();
-                
+
                 foreach (var voterEl in voteEl.Element("Voters")?.Elements())
-                    voters.Add(Convert.ToUInt64(voterEl.Value), 
+                    voters.Add(Convert.ToUInt64(voterEl.Value),
                         voteEl.Attribute("vote") != null ? Convert.ToBoolean(voteEl.Attribute("vote").Value) : false);
 
-                var vote = new Vote(voteEl.Element("Topic").Value, 
+                var vote = new Vote(voteEl.Element("Topic").Value,
                     Convert.ToInt32(voteEl.Element("Yes").Value),
                     Convert.ToInt32(voteEl.Element("No").Value),
                     Convert.ToDateTime(voteEl.Element("End").Value),

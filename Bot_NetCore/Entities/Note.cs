@@ -8,7 +8,7 @@ namespace Bot_NetCore.Entities
     public class Note
     {
         public static Dictionary<ulong, Note> Notes = new Dictionary<ulong, Note>();
-        
+
         public readonly ulong User;
 
         private string _content;
@@ -43,10 +43,10 @@ namespace Bot_NetCore.Entities
 
             foreach (var noteEl in root.Elements())
             {
-               var note = new Note(Convert.ToUInt64(noteEl.Attribute("user").Value), noteEl.Value);
+                var note = new Note(Convert.ToUInt64(noteEl.Attribute("user").Value), noteEl.Value);
             }
         }
-        
+
         public static void Save(string fileName)
         {
             var doc = new XDocument();
@@ -56,7 +56,7 @@ namespace Bot_NetCore.Entities
             {
                 root.Add(new XElement("Note", note.Content, new XAttribute("user", note.User)));
             }
-            
+
             doc.Add(root);
             doc.Save(fileName);
         }

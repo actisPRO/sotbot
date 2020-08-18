@@ -23,7 +23,7 @@ namespace Bot_NetCore.Entities
         public bool Status { get; internal set; }
         public ulong Channel { get; internal set; }
         public ulong CreationMessage { get; internal set; }
-        
+
         public DateTime LastUsed { get; set; }
         public Dictionary<ulong, ShipMember> Members { get; }
 
@@ -99,7 +99,7 @@ namespace Bot_NetCore.Entities
             LastUsed = dateTime;
             ShipList.Update(Name, this);
         }
-        
+
         public void SetChannel(ulong id)
         {
             Channel = id;

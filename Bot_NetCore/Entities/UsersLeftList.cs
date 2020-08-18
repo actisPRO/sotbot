@@ -19,7 +19,7 @@ namespace Bot_NetCore.Entities
                 {
                     roles.Add(Convert.ToUInt64(role.Value));
                 }
-                
+
                 Users.Add(id, new UserLeft(id, roles));
             }
 
@@ -38,7 +38,7 @@ namespace Bot_NetCore.Entities
                 }
                 root.Add(userEl);
             }
-            
+
             doc.Add(root);
             doc.Save(filename);
         }

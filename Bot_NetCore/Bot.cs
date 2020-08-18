@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using Bot_NetCore.Commands;
+using Bot_NetCore.Entities;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using Bot_NetCore.Commands;
-using Bot_NetCore.Entities;
-using Bot_NetCore.Misc;
-using DSharpPlus.CommandsNext.Exceptions;
-using System.Reflection;
 using DSharpPlus.Interactivity.Enums;
 using Microsoft.VisualBasic.FileIO;
-using DSharpPlus.CommandsNext.Attributes;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -91,7 +91,7 @@ namespace Bot_NetCore
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
-            Note.Read(BotSettings.NotesXML);            
+            Note.Read(BotSettings.NotesXML);
 
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -178,7 +178,7 @@ namespace Bot_NetCore
             clearVotes.Elapsed += ClearAndRepairVotesOnElapsed;
             clearVotes.AutoReset = true;
             clearVotes.Enabled = true;
-            
+
             var deleteShips = new Timer(60000 * 10);
             deleteShips.Elapsed += DeleteShipsOnElapsed;
             deleteShips.AutoReset = true;
@@ -224,18 +224,18 @@ namespace Bot_NetCore
                     {
                         // ничего не делаем, владелец покинул сервер
                     }
-                    
+
                     ship.Delete();
                     ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
                     await channel.DeleteAsync();
-                    
+
                     var doc = XDocument.Load("actions.xml");
                     foreach (var action in doc.Element("actions").Elements("action"))
                         if (Convert.ToUInt64(action.Value) == ownerId)
                             action.Remove();
                     doc.Save("actions.xml");
-                    
+
                     await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
                         "**Удаление корабля**\n\n" +
                         $"**Модератор:** {Client.CurrentUser}\n" +
@@ -722,20 +722,20 @@ namespace Bot_NetCore
                     vote.Voters.Add(e.User.Id, false);
                     ++vote.No;
                 }
-                
+
                 var total = vote.Voters.Count;
 
                 var author = await e.Guild.GetMemberAsync(vote.Author);
                 var embed = Utility.GenerateVoteEmbed(
-                    author, 
-                    DiscordColor.Yellow, 
-                    vote.Topic, 
+                    author,
+                    DiscordColor.Yellow,
+                    vote.Topic,
                     vote.End,
-                    vote.Voters.Count, 
-                    vote.Yes, 
-                    vote.No, 
+                    vote.Voters.Count,
+                    vote.Yes,
+                    vote.No,
                     vote.Id);
-                
+
                 Vote.Save(BotSettings.VotesXML);
 
                 await e.Message.ModifyAsync(embed: embed);
@@ -1414,13 +1414,13 @@ namespace Bot_NetCore
                     {
                         if (message.Pinned) continue; // автор закрепленного сообщения не должен учитываться
                         if (membersLookingForTeam.Contains(message.Author.Id)) continue; // автор сообщения уже мог быть добавлен в лист
-                        
+
                         membersLookingForTeam.Add(message.Author.Id);
                     }
-                    
+
                     var possibleChannels = new List<DiscordChannel>();
                     foreach (var ship in shipCategory.Children)
-                        if (ship.Users.Count() < ship.UserLimit)                        
+                        if (ship.Users.Count() < ship.UserLimit)
                             foreach (var user in ship.Users)
                                 if (membersLookingForTeam.Contains(user.Id))
                                     possibleChannels.Add(ship);
@@ -1432,7 +1432,7 @@ namespace Bot_NetCore
                         await m.SendMessageAsync($"{BotSettings.ErrorEmoji} Не удалось найти подходящий корабль.");
                         return;
                     }
-                    
+
                     var random = new Random();
                     var rShip = random.Next(0, possibleChannels.Count);
 
@@ -2024,7 +2024,7 @@ namespace Bot_NetCore
         ///     Путь до файла с заметками о пользователях.
         /// </summary>
         public string NotesXML;
-      
+
         ///     ID канала с архивом голосований
         /// </summary>
         public ulong VotesArchive;

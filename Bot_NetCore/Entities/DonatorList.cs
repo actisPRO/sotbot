@@ -38,7 +38,7 @@ namespace Bot_NetCore.Entities
                 if (donator.Element("date") != null) date = DateTime.ParseExact(donator.Element("date").Value, "dd-MM-yyyy", null);
                 var created =
                     new Donator(Convert.ToUInt64(donator.Element("id").Value),
-                        Convert.ToUInt64(donator.Element("colorRole").Value), 
+                        Convert.ToUInt64(donator.Element("colorRole").Value),
                         date,
                         Convert.ToDouble(donator.Element("balance").Value));
                 foreach (var friend in donator.Elements("friend")) created.AddFriend(Convert.ToUInt64(friend.Value));

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bot_NetCore.Entities;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
-using Bot_NetCore.Entities;
 
 namespace Bot_NetCore.Commands
 {
@@ -47,10 +47,10 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменена цена услуги!");
-            
+
             PriceList.SaveToXML(Bot.BotSettings.PriceListXML);
         }
-        
+
         [Command("getprices")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task GetPrices(CommandContext ctx)
@@ -68,7 +68,7 @@ namespace Bot_NetCore.Commands
 
             await ctx.RespondAsync(embed: embed.Build());
         }
-        
+
         [Command("add")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task Add(CommandContext ctx, DiscordMember member, int balance)
@@ -77,7 +77,7 @@ namespace Bot_NetCore.Commands
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
             var message = $"Спасибо за поддержку нашего сообщества! **Ваш баланс: {balance} ₽.\n" +
                           $"Доступные функции:**\n";
-            
+
             if (balance >= prices.ColorPrice)
             {
                 var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
@@ -97,7 +97,7 @@ namespace Bot_NetCore.Commands
             if (balance >= prices.FriendsPrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
                            $"• `{Bot.BotSettings.Prefix}donator unfriend` — убирает у друга ваш цвет.";
-            
+
             await member.SendMessageAsync(message);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
         }
@@ -156,14 +156,14 @@ namespace Bot_NetCore.Commands
             }
             catch (NullReferenceException)
             {
-                
+
             }
             DonatorList.Donators[member.Id].Remove();
             DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён донатер!");
         }
-        
+
         [Command("color")]
         [Description("Устанавливает донатерский цвет. Формат: 000000")]
         public async Task Color(CommandContext ctx, string color)
@@ -421,17 +421,17 @@ namespace Bot_NetCore.Commands
             {
                 // выбрасывается, если нет сообщений в канале
             }
-            
+
             var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
             foreach (var donator in DonatorList.Donators.Values)
                 if (!donator.Hidden)
                     donators.Add(donator.Member, donator.Balance);
 
             var ordered = donators.OrderBy(x => -x.Value);
-            
+
             int position = 0, balance = int.MaxValue, str = 1;
             var message = "";
-                
+
             foreach (var el in ordered)
             {
                 if (str % 10 == 0)

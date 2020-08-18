@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -10,7 +11,6 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using Bot_NetCore.Entities;
 
 namespace Bot_NetCore.Commands
 {
@@ -135,10 +135,10 @@ namespace Bot_NetCore.Commands
                 .OrderByDescending(x => x.Value.CurrentMonthActiveCount).ToList()
                 .FindAll(x =>
                 {
-                        if (!x.Value.Active)
-                            return false;
-                        //guild.GetMemberAsync(x.Key);
-                        return true;
+                    if (!x.Value.Active)
+                        return false;
+                    //guild.GetMemberAsync(x.Key);
+                    return true;
                 })
                 .Take(10).ToList();
 

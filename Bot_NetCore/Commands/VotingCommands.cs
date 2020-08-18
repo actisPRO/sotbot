@@ -37,7 +37,7 @@ namespace Bot_NetCore.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
         }
-        
+
         [Command("starteveryone")]
         [Aliases("starte")]
         [Description("Начинает голосование за/против")]
@@ -74,7 +74,7 @@ namespace Bot_NetCore.Commands
                         await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Данное голосование уже завершено!");
                         return;
                     }
-                    
+
                     Vote.Votes[vote.Id].End = DateTime.Now;
                     Vote.Save(Bot.BotSettings.VotesXML);
 
@@ -104,7 +104,7 @@ namespace Bot_NetCore.Commands
                     }
                     catch (NotFoundException)
                     {
-                        
+
                     }
                     Vote.Votes.Remove(vote.Id);
                     Vote.Save(Bot.BotSettings.VotesXML);

@@ -14,7 +14,7 @@ namespace Bot_NetCore.Entities
         public static void SaveToXML(string fileName)
         {
             var doc = new XDocument();
-            
+
             var root = new XElement("Reports");
 
             var rElement = new XElement("Mutes");

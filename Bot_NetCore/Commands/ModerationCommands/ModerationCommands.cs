@@ -38,7 +38,8 @@ namespace Bot_NetCore.Commands
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
 
             //Log deleted messages
-            Task taskA = new Task(async () => {
+            Task taskA = new Task(async () =>
+            {
                 List<string> splitMessages = new List<string>();
                 var singleMessage = "";
 
@@ -261,7 +262,7 @@ namespace Bot_NetCore.Commands
                 ctx.Member.Id,
                 reason);
 
-            if(mute.ReportDuration.TotalSeconds < 1)
+            if (mute.ReportDuration.TotalSeconds < 1)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
                 return;
@@ -595,7 +596,7 @@ namespace Bot_NetCore.Commands
 
             var message = $"{Bot.BotSettings.OkEmoji} Успешно добавлена заметка о пользователе!";
             if (oldContent != null) message += " **Предыдущая заметка:** " + oldContent;
-            
+
             await ctx.RespondAsync(message);
         }
 

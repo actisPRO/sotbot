@@ -225,7 +225,7 @@ namespace Bot_NetCore.Commands
         {
             notes = notes.Substring(0, Math.Min(notes.Length, 25));
 
-            if (nShips < 1 || nShips > 10 || 
+            if (nShips < 1 || nShips > 10 ||
                 slots < 2 || slots > 25)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимые параметры рейда!");
@@ -247,7 +247,7 @@ namespace Bot_NetCore.Commands
                                  $"**Примечание**: {notes} \n\n" +
                                  $"***Создатель рейда**: {ctx.Member.Mention}*");
 
-            if(pollNeeded)
+            if (pollNeeded)
             {
                 var pollTIme = new TimeSpan(0, 2, 0);
 
@@ -314,7 +314,7 @@ namespace Bot_NetCore.Commands
             }
 
             //Если капитан или голосование успешное
-            if(pollNeeded == false || (pollNeeded && pollSucceded))
+            if (pollNeeded == false || (pollNeeded && pollSucceded))
             {
                 var rootFleetCategory = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory);
 
@@ -338,7 +338,7 @@ namespace Bot_NetCore.Commands
             }
 
             //Чистим голосование после создания рейда
-            if(pollNeeded || pollSucceded)
+            if (pollNeeded || pollSucceded)
             {
                 Thread.Sleep(30000);
                 if (pollSucceded)

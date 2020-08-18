@@ -25,9 +25,9 @@ namespace Bot_NetCore.Entities
         public static Ship GetOwnedShip(ulong id)
         {
             foreach (var ship in Ships.Values)
-            foreach (var member in ship.Members.Values)
-                if (member.Id == id && member.Type == MemberType.Owner)
-                    return ship;
+                foreach (var member in ship.Members.Values)
+                    if (member.Id == id && member.Type == MemberType.Owner)
+                        return ship;
 
             return null;
         }
@@ -90,7 +90,7 @@ namespace Bot_NetCore.Entities
                     if (shipE.Element("lastUsed") != null) lastUsed = Convert.ToDateTime(shipE.Element("lastUsed").Value);
 
                     var ship = Ship.Create(
-                        shipE.Attribute("name").Value, 
+                        shipE.Attribute("name").Value,
                         Convert.ToUInt64(shipE.Element("channel").Value),
                         Convert.ToUInt64(creationMessage), lastUsed);
 

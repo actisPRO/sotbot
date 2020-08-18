@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -10,7 +11,6 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using Bot_NetCore.Entities;
 
 namespace Bot_NetCore.Commands
 {
@@ -554,7 +554,7 @@ namespace Bot_NetCore.Commands
 
         [Command("shipinfo")]
         [RequirePermissions(Permissions.KickMembers)]
-        public async Task ShipInfo(CommandContext ctx, [RemainingText]string name)
+        public async Task ShipInfo(CommandContext ctx, [RemainingText] string name)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -591,7 +591,7 @@ namespace Bot_NetCore.Commands
             var msgContent = "";
 
 
-                embed.Color = new DiscordColor("#00FF00");
+            embed.Color = new DiscordColor("#00FF00");
 
             var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
 

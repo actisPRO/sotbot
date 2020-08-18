@@ -85,7 +85,7 @@ namespace Bot_NetCore.Commands
                            .OrderBy(x => x.Name)
                            .Select(x => $"{Formatter.InlineCode(x.Name)}"));
 
-            var fieldValue = string.Join("\n\n", new string []{ withoutDescription, withDescription });
+            var fieldValue = string.Join("\n\n", new string[] { withoutDescription, withDescription });
 
             this.EmbedBuilder.AddField(this.Command != null ? "Подкоманды" : "Команды", fieldValue, false);
 

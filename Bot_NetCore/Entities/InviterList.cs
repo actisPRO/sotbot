@@ -21,11 +21,11 @@ namespace Bot_NetCore.Entities
             foreach (var inviter in Inviters.Values)
             {
                 var iElement = new XElement(
-                    "inviter", 
-                    new XAttribute("id", inviter.InviterId), 
+                    "inviter",
+                    new XAttribute("id", inviter.InviterId),
                     new XAttribute("active", inviter.Active)
                 );
-                foreach (var referral in inviter.Referrals) 
+                foreach (var referral in inviter.Referrals)
                     iElement.Add(new XElement(
                                     "referral",
                                     new XAttribute("id", referral.Value.Id),
@@ -72,7 +72,7 @@ namespace Bot_NetCore.Entities
                 var elem = new Inviter(Convert.ToUInt64(inviter.Attribute("id").Value),
                                           Convert.ToBoolean(inviter.Attribute("active").Value));
 
-                foreach (var referral in inviter.Elements("referral")) 
+                foreach (var referral in inviter.Elements("referral"))
                     elem.AddReferral(
                         Convert.ToUInt64(referral.Attribute("id").Value),
                         Convert.ToBoolean(referral.Attribute("active").Value),

@@ -46,7 +46,7 @@ namespace Bot_NetCore.Entities
                 }
 
                 var dateVal = Convert.ToDateTime(date.Attribute("date").Value);
-                Prices[dateVal] = 
+                Prices[dateVal] =
                     new DateServices(dateVal, colorPrice, wantedPrice, roleRenamePrice, friendsPrice);
             }
         }
@@ -63,10 +63,10 @@ namespace Bot_NetCore.Entities
                 dateEl.Add(new XElement("Service", date.WantedPrice, new XAttribute("id", "wanted")));
                 dateEl.Add(new XElement("Service", date.RoleNamePrice, new XAttribute("id", "role_rename")));
                 dateEl.Add(new XElement("Service", date.FriendsPrice, new XAttribute("id", "friends")));
-                
+
                 root.Add(dateEl);
             }
-            
+
             doc.Add(root);
             doc.Save(fileName);
         }
