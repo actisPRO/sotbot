@@ -291,14 +291,18 @@ namespace Bot_NetCore.Commands
             }
             */
 
-            if (DonatorList.Donators[member.Id].Friends.Contains(ctx.Member.Id))
+            //Удаление роли которую дали
+            if (DonatorList.Donators.ContainsKey(member.Id) &&
+                DonatorList.Donators[member.Id].Friends.Contains(ctx.Member.Id))
             {
                 DonatorList.Donators[member.Id].RemoveFriend(ctx.Member.Id);
                 await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[member.Id].ColorRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Friends.Contains(member.Id))
+            //Удаление своей роли
+            if (DonatorList.Donators.ContainsKey(ctx.Member.Id) &&
+                DonatorList.Donators[ctx.Member.Id].Friends.Contains(member.Id))
             {
                 DonatorList.Donators[ctx.Member.Id].RemoveFriend(member.Id);
                 await member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
