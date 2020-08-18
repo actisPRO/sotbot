@@ -7,7 +7,7 @@ namespace Bot_NetCore.Entities
 {
     public class Note
     {
-        public Dictionary<ulong, Note> Notes = new Dictionary<ulong, Note>();
+        public static Dictionary<ulong, Note> Notes = new Dictionary<ulong, Note>();
         
         public readonly ulong User;
 
@@ -30,7 +30,7 @@ namespace Bot_NetCore.Entities
             Notes[User] = this;
         }
 
-        public void Read(string fileName)
+        public static void Read(string fileName)
         {
             if (!File.Exists(fileName))
             {
@@ -47,7 +47,7 @@ namespace Bot_NetCore.Entities
             }
         }
         
-        public void Save(string fileName)
+        public static void Save(string fileName)
         {
             var doc = new XDocument();
             var root = new XElement("Notes");

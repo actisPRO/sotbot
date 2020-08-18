@@ -91,6 +91,7 @@ namespace Bot_NetCore
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
+            Note.Read(BotSettings.NotesXML);            
 
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -1986,6 +1987,11 @@ namespace Bot_NetCore
         ///     ID канала "Найти корабль"
         /// </summary>
         public ulong FindShip;
+
+        /// <summary>
+        ///     Путь до файла с заметками о пользователях.
+        /// </summary>
+        public string NotesXML;
     }
 
     public enum CommandType
