@@ -457,9 +457,9 @@ namespace Bot_NetCore.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_crossbones:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":bone:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":fish:"));
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":crossed_swords:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":axe:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
         }

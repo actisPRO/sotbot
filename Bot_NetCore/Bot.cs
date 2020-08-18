@@ -673,13 +673,13 @@ namespace Bot_NetCore
                     case ":gem:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryAthenaRole));
                         break;
-                    case ":skull_crossbones:":
+                    case ":bone:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.EmissaryReaperBonesRole));
                         break;
                     case ":fish:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.HuntersRole));
                         break;
-                    case ":crossed_swords:":
+                    case ":axe:":
                         await user.GrantRoleAsync(e.Channel.Guild.GetRole(BotSettings.ArenaRole));
                         break;
                     default:
