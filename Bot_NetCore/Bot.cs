@@ -1013,7 +1013,12 @@ namespace Bot_NetCore
 
             //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
             if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
+            {
+                if (!InviterList.Inviters.ContainsKey(0))
+                    InviterList.Inviters[0] = new Inviter(0, false);
+
                 InviterList.Inviters[0].AddReferral(e.Member.Id, false);
+            }
 
             //При выходе обновляем реферала на неактив.
             InviterList.Inviters.ToList().Where(i => i.Value.Referrals.ContainsKey(e.Member.Id)).ToList()
