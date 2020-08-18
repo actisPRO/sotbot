@@ -582,6 +582,23 @@ namespace Bot_NetCore.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снят бан c {member.Mention}!");
         }
 
+        [Command("note")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task AddNote(CommandContext ctx, DiscordUser user, [RemainingText] string content)
+        {
+            string oldContent = null;
+            if (Note.Notes.ContainsKey(user.Id))
+                oldContent = Note.Notes[user.Id].Content;
+
+            var note = new Note(user.Id, content);
+            Note.Save(Bot.BotSettings.NotesXML);
+
+            var message = $"{Bot.BotSettings.OkEmoji} Успешно добавлена заметка о пользователе!";
+            if (oldContent != null) message += " **Предыдущая заметка:** " + oldContent;
+            
+            await ctx.RespondAsync(message);
+        }
+
         /// <summary>
         ///     Исключает участника и отправляет уведомление в лог и в ЛС
         /// </summary>

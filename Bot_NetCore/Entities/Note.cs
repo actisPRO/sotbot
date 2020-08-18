@@ -25,7 +25,7 @@ namespace Bot_NetCore.Entities
         public Note(ulong user, string content)
         {
             User = user;
-            Content = content;
+            _content = content;
 
             Notes[User] = this;
         }

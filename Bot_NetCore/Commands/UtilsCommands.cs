@@ -130,6 +130,12 @@ namespace Bot_NetCore.Commands
                     if (!ReportList.Mutes[member.Id].Expired())
                         mute = Utility.FormatTimespan(ReportList.Mutes[member.Id].getRemainingTime());
                 embed.AddField("Мут", mute, true);
+                
+                //Заметка
+                var note = "Отсутствует";
+                if (Note.Notes.ContainsKey(member.Id))
+                    note = Note.Notes[member.Id].Content;
+                embed.AddField("Заметка", note, false);
 
                 embed.WithFooter("(*) Не принял после разблокировки");
 
@@ -209,6 +215,12 @@ namespace Bot_NetCore.Commands
                     if (!ReportList.Mutes[user.Id].Expired())
                         mute = Utility.FormatTimespan(ReportList.Mutes[user.Id].getRemainingTime());
                 embed.AddField("Мут", mute, true);
+
+                //Заметка
+                var note = "Отсутствует";
+                if (Note.Notes.ContainsKey(user.Id))
+                    note = Note.Notes[user.Id].Content;
+                embed.AddField("Заметка", note, false);
 
                 embed.WithFooter("(*) Не принял после разблокировки");
 
