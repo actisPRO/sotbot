@@ -32,7 +32,7 @@ namespace Bot_NetCore.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
-            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
+            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new Dictionary<ulong, bool>());
             Vote.Save(Bot.BotSettings.VotesXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
@@ -54,7 +54,7 @@ namespace Bot_NetCore.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
-            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new List<ulong>());
+            var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new Dictionary<ulong, bool>());
             Vote.Save(Bot.BotSettings.VotesXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Голосование запущено!");
@@ -75,7 +75,7 @@ namespace Bot_NetCore.Commands
                         return;
                     }
                     
-                    Vote.Votes[vote.Message].End = DateTime.Now;
+                    Vote.Votes[vote.Id].End = DateTime.Now;
                     Vote.Save(Bot.BotSettings.VotesXML);
 
                     await ctx.RespondAsync(
@@ -106,7 +106,7 @@ namespace Bot_NetCore.Commands
                     {
                         
                     }
-                    Vote.Votes.Remove(vote.Message);
+                    Vote.Votes.Remove(vote.Id);
                     Vote.Save(Bot.BotSettings.VotesXML);
 
                     await ctx.RespondAsync(

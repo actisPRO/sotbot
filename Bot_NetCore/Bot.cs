@@ -255,7 +255,7 @@ namespace Bot_NetCore
                 {
                     var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
                         .GetMessageAsync(vote.Message);
-                    if (DateTime.Now > vote.End)
+                    if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
                     {
                         if (message.Reactions.Count == 0) continue;
 
@@ -272,7 +272,31 @@ namespace Bot_NetCore
                         await message.ModifyAsync(embed: embed);
                         await message.DeleteAllReactionsAsync();
                     }
-                    else
+                    else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
+                    {
+                        var author = await Client.Guilds[BotSettings.Guild].GetMemberAsync(vote.Author);
+                        var embed = Utility.GenerateVoteEmbed(
+                            author,
+                            vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                            vote.Topic, vote.End,
+                            vote.Voters.Count,
+                            vote.Yes,
+                            vote.No,
+                            vote.Id);
+
+                        var doc = new XDocument();
+                        var root = new XElement("Voters");
+                        foreach (var voter in vote.Voters)
+                            root.Add(new XElement("Voter", voter));
+                        doc.Add(root);
+                        doc.Save($"generated/voters-{vote.Id}.xml");
+
+                        var channel = Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesArchive);
+                        await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
+
+                        await message.DeleteAsync();
+                    }
+                    else if (DateTime.Now < vote.End) // починка голосования
                     {
                         if (message.Reactions.Count < 2)
                         {
@@ -672,7 +696,7 @@ namespace Bot_NetCore
             //Проверка на голосование
             if (e.Message.Channel.Id == BotSettings.VotesChannel)
             {
-                var vote = Vote.Votes[e.Message.Id];
+                var vote = Vote.GetByMessageId(e.Message.Id);
 
                 await e.Message.DeleteReactionAsync(e.Emoji, e.User);
 
@@ -683,17 +707,23 @@ namespace Bot_NetCore
                 }
 
                 // Проверка на предыдущий голос
-                if (vote.Voters.Contains(e.User.Id))
+                if (vote.Voters.ContainsKey(e.User.Id))
                 {
                     return;
                 }
 
-                vote.Voters.Add(e.User.Id);
-                var total = vote.Voters.Count;
-
                 if (e.Emoji.GetDiscordName() == ":white_check_mark:")
+                {
+                    vote.Voters.Add(e.User.Id, true);
                     ++vote.Yes;
-                else ++vote.No;
+                }
+                else
+                {
+                    vote.Voters.Add(e.User.Id, false);
+                    ++vote.No;
+                }
+                
+                var total = vote.Voters.Count;
 
                 var author = await e.Guild.GetMemberAsync(vote.Author);
                 var embed = Utility.GenerateVoteEmbed(
@@ -705,8 +735,7 @@ namespace Bot_NetCore
                     vote.Yes, 
                     vote.No, 
                     vote.Id);
-
-                Vote.Votes[e.Message.Id] = vote;
+                
                 Vote.Save(BotSettings.VotesXML);
 
                 await e.Message.ModifyAsync(embed: embed);
@@ -1981,6 +2010,9 @@ namespace Bot_NetCore
         /// </summary>
         public string VotesXML;
 
+        /// <summary>
+        ///     ID канала с активными или недавно закончившимися голосованиями
+        /// </summary>
         public ulong VotesChannel;
 
         /// <summary>
@@ -1992,6 +2024,10 @@ namespace Bot_NetCore
         ///     Путь до файла с заметками о пользователях.
         /// </summary>
         public string NotesXML;
+      
+        ///     ID канала с архивом голосований
+        /// </summary>
+        public ulong VotesArchive;
     }
 
     public enum CommandType
