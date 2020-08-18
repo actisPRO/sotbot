@@ -91,6 +91,7 @@ namespace Bot_NetCore
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
+            Note.Read(BotSettings.NotesXML);            
 
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -196,19 +197,33 @@ namespace Bot_NetCore
 
         private async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
         {
-            foreach (var ship in ShipList.Ships.Values)
+            for (int i = 0; i < ShipList.Ships.Count; ++i)
             {
+                var ship = ShipList.Ships.Values.ToArray()[i];
                 if ((DateTime.Now - ship.LastUsed).Days >= 3)
                 {
                     var channel = Client.Guilds[BotSettings.Guild].GetChannel(ship.Channel);
 
-                    DiscordMember owner = null;
+                    ulong ownerId = 0;
                     foreach (var member in ship.Members.Values)
                         if (member.Type == MemberType.Owner)
                         {
-                            owner = await Client.Guilds[BotSettings.Guild].GetMemberAsync(member.Id);
+                            ownerId = member.Id;
                             break;
                         }
+
+                    DiscordMember owner = null;
+                    try
+                    {
+                        owner = await Client.Guilds[BotSettings.Guild].GetMemberAsync(ownerId);
+                        await owner.SendMessageAsync(
+                            "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
+                            "не планируете пользоваться этой функцией**");
+                    }
+                    catch (NotFoundException)
+                    {
+                        // ничего не делаем, владелец покинул сервер
+                    }
                     
                     ship.Delete();
                     ShipList.SaveToXML(Bot.BotSettings.ShipXML);
@@ -217,14 +232,9 @@ namespace Bot_NetCore
                     
                     var doc = XDocument.Load("actions.xml");
                     foreach (var action in doc.Element("actions").Elements("action"))
-                        if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
+                        if (Convert.ToUInt64(action.Value) == ownerId)
                             action.Remove();
                     doc.Save("actions.xml");
-
-                    if (owner != null)
-                        await owner.SendMessageAsync(
-                            "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
-                            "не планируете пользоваться этой функцией**");
                     
                     await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.ModlogChannel).SendMessageAsync(
                         "**Удаление корабля**\n\n" +
@@ -238,8 +248,9 @@ namespace Bot_NetCore
 
         private async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
-            foreach (var vote in Vote.Votes.Values)
+            for (int i = 0; i < Vote.Votes.Count; ++i)
             {
+                var vote = Vote.Votes.Values.ToArray()[i];
                 try
                 {
                     var message = await Client.Guilds[BotSettings.Guild].GetChannel(BotSettings.VotesChannel)
@@ -2010,6 +2021,10 @@ namespace Bot_NetCore
         public ulong FindShip;
 
         /// <summary>
+        ///     Путь до файла с заметками о пользователях.
+        /// </summary>
+        public string NotesXML;
+      
         ///     ID канала с архивом голосований
         /// </summary>
         public ulong VotesArchive;
