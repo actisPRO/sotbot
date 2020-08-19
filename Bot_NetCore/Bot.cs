@@ -1278,12 +1278,6 @@ namespace Bot_NetCore
                 return;
             }
 
-            if (e.Exception is InvalidOperationException)
-            {
-                await e.Context.RespondAsync($"{BotSettings.ErrorEmoji} Не была найдена подкоманда.");
-                return;
-            }
-
             if (e.Exception is ChecksFailedException)
             {
                 var msg = $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: ";
