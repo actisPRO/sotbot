@@ -83,7 +83,7 @@ namespace Bot_NetCore
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
-            DonatorList.ReadFromXML(BotSettings.DonatorXML);
+            DonatorList.ReadFromXML("donators.old.xml");
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
@@ -92,6 +92,7 @@ namespace Bot_NetCore
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
             Note.Read(BotSettings.NotesXML);
+            Donator.Read(BotSettings.DonatorXML);
 
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
