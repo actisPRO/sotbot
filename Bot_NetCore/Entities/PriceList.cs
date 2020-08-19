@@ -61,7 +61,7 @@ namespace Bot_NetCore.Entities
                 var dateEl = new XElement("Date", new XAttribute("date", date.Date.ToString("dd.MM.yyyy")));
                 dateEl.Add(new XElement("Service", date.ColorPrice, new XAttribute("id", "color")));
                 dateEl.Add(new XElement("Service", date.WantedPrice, new XAttribute("id", "wanted")));
-                dateEl.Add(new XElement("Service", date.RoleNamePrice, new XAttribute("id", "role_rename")));
+                dateEl.Add(new XElement("Service", date.RolePrice, new XAttribute("id", "role_rename")));
                 dateEl.Add(new XElement("Service", date.FriendsPrice, new XAttribute("id", "friends")));
 
                 root.Add(dateEl);
