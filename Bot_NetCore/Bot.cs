@@ -982,6 +982,8 @@ namespace Bot_NetCore
             {
                 BotSettings.CodexRole,
                 BotSettings.FleetCodexRole,
+                BotSettings.MuteRole,
+                BotSettings.VoiceMuteRole,
                 BotSettings.EmissaryAthenaRole,
                 BotSettings.EmissaryGoldhoadersRole,
                 BotSettings.EmissaryReaperBonesRole,
