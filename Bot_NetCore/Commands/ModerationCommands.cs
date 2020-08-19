@@ -10,6 +10,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity;
 
 namespace Bot_NetCore.Commands
 {
@@ -570,38 +571,6 @@ namespace Bot_NetCore.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {user.Username}#{user.Discriminator}!");
         }
 
-        [Command("wlist")]
-        [Aliases("wl")]
-        [RequirePermissions(Permissions.KickMembers)]
-        public async Task WList(CommandContext ctx, DiscordUser member)
-        {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
-            var count = 0;
-            if (!UserList.Users.ContainsKey(member.Id)) count = 0;
-            else count = UserList.Users[member.Id].Warns.Count;
-
-            if (count == 0)
-            {
-                await ctx.RespondAsync("*Предупреждения отсутствуют.*");
-                return;
-            }
-
-            var response = "*" + member + "*\n";
-            for (var i = 1; i <= count; ++i)
-            {
-                var warn = UserList.Users[member.Id].Warns[i - 1];
-                response +=
-                    $"**{i}.** {warn.Reason}. **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date}. **ID:** {warn.Id}.\n";
-            }
-
-            await ctx.RespondAsync(response);
-        }
-
         [Command("unwarn")]
         [Aliases("uw")]
         [RequirePermissions(Permissions.KickMembers)]
@@ -801,23 +770,6 @@ namespace Bot_NetCore.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снят бан c {member.Mention}!");
         }
 
-        [Command("note")]
-        [RequirePermissions(Permissions.KickMembers)]
-        public async Task AddNote(CommandContext ctx, DiscordUser user, [RemainingText] string content)
-        {
-            string oldContent = null;
-            if (Note.Notes.ContainsKey(user.Id))
-                oldContent = Note.Notes[user.Id].Content;
-
-            var note = new Note(user.Id, content);
-            Note.Save(Bot.BotSettings.NotesXML);
-
-            var message = $"{Bot.BotSettings.OkEmoji} Успешно добавлена заметка о пользователе!";
-            if (oldContent != null) message += " **Предыдущая заметка:** " + oldContent;
-
-            await ctx.RespondAsync(message);
-        }
-
         /// <summary>
         ///     Исключает участника и отправляет уведомление в лог и в ЛС
         /// </summary>
@@ -878,6 +830,240 @@ namespace Bot_NetCore.Commands
             {
                 //user can block the bot
             }
+        }
+    }
+
+    [Group("whois")]
+    [Description("Информация о пользователе.")]
+    [RequirePermissions(Permissions.KickMembers)]
+    public class WhoisCommand : BaseCommandModule
+    {
+        [GroupCommand]
+        public async Task WhoIs(CommandContext ctx, [Description("Участник сервера")] DiscordUser user)
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            try
+            {
+                DiscordMember member = null;
+                try
+                {
+                    member = await ctx.Guild.GetMemberAsync(user.Id);
+                }
+                catch
+                {
+
+                }
+
+                var embed = new DiscordEmbedBuilder();
+                embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
+                embed.AddField("ID", user.Id.ToString(), true);
+                embed.WithColor(DiscordColor.Blurple);
+
+                if (member == null)
+                    embed.WithDescription("Покинул сервер");
+                else
+                    //Имя на сервере
+                    embed.AddField("Имя на сервере", member.DisplayName);
+
+                //Предупреждения
+                var warnings = 0;
+                if (UserList.Users.ContainsKey(user.Id)) warnings = UserList.Users[user.Id].Warns.Count;
+
+                //Emoji используется при выводе списка предупреждений.
+                var emoji = DiscordEmoji.FromName(ctx.Client, ":pencil:");
+
+                embed.AddField("Предупреждения", $"{emoji} {warnings}", true);
+
+                //Донат
+                var donate = 0;
+                if (DonatorList.Donators.ContainsKey(user.Id)) donate = (int)DonatorList.Donators[user.Id].Balance;
+                embed.AddField("Донат", donate.ToString(), true);
+
+
+                if (member != null)
+                {
+                    //Модератор
+                    var moderator = "Нет";
+                    if (Bot.IsModerator(member)) moderator = "Да";
+                    embed.AddField("Модератор", moderator, true);
+
+                    //Правила
+                    var codex = "Не принял";
+                    if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
+                        codex = "Принял";
+                    else if (ReportList.CodexPurges.ContainsKey(user.Id))
+                        if (ReportList.CodexPurges[user.Id].Expired())
+                            codex = "Не принял*";
+                        else
+                            codex = Utility.FormatTimespan(ReportList.CodexPurges[user.Id].getRemainingTime());
+                    embed.AddField("Правила", codex, true);
+
+                    //Правила рейда
+                    var fleetCodex = "Не принял";
+                    if (member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
+                        fleetCodex = "Принял";
+                    else if (ReportList.FleetPurges.ContainsKey(user.Id))
+                        if (ReportList.FleetPurges[user.Id].Expired())
+                            fleetCodex = "Не принял*";
+                        else
+                            fleetCodex = Utility.FormatTimespan(ReportList.FleetPurges[user.Id].getRemainingTime());
+                    embed.AddField("Правила рейда", fleetCodex, true);
+                }
+
+                //Мут
+                var mute = "Нет";
+                if (ReportList.Mutes.ContainsKey(user.Id))
+                    if (!ReportList.Mutes[user.Id].Expired())
+                        mute = Utility.FormatTimespan(ReportList.Mutes[user.Id].getRemainingTime());
+                embed.AddField("Мут", mute, true);
+
+                //Приватный корабль
+                var privateShip = "Нет";
+                foreach (var ship in ShipList.Ships.Values)
+                    foreach (var shipMember in ship.Members.Values)
+                        if (shipMember.Type == MemberType.Owner && shipMember.Id == user.Id)
+                        {
+                            privateShip = ship.Name;
+                            break;
+                        }
+                embed.AddField("Владелец приватного корабля", privateShip);
+
+                //Заметка
+                var note = "Отсутствует";
+                if (Note.Notes.ContainsKey(user.Id))
+                    note = Note.Notes[user.Id].Content;
+                embed.AddField("Заметка", note, false);
+
+                embed.WithFooter("(*) Не принял после разблокировки");
+
+                var message = await ctx.RespondAsync(embed: embed.Build());
+
+                //Реакция на вывод сообщения с предупреждениями
+                if (warnings > 0)
+                {
+                    var interactivity = ctx.Client.GetInteractivity();
+
+                    await message.CreateReactionAsync(emoji);
+
+                    var em = await interactivity.WaitForReactionAsync(xe => xe.Emoji == emoji, message, ctx.User, TimeSpan.FromSeconds(60));
+
+                    if (!em.TimedOut)
+                    {
+                        await ctx.TriggerTypingAsync();
+
+                        var command = $"whois wl {user.Id}";
+
+                        var cmds = ctx.CommandsNext;
+
+                        // Ищем команду и извлекаем параметры.
+                        var cmd = cmds.FindCommand(command, out var customArgs);
+
+                        // Создаем фейковый контекст команды.
+                        var fakeContext = cmds.CreateFakeContext(ctx.Member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
+
+                        // Выполняем команду за пользователя.
+                        await cmds.ExecuteCommandAsync(fakeContext);
+                    }
+
+                }
+            }
+            catch (NotFoundException)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не найден.");
+            }
+        }
+
+        [Command("wlist")]
+        [Aliases("wl")]
+        [Description("Выводит список предупреждений.")]
+        public async Task WList(CommandContext ctx, DiscordUser user)
+        {
+            if (!Bot.IsModerator(ctx.Member))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                return;
+            }
+
+            var count = 0;
+            if (!UserList.Users.ContainsKey(user.Id)) count = 0;
+            else count = UserList.Users[user.Id].Warns.Count;
+
+            if (count == 0)
+            {
+                await ctx.RespondAsync("*Предупреждения отсутствуют.*");
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder();
+            embed.WithDescription("Предупреждения пользователя");
+            embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
+
+            for (var i = 1; i <= count; ++i)
+            {
+                var warn = UserList.Users[user.Id].Warns[i - 1];
+                var moderator = await ctx.Client.GetUserAsync(warn.Moderator);
+                embed.AddField($"*{i}*. {warn.Reason}.", $"**Выдан:** {moderator.Username}#{moderator.Discriminator} {warn.Date.ToShortDateString()}. **ID:** {warn.Id}.");
+            }
+
+            await ctx.RespondAsync(embed: embed.Build());
+        }
+
+        [Command("note")]
+        public async Task GetNote(CommandContext ctx, DiscordUser user)
+        {
+
+            if (!Note.Notes.ContainsKey(user.Id))
+            {
+                await ctx.RespondAsync("У пользователя нет заметки!");
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder();
+
+            embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
+            embed.WithColor(DiscordColor.Blurple);
+
+            var note = "Отсутствует";
+            note = Note.Notes[user.Id].Content;
+            embed.AddField("Заметка", note, false);
+
+            await ctx.RespondAsync(embed: embed.Build());
+        }
+
+        [Command("addnote")]
+        public async Task AddNote(CommandContext ctx, DiscordUser user, [RemainingText] string content)
+        {
+            string oldContent = null;
+            if (Note.Notes.ContainsKey(user.Id))
+                oldContent = Note.Notes[user.Id].Content;
+
+            var note = new Note(user.Id, content);
+            Note.Save(Bot.BotSettings.NotesXML);
+
+            var message = $"{Bot.BotSettings.OkEmoji} Успешно добавлена заметка о пользователе!";
+            if (oldContent != null) message += " **Предыдущая заметка:** " + oldContent;
+
+            await ctx.RespondAsync(message);
+        }
+
+        [Command("deletenote")]
+        [Aliases("dnote")]
+        public async Task DeleteNote(CommandContext ctx, DiscordUser user)
+        {
+            if (!Note.Notes.ContainsKey(user.Id))
+            {
+                await ctx.RespondAsync("У пользователя нет заметки!");
+                return;
+            }
+
+            Note.Notes.Remove(user.Id);
+
+            await ctx.RespondAsync($"Успешно удалена заметка пользователя <@{user.Id}>!");
         }
     }
 }
