@@ -969,6 +969,10 @@ namespace Bot_NetCore.Commands
                         // Выполняем команду за пользователя.
                         await cmds.ExecuteCommandAsync(fakeContext);
                     }
+                    else
+                    {
+                        await message.DeleteAllReactionsAsync();
+                    }
 
                 }
             }
