@@ -6,7 +6,7 @@ namespace Bot_NetCore.Entities
 {
     public static class DonatorList
     {
-        public static Dictionary<ulong, Donator> Donators = new Dictionary<ulong, Donator>();
+        public static Dictionary<ulong, DonatorLegacy> Donators = new Dictionary<ulong, DonatorLegacy>();
 
         public static void SaveToXML(string fileName)
         {
@@ -37,7 +37,7 @@ namespace Bot_NetCore.Entities
                 var date = DateTime.Now.Date;
                 if (donator.Element("date") != null) date = DateTime.ParseExact(donator.Element("date").Value, "dd-MM-yyyy", null);
                 var created =
-                    new Donator(Convert.ToUInt64(donator.Element("id").Value),
+                    new DonatorLegacy(Convert.ToUInt64(donator.Element("id").Value),
                         Convert.ToUInt64(donator.Element("colorRole").Value),
                         date,
                         Convert.ToDouble(donator.Element("balance").Value));
