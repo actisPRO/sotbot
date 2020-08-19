@@ -73,7 +73,7 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Add(CommandContext ctx, DiscordMember member, int balance)
         {
-            var res = new Donator(member.Id, 0, DateTime.Today, balance);
+            var res = new DonatorLegacy(member.Id, 0, DateTime.Today, balance);
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
             var message = $"Спасибо за поддержку нашего сообщества! **Ваш баланс: {balance} ₽.\n" +
                           $"Доступные функции:**\n";

@@ -5,63 +5,64 @@ namespace Bot_NetCore.Entities
 {
     public class Donator
     {
-        public Donator(ulong member, ulong colorRole, DateTime date, double balance = 0)
-        {
-            Member = member;
-            Balance = balance;
-            ColorRole = colorRole;
-            Friends = new List<ulong>();
-            Hidden = false;
-            Date = date;
+        public static Dictionary<ulong, Donator> DonatorList = new Dictionary<ulong, Donator>();
+            
+        public readonly ulong Member;
 
-            DonatorList.Donators[Member] = this;
+        private int _balance;
+        private int _privateRole;
+        private List<ulong> _friends;
+        private DateTime _date;
+        private bool _hidden;
+
+        public int Balance
+        {
+            get => _balance;
+            set
+            {
+                _balance = value;
+                DonatorList[Member]._balance = value;
+            }
         }
 
-        public ulong Member { get; }
-        public double Balance { get; private set; }
-        public ulong ColorRole { get; private set; }
-        public List<ulong> Friends { get; }
-        public bool Hidden { get; private set; }
-        public DateTime Date { get; set; }
-
-        public void AddFriend(ulong friend)
+        public int PrivateRole
         {
-            Friends.Add(friend);
-
-            DonatorList.Donators[Member] = this;
+            get => _privateRole;
+            set
+            {
+                _privateRole = value;
+                DonatorList[Member]._privateRole = value;
+            }
         }
 
-        public void RemoveFriend(ulong friend)
+        public DateTime Date
         {
-            Friends.Remove(friend);
-
-            DonatorList.Donators[Member] = this;
+            get => _date;
+            set
+            {
+                _date = value;
+                DonatorList[Member]._date = value;
+            }
         }
 
-        public void SetBalance(double newBalance)
+        public List<ulong> Friends
         {
-            Balance = newBalance;
-
-            DonatorList.Donators[Member] = this;
+            get => _friends;
+            set
+            {
+                _friends = value;
+                DonatorList[Member]._friends = value;
+            }
         }
 
-        public void SetRole(ulong colorRole)
+        public bool Hidden
         {
-            ColorRole = colorRole;
-
-            DonatorList.Donators[Member] = this;
-        }
-
-        public void UpdateHidden(bool hidden)
-        {
-            Hidden = hidden;
-
-            DonatorList.Donators[Member] = this;
-        }
-
-        public void Remove()
-        {
-            DonatorList.Donators.Remove(Member);
+            get => _hidden;
+            set
+            {
+                _hidden = value;
+                DonatorList[Member]._hidden = value;
+            }
         }
     }
 }
