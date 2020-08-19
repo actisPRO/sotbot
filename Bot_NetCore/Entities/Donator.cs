@@ -7,7 +7,7 @@ namespace Bot_NetCore.Entities
 {
     public class Donator
     {
-        public static Dictionary<ulong, Donator> DonatorList = new Dictionary<ulong, Donator>();
+        public static Dictionary<ulong, Donator> Donators = new Dictionary<ulong, Donator>();
             
         public readonly ulong Member;
 
@@ -23,7 +23,7 @@ namespace Bot_NetCore.Entities
             set
             {
                 _balance = value;
-                DonatorList[Member]._balance = value;
+                Donators[Member]._balance = value;
             }
         }
 
@@ -33,7 +33,7 @@ namespace Bot_NetCore.Entities
             set
             {
                 _privateRole = value;
-                DonatorList[Member]._privateRole = value;
+                Donators[Member]._privateRole = value;
             }
         }
 
@@ -43,7 +43,7 @@ namespace Bot_NetCore.Entities
             set
             {
                 _date = value;
-                DonatorList[Member]._date = value;
+                Donators[Member]._date = value;
             }
         }
 
@@ -53,7 +53,7 @@ namespace Bot_NetCore.Entities
             set
             {
                 _friends = value;
-                DonatorList[Member]._friends = value;
+                Donators[Member]._friends = value;
             }
         }
 
@@ -63,7 +63,7 @@ namespace Bot_NetCore.Entities
             set
             {
                 _hidden = value;
-                DonatorList[Member]._hidden = value;
+                Donators[Member]._hidden = value;
             }
         }
 
@@ -77,7 +77,7 @@ namespace Bot_NetCore.Entities
             _friends = friends;
             _hidden = hidden;
 
-            DonatorList[Member] = this;
+            Donators[Member] = this;
         }
 
         public static void Save(string fileName)
@@ -85,7 +85,7 @@ namespace Bot_NetCore.Entities
             var doc = new XDocument();
             var root = new XElement("Donators");
 
-            foreach (var donator in DonatorList.Values)
+            foreach (var donator in Donators.Values)
             {
                 var donatorEl = new XElement("Donator", new XAttribute("member", donator));
                 

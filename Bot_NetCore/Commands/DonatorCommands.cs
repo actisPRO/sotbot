@@ -24,7 +24,7 @@ namespace Bot_NetCore.Commands
             {
                 var latestPrices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
                 PriceList.Prices[DateTime.Today] = new DateServices(DateTime.Today, latestPrices.ColorPrice,
-                    latestPrices.WantedPrice, latestPrices.RoleNamePrice, latestPrices.FriendsPrice);
+                    latestPrices.WantedPrice, latestPrices.RolePrice, latestPrices.FriendsPrice);
             }
 
             switch (name)
@@ -35,8 +35,8 @@ namespace Bot_NetCore.Commands
                 case "wanted":
                     PriceList.Prices[DateTime.Today].WantedPrice = newPrice;
                     break;
-                case "role_rename":
-                    PriceList.Prices[DateTime.Today].RoleNamePrice = newPrice;
+                case "role":
+                    PriceList.Prices[DateTime.Today].RolePrice = newPrice;
                     break;
                 case "friends":
                     PriceList.Prices[DateTime.Today].FriendsPrice = newPrice;
@@ -63,7 +63,7 @@ namespace Bot_NetCore.Commands
             embed.Title = "Текущие цены на донат";
             embed.AddField("Color", prices.ColorPrice.ToString(), true);
             embed.AddField("Wanted", prices.WantedPrice.ToString(), true);
-            embed.AddField("Role rename", prices.RoleNamePrice.ToString(), true);
+            embed.AddField("Role", prices.RolePrice.ToString(), true);
             embed.AddField("Friends", prices.FriendsPrice.ToString(), true);
 
             await ctx.RespondAsync(embed: embed.Build());
@@ -73,31 +73,37 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Add(CommandContext ctx, DiscordMember member, int balance)
         {
-            var res = new DonatorLegacy(member.Id, 0, DateTime.Today, balance);
+            var donator = new Donator(member.Id, balance, 0, DateTime.Now, new List<ulong>(), false);
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
             var message = $"Спасибо за поддержку нашего сообщества! **Ваш баланс: {balance} ₽.\n" +
                           $"Доступные функции:**\n";
 
-            if (balance >= prices.ColorPrice)
+            if (balance >= prices.ColorPrice && balance < prices.RolePrice)
             {
-                var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
-                res.SetRole(role.Id);
-                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-                await member.GrantRoleAsync(role);
-                message += $"• `{Bot.BotSettings.Prefix}donator color hex-код-цвета` — изменяет цвет вашего ника.\n";
+                message += $"• `{Bot.BotSettings.Prefix}d color цвет (из списка)` — изменяет цвет вашего ника.\n";
+                message += $"• `{Bot.BotSettings.Prefix}d colors` — выводит список доступных цветов.\n";
             }
 
-            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            if (balance >= prices.RolePrice)
+            {
+                message += $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n";
+                message += $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n";
+
+                var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
+                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                await member.GrantRoleAsync(role);
+                donator.PrivateRole = role.Id;
+            }
 
             if (balance >= prices.WantedPrice)
-                message += $"• `{Bot.BotSettings.Prefix}donator roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
-                           $"• `{Bot.BotSettings.Prefix}donator rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
-            if (balance >= prices.RoleNamePrice)
-                message += $"• `{Bot.BotSettings.Prefix}donator rename` — изменяет название вашей роли донатера.\n";
+                message += $"• `{Bot.BotSettings.Prefix}d roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                           $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
+            
             if (balance >= prices.FriendsPrice)
-                message += $"• `{Bot.BotSettings.Prefix}donator friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
-                           $"• `{Bot.BotSettings.Prefix}donator unfriend` — убирает у друга ваш цвет.";
+                message += $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                           $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.";
 
+            Donator.Save(Bot.BotSettings.DonatorXML);
             await member.SendMessageAsync(message);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
         }
@@ -128,7 +134,7 @@ namespace Bot_NetCore.Commands
             if (newBalance >= prices.WantedPrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
                            $"• `{Bot.BotSettings.Prefix}donator rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
-            if (newBalance >= prices.RoleNamePrice)
+            if (newBalance >= prices.RolePrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator rename` — изменяет название вашей роли донатера.\n";
             if (newBalance >= prices.FriendsPrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
@@ -212,7 +218,7 @@ namespace Bot_NetCore.Commands
 
             var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.RoleNamePrice)
+            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.RolePrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
