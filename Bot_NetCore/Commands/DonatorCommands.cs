@@ -205,11 +205,37 @@ namespace Bot_NetCore.Commands
             }
             else if (donator.Balance >= prices.ColorPrice && donator.Balance < prices.RolePrice)
             {
-                
+                var avaliableRoles = GetColorRolesIds(ctx.Guild);
+                if (avaliableRoles == null)
+                {
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Не заданы цветные роли! Обратитесь к администратору для решения проблемы.");
+                    return;
+                }
+
+                foreach (var role in avaliableRoles)
+                {
+                    if (role.Name.ToLower() == color.ToLower())
+                    {
+                        foreach (var memberRole in ctx.Member.Roles)
+                            if (avaliableRoles.Contains(memberRole))
+                                await ctx.Member.RevokeRoleAsync(memberRole);
+                                
+                        await ctx.Member.GrantRoleAsync(role);
+                        await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                        return;
+                    }
+                }
+
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Неправильно задано имя цвета! Используйте `!d colors`, чтобы получить список доступых цветов. ");
             }
             else if (donator.Balance >= prices.RolePrice)
             {
-                
+                var role = ctx.Guild.GetRole(donator.PrivateRole);
+                await role.ModifyAsync(x => x.Color = new DiscordColor(color));
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
             }
         }
 
@@ -533,6 +559,26 @@ namespace Bot_NetCore.Commands
             {
                 var sendedMessage = await channel.SendMessageAsync(message);
             }
+        }
+
+        private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
+        {
+            if (!File.Exists("generated/color_roles.txt"))
+                return null;
+            
+            var colorRoles = new List<DiscordRole>();
+            using (var fs = new FileStream("generated/color_roles.txt", FileMode.Open))
+            using (var sr = new StreamReader(fs))
+            {
+                var roleId = sr.ReadLine();
+                while (roleId != null)
+                {
+                    colorRoles.Add(guild.GetRole(Convert.ToUInt64(roleId)));
+                    roleId = sr.ReadLine();
+                }
+            }
+
+            return colorRoles;
         }
     }
 }
