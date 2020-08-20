@@ -164,62 +164,92 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Remove(CommandContext ctx, DiscordMember member)
         {
-            if (!DonatorList.Donators.ContainsKey(member.Id))
+            if (!Donator.Donators.ContainsKey(member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не является донатером!");
                 return;
             }
 
-            try
-            {
-                await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole),
-                    "Donator deletion");
-                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[member.Id].ColorRole));
-            }
-            catch (NullReferenceException)
-            {
+            var donator = Donator.Donators[member.Id];
 
-            }
-            DonatorList.Donators[member.Id].Remove();
-            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            if (member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole)))
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole),
+                        "Donator deletion");
+
+            if (donator.PrivateRole != 0)
+                await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync("Donator deletion");
+
+            Donator.Donators.Remove(member.Id);
+            Donator.Save(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён донатер!");
         }
 
         [Command("color")]
-        [Description("Устанавливает донатерский цвет. Формат: 000000")]
+        [Description("Устанавливает донатерский цвет. Формат: #000000 для владельцев приватных ролей, либо название цвета.")]
         public async Task Color(CommandContext ctx, string color)
         {
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
             var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var donator = Donator.Donators[ctx.Member.Id];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.ColorPrice)
+            if (donator.Balance < prices.ColorPrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+            }
+            else if (donator.Balance >= prices.ColorPrice && donator.Balance < prices.RolePrice)
+            {
+                
+            }
+            else if (donator.Balance >= prices.RolePrice)
+            {
+                
+            }
+        }
+
+        [Command("colors")]
+        [Description("Выводит список доступных цветов.")]
+        public async Task Colors(CommandContext ctx)
+        {
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
-            var discordColor = new DiscordColor(000000);
-            try
+            throw new NotImplementedException(); //TODO
+        }
+
+        [Command("generatecolors")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task GenerateColors(CommandContext ctx, DiscordRole spacer) //debug: 745801411685646396
+        {
+            var colors = new Dictionary<string, DiscordColor>
             {
-                discordColor = new DiscordColor(color);
-            }
-            catch (Exception)
+                ["Red"] = DiscordColor.Red,
+                ["Blue"] = DiscordColor.Blue,
+                ["Yellow"] = DiscordColor.Yellow,
+                ["Blurple"] = DiscordColor.Blurple,
+                ["Orange"] = DiscordColor.Orange,
+                ["Cyan"] = DiscordColor.Cyan,
+                ["Green"] = DiscordColor.Green,
+                ["Gold"] = DiscordColor.Gold,
+                ["Brown"] = DiscordColor.Brown,
+                ["White"] = DiscordColor.White
+            };
+
+            foreach (var color in colors)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Некорректный формат цвета!");
-                return;
+                var role = await ctx.Guild.CreateRoleAsync(color.Key, color: color.Value);
+                await role.ModifyPositionAsync(spacer.Position - 1);
             }
 
-            var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
-            await role.ModifyAsync(x => x.Color = discordColor);
-            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен цвет донатера!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сгенерированы цветные роли!");
         }
 
         [Command("rename")]
