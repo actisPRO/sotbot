@@ -337,29 +337,29 @@ namespace Bot_NetCore.Commands
         [Description("Добавляет вашему другу цвет донатера (ваш)")]
         public async Task Friend(CommandContext ctx, DiscordMember member)
         {
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
+            if (Donator.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
             }
 
-            if (DonatorList.Donators[ctx.Member.Id].Friends.Count == 5)
+            if (Donator.Donators[ctx.Member.Id].Friends.Count == 5)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
                 return;
             }
 
-            DonatorList.Donators[ctx.Member.Id].AddFriend(member.Id);
-            await member.GrantRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
-            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            Donator.Donators[ctx.Member.Id].Friends.Add(member.Id);
+            await member.GrantRoleAsync(ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole));
+            Donator.Save(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
         }
