@@ -368,42 +368,25 @@ namespace Bot_NetCore.Commands
         [Description("Убирает цвет у друга")]
         public async Task Unfriend(CommandContext ctx, DiscordMember member)
         {
-            //Убрал
-            /*
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
-                return;
-            }
-
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
-
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
-                return;
-            }
-            */
-
             //Удаление роли которую дали
-            if (DonatorList.Donators.ContainsKey(member.Id) &&
-                DonatorList.Donators[member.Id].Friends.Contains(ctx.Member.Id))
+            if (Donator.Donators.ContainsKey(member.Id) &&
+                Donator.Donators[member.Id].Friends.Contains(ctx.Member.Id))
             {
-                DonatorList.Donators[member.Id].RemoveFriend(ctx.Member.Id);
-                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[member.Id].ColorRole));
+                Donator.Donators[member.Id].Friends.Remove(ctx.Member.Id);
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[member.Id].PrivateRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
             }
 
             //Удаление своей роли
-            if (DonatorList.Donators.ContainsKey(ctx.Member.Id) &&
-                DonatorList.Donators[ctx.Member.Id].Friends.Contains(member.Id))
+            if (Donator.Donators.ContainsKey(ctx.Member.Id) &&
+                Donator.Donators[ctx.Member.Id].Friends.Contains(member.Id))
             {
-                DonatorList.Donators[ctx.Member.Id].RemoveFriend(member.Id);
-                await member.RevokeRoleAsync(ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole));
+                Donator.Donators[ctx.Member.Id].Friends.Remove(member.Id);
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
             }
 
-            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            Donator.Save(Bot.BotSettings.DonatorXML);
         }
 
         [Command("friends")]
