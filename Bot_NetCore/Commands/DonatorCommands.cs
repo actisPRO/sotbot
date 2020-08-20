@@ -112,34 +112,50 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Balance(CommandContext ctx, DiscordMember member, int newBalance)
         {
-            if (!DonatorList.Donators.ContainsKey(member.Id))
+            if (Donator.Donators.ContainsKey(member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не является донатером!");
                 return;
             }
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
+            var donator = Donator.Donators[member.Id];
 
-            var oldBalance = DonatorList.Donators[member.Id].Balance;
-            DonatorList.Donators[member.Id].SetBalance(newBalance);
-            DonatorList.Donators[member.Id].Date = DateTime.Today;
-            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            var oldBalance = donator.Balance;
+            donator.Balance = newBalance;
+            donator.Date = DateTime.Today;
+            Donator.Save(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно изменили баланс.");
 
             var message = $"Ваш баланс был изменён. **Новый баланс: {newBalance} ₽\n" +
                           $"Доступные функции:**\n";
 
-            if (newBalance >= prices.ColorPrice)
-                message += $"• `{Bot.BotSettings.Prefix}donator color hex-код-цвета` — изменяет цвет вашего ника.\n";
+            if (newBalance >= prices.ColorPrice && newBalance < prices.RolePrice)
+                message += $"• `{Bot.BotSettings.Prefix}donator color цвет (из списка)` — изменяет цвет вашего ника.\n";
+            if (donator.PrivateRole != 0)
+            {
+                await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
+                donator.PrivateRole = 0;
+            }
+
+            if (newBalance >= prices.RolePrice)
+                message += $"• `{Bot.BotSettings.Prefix}donator color hex-код цвета` — изменяет цвет вашего ника.\n" +
+                           $"• `{Bot.BotSettings.Prefix}donator rename` — изменяет название вашей роли донатера.\n";
+            if (oldBalance < prices.RolePrice)
+            {
+                var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
+                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                await member.GrantRoleAsync(role);
+            }
+            
             if (newBalance >= prices.WantedPrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
                            $"• `{Bot.BotSettings.Prefix}donator rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
-            if (newBalance >= prices.RolePrice)
-                message += $"• `{Bot.BotSettings.Prefix}donator rename` — изменяет название вашей роли донатера.\n";
             if (newBalance >= prices.FriendsPrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
                            $"• `{Bot.BotSettings.Prefix}donator unfriend` — убирает у друга ваш цвет.";
 
+            Donator.Save(Bot.BotSettings.DonatorXML);
             await member.SendMessageAsync(message);
         }
 
