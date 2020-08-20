@@ -196,7 +196,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
             var donator = Donator.Donators[ctx.Member.Id];
 
             if (donator.Balance < prices.ColorPrice)
@@ -239,7 +239,7 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        [Command("colors")]
+        [Command("colors")] //TODO: доделать
         [Description("Выводит список доступных цветов.")]
         public async Task Colors(CommandContext ctx)
         {
@@ -298,15 +298,15 @@ namespace Bot_NetCore.Commands
         [Description("Измененяет название роли донатера.")]
         public async Task Rename(CommandContext ctx, [RemainingText] string newName)
         {
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.RolePrice)
+            if (Donator.Donators[ctx.Member.Id].Balance < prices.RolePrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
@@ -327,7 +327,7 @@ namespace Bot_NetCore.Commands
                 throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
             }
 
-            var role = ctx.Guild.GetRole(DonatorList.Donators[ctx.Member.Id].ColorRole);
+            var role = ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole);
             await role.ModifyAsync(x => x.Name = newName);
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
