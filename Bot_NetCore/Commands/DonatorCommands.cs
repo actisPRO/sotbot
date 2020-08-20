@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
@@ -229,6 +230,18 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task GenerateColors(CommandContext ctx, DiscordRole spacer) //debug: 745801411685646396
         {
+            if (File.Exists("generated/color_roles.txt"))
+                using (var fs = new FileStream("generated/color_roles.txt", FileMode.Open))
+                using (var sr = new StreamReader(fs))
+                {
+                    var role = await sr.ReadLineAsync();
+                    while (role != null)
+                    {
+                        await ctx.Guild.GetRole(Convert.ToUInt64(role)).DeleteAsync();
+                        role = await sr.ReadLineAsync();
+                    }
+                }
+
             var colors = new Dictionary<string, DiscordColor>
             {
                 ["Red"] = DiscordColor.Red,
@@ -243,11 +256,14 @@ namespace Bot_NetCore.Commands
                 ["White"] = DiscordColor.White
             };
 
-            foreach (var color in colors)
-            {
-                var role = await ctx.Guild.CreateRoleAsync(color.Key, color: color.Value);
-                await role.ModifyPositionAsync(spacer.Position - 1);
-            }
+            using (var fs = File.Create("generated/color_roles.txt"))
+                using (var sw = new StreamWriter(fs))
+                    foreach (var color in colors)
+                    {
+                        var role = await ctx.Guild.CreateRoleAsync(color.Key, color: color.Value);
+                        await role.ModifyPositionAsync(spacer.Position - 1);
+                        await sw.WriteLineAsync(role.Id.ToString());
+                    }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сгенерированы цветные роли!");
         }
