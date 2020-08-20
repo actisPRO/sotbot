@@ -393,15 +393,15 @@ namespace Bot_NetCore.Commands
         [Description("Выводит список друзей")]
         public async Task Friends(CommandContext ctx)
         {
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
+            if (Donator.Donators[ctx.Member.Id].Balance < prices.FriendsPrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
@@ -409,7 +409,7 @@ namespace Bot_NetCore.Commands
 
             var i = 0;
             var friendsMsg = "";
-            foreach (var friend in DonatorList.Donators[ctx.Member.Id].Friends)
+            foreach (var friend in Donator.Donators[ctx.Member.Id].Friends)
             {
                 DiscordMember discordMember = null;
                 try
@@ -431,15 +431,15 @@ namespace Bot_NetCore.Commands
         [Description("Выдает роль донатера.")]
         public async Task RoleAdd(CommandContext ctx)
         {
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
+            if (Donator.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
@@ -453,15 +453,15 @@ namespace Bot_NetCore.Commands
         [Description("Убирает роль донатера.")]
         public async Task RoleRemove(CommandContext ctx)
         {
-            if (!DonatorList.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
 
-            var prices = PriceList.Prices[PriceList.GetLastDate(DonatorList.Donators[ctx.Member.Id].Date)];
+            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
-            if (DonatorList.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
+            if (Donator.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 return;
@@ -476,14 +476,14 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task SetHidden(CommandContext ctx, DiscordMember member, bool hidden = true)
         {
-            if (!DonatorList.Donators.ContainsKey(member.Id))
+            if (!Donator.Donators.ContainsKey(member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Участник не является донатером!");
                 return;
             }
 
-            DonatorList.Donators[member.Id].UpdateHidden(hidden);
-            DonatorList.SaveToXML(Bot.BotSettings.DonatorXML);
+            Donator.Donators[member.Id].Hidden = hidden;
+            Donator.Save(Bot.BotSettings.DonatorXML);
         }
 
         [Command("genlist")]
@@ -504,7 +504,7 @@ namespace Bot_NetCore.Commands
             }
 
             var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
-            foreach (var donator in DonatorList.Donators.Values)
+            foreach (var donator in Donator.Donators.Values)
                 if (!donator.Hidden)
                     donators.Add(donator.Member, donator.Balance);
 
