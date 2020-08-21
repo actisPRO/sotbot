@@ -219,9 +219,13 @@ namespace Bot_NetCore.Commands
                     {
                         foreach (var memberRole in ctx.Member.Roles)
                             if (avaliableRoles.Contains(memberRole))
+                            {
                                 await ctx.Member.RevokeRoleAsync(memberRole);
+                                break;
+                            }
                                 
                         await ctx.Member.GrantRoleAsync(role);
+                        await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
                         await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
                         return;
                     }
@@ -234,6 +238,7 @@ namespace Bot_NetCore.Commands
             {
                 var role = ctx.Guild.GetRole(donator.PrivateRole);
                 await role.ModifyAsync(x => x.Color = new DiscordColor(color));
+                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
 
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
             }
@@ -254,7 +259,7 @@ namespace Bot_NetCore.Commands
 
         [Command("generatecolors")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task GenerateColors(CommandContext ctx, DiscordRole spacer) //debug: 745801411685646396
+        public async Task GenerateColors(CommandContext ctx, ulong spacerId) //debug: 745801411685646396
         {
             if (File.Exists("generated/color_roles.txt"))
                 using (var fs = new FileStream("generated/color_roles.txt", FileMode.Open))
@@ -281,13 +286,14 @@ namespace Bot_NetCore.Commands
                 ["Brown"] = DiscordColor.Brown,
                 ["White"] = DiscordColor.White
             };
-
+            
+            var roles = new List<ulong>();
             using (var fs = File.Create("generated/color_roles.txt"))
                 using (var sw = new StreamWriter(fs))
                     foreach (var color in colors)
                     {
                         var role = await ctx.Guild.CreateRoleAsync(color.Key, color: color.Value);
-                        await role.ModifyPositionAsync(spacer.Position - 1);
+                        roles.Add(role.Id);
                         await sw.WriteLineAsync(role.Id.ToString());
                     }
 

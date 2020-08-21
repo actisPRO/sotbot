@@ -87,19 +87,19 @@ namespace Bot_NetCore.Entities
 
             foreach (var donator in Donators.Values)
             {
-                var donatorEl = new XElement("Donator", new XAttribute("member", donator));
+                var donatorEl = new XElement("Donator", new XAttribute("member", donator.Member));
                 
-                donatorEl.Add(new XElement("Balance"), donator.Balance);
-                donatorEl.Add(new XElement("Date"), donator.Date);
-                if (donator.PrivateRole != 0) donatorEl.Add(new XElement("PrivateRole"), donator.PrivateRole);
+                donatorEl.Add(new XElement("Balance", donator.Balance));
+                donatorEl.Add(new XElement("Date", donator.Date));
+                if (donator.PrivateRole != 0) donatorEl.Add(new XElement("PrivateRole", donator.PrivateRole));
                 if (donator.Friends.Count != 0)
                 {
                     var friendEl = new XElement("Friends");
                     foreach (var friend in donator.Friends)
-                        friendEl.Add(new XElement("Friend"), friend);
+                        friendEl.Add(new XElement("Friend", friend));
                     donatorEl.Add(friendEl);
                 }
-                donatorEl.Add(new XElement("Hidden"), donator.Hidden);
+                donatorEl.Add(new XElement("Hidden", donator.Hidden));
             
                 root.Add(donatorEl);
             }
