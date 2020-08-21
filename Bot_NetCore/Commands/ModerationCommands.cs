@@ -1013,9 +1013,8 @@ namespace Bot_NetCore.Commands
             for (var i = count; i > 0; i--)
             {
                 var warn = UserList.Users[user.Id].Warns[i - 1];
-                var moderator = await ctx.Client.GetUserAsync(warn.Moderator);
                 fields.Add(new CustomEmbedField($"*{i}*.", 
-                    $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {moderator.Username}#{moderator.Discriminator} {warn.Date.ToShortDateString()}"));
+                    $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date.ToShortDateString()}"));
             }
 
 
