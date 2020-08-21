@@ -11,6 +11,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using static Bot_NetCore.Misc.Utility;
 
 namespace Bot_NetCore.Commands
 {
@@ -993,9 +994,11 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var count = 0;
-            if (!UserList.Users.ContainsKey(user.Id)) count = 0;
-            else count = UserList.Users[user.Id].Warns.Count;
+            int count;
+            if (!UserList.Users.ContainsKey(user.Id)) 
+                count = 0;
+            else 
+                count = UserList.Users[user.Id].Warns.Count;
 
             if (count == 0)
             {
@@ -1003,22 +1006,25 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            //TODO: Split this embed in pages when needed.
-            var embed = new DiscordEmbedBuilder()
-            {
-                Color = DiscordColor.LightGray,
-                Description = "Предупреждения пользователя"
-            };
-            embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
+            var interactivity = ctx.Client.GetInteractivity();
 
-            for (var i = 1; i <= count; ++i)
+            List<CustomEmbedField> fields = new List<CustomEmbedField>();
+
+            for (var i = count; i > 0; i--)
             {
                 var warn = UserList.Users[user.Id].Warns[i - 1];
                 var moderator = await ctx.Client.GetUserAsync(warn.Moderator);
-                embed.AddField($"*{i}*.", $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {moderator.Username}#{moderator.Discriminator} {warn.Date.ToShortDateString()}");
+                fields.Add(new CustomEmbedField($"*{i}*.", 
+                    $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {moderator.Username}#{moderator.Discriminator} {warn.Date.ToShortDateString()}"));
             }
 
-            await ctx.RespondAsync(embed: embed.Build());
+
+            var fields_pagination = GeneratePagesInEmbeds(fields, "Список варнов.");
+
+            if (fields_pagination.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, fields_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            else
+                await ctx.RespondAsync(embed: fields_pagination.First().Embed);
         }
 
         [Command("note")]

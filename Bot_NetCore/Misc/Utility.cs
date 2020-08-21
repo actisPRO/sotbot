@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.RegularExpressions;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
@@ -44,13 +46,41 @@ namespace Bot_NetCore.Misc
                 });
                 page++;
             }
+
             return result;
         }
 
-        //TODO: GeneratePagesInEmbeds with fields.
-        public static IEnumerable<Page> GeneratePagesInEmbeds(DiscordEmbedField[] input, string title = "") //Alternative is to use Dictionary<String, String> input
+        public static IEnumerable<Page> GeneratePagesInEmbeds(List<CustomEmbedField> input, string title = "")
         {
-            throw new NotImplementedException();
+            var maxFields = 6;
+
+            if (input.Count == 0)
+                throw new InvalidOperationException("You must provide a list of strings that is not null or empty!");
+
+            List<Page> result = new List<Page>();
+
+            var page = 1;
+            var inputCount = input.Count();
+            while (input.Any())
+            {
+                var pageEmbed = new DiscordEmbedBuilder()
+                {
+                    Title = title,
+                };
+                for (var i = 0; i < maxFields && input.Any(); i++)
+                {
+                    var field = input.First();
+                    input.RemoveAt(0);
+                    pageEmbed.AddField(field.Name, field.Value);
+                }
+                pageEmbed.WithFooter($"Страница {page} / {(int)(inputCount / maxFields) + 1}. Всего {inputCount}");
+                page++;
+                result.Add(new Page()
+                {
+                    Embed = pageEmbed
+                });
+            }
+            return result;
         }
 
         //Парсит формат даты на подобии 1d2h30m, 1d, 30m10s
@@ -159,6 +189,20 @@ namespace Bot_NetCore.Misc
             Hours,
             Days
         }
+
+        public struct CustomEmbedField
+        {
+            public CustomEmbedField(string name, string value)
+            {
+                Name = name;
+                Value = value;
+            }
+            public string Name;
+            public string Value;
+
+            public override string ToString() => $"({Name}, {Value})";
+        }
+
         public static DiscordEmbed GenerateVoteEmbed(DiscordMember author, DiscordColor color, string topic, DateTime end, int participants,
             int yes, int no, string id)
         {
