@@ -2028,9 +2028,15 @@ namespace Bot_NetCore
         /// </summary>
         public string NotesXML;
 
+        /// <summary>
         ///     ID канала с архивом голосований
         /// </summary>
         public ulong VotesArchive;
+
+        /// <summary>
+        ///     ID категории ролей-цветов
+        /// </summary>
+        public ulong ColorSpacerRole;
     }
 
     public enum CommandType
