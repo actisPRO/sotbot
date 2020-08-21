@@ -839,7 +839,7 @@ namespace Bot_NetCore.Commands
     public class WhoisCommand : BaseCommandModule
     {
         [GroupCommand]
-        public async Task WhoIs(CommandContext ctx, [Description("Участник сервера")] DiscordUser user)
+        public async Task WhoIs(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -985,7 +985,7 @@ namespace Bot_NetCore.Commands
         [Command("wlist")]
         [Aliases("wl")]
         [Description("Выводит список предупреждений.")]
-        public async Task WList(CommandContext ctx, DiscordUser user)
+        public async Task WList(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -1003,24 +1003,28 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var embed = new DiscordEmbedBuilder();
-            embed.WithDescription("Предупреждения пользователя");
+            //TODO: Split this embed in pages when needed.
+            var embed = new DiscordEmbedBuilder()
+            {
+                Color = DiscordColor.LightGray,
+                Description = "Предупреждения пользователя"
+            };
             embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
 
             for (var i = 1; i <= count; ++i)
             {
                 var warn = UserList.Users[user.Id].Warns[i - 1];
                 var moderator = await ctx.Client.GetUserAsync(warn.Moderator);
-                embed.AddField($"*{i}*. {warn.Reason}.", $"**Выдан:** {moderator.Username}#{moderator.Discriminator} {warn.Date.ToShortDateString()}. **ID:** {warn.Id}.");
+                embed.AddField($"*{i}*.", $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {moderator.Username}#{moderator.Discriminator} {warn.Date.ToShortDateString()}");
             }
 
             await ctx.RespondAsync(embed: embed.Build());
         }
 
         [Command("note")]
-        public async Task GetNote(CommandContext ctx, DiscordUser user)
+        [Description("Показать заметку.")]
+        public async Task GetNote(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
         {
-
             if (!Note.Notes.ContainsKey(user.Id))
             {
                 await ctx.RespondAsync("У пользователя нет заметки!");
@@ -1040,7 +1044,8 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("addnote")]
-        public async Task AddNote(CommandContext ctx, DiscordUser user, [RemainingText] string content)
+        [Description("Добавить заметку.")]
+        public async Task AddNote(CommandContext ctx, [Description("Пользователь")] DiscordUser user, [Description("Заметка")] [RemainingText] string content)
         {
             string oldContent = null;
             if (Note.Notes.ContainsKey(user.Id))
@@ -1057,7 +1062,8 @@ namespace Bot_NetCore.Commands
 
         [Command("deletenote")]
         [Aliases("dnote")]
-        public async Task DeleteNote(CommandContext ctx, DiscordUser user)
+        [Description("Удалить заметку.")]
+        public async Task DeleteNote(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
         {
             if (!Note.Notes.ContainsKey(user.Id))
             {

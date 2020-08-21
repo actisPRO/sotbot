@@ -47,6 +47,12 @@ namespace Bot_NetCore.Misc
             return result;
         }
 
+        //TODO: GeneratePagesInEmbeds with fields.
+        public static IEnumerable<Page> GeneratePagesInEmbeds(DiscordEmbedField[] input, string title = "") //Alternative is to use Dictionary<String, String> input
+        {
+            throw new NotImplementedException();
+        }
+
         //Парсит формат даты на подобии 1d2h30m, 1d, 30m10s
         //Добавлены дни, взято отсюда: 
         //https://stackoverflow.com/questions/47702094/parse-the-string-26h44m3s-to-timespan-in-c-sharp
