@@ -113,7 +113,7 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Balance(CommandContext ctx, DiscordMember member, int newBalance)
         {
-            if (Donator.Donators.ContainsKey(member.Id))
+            if (!Donator.Donators.ContainsKey(member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не является донатером!");
                 return;
