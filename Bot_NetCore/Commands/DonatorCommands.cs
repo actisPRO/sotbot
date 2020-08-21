@@ -124,7 +124,6 @@ namespace Bot_NetCore.Commands
             var oldBalance = donator.Balance;
             donator.Balance = newBalance;
             donator.Date = DateTime.Today;
-            Donator.Save(Bot.BotSettings.DonatorXML);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно изменили баланс.");
 
@@ -147,6 +146,7 @@ namespace Bot_NetCore.Commands
                 var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
                 await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
                 await member.GrantRoleAsync(role);
+                donator.PrivateRole = role.Id;
             }
             
             if (newBalance >= prices.WantedPrice)
