@@ -867,9 +867,11 @@ namespace Bot_NetCore.Commands
 
                 if (member == null)
                     embed.WithDescription("Покинул сервер");
-                else
-                    //Имя на сервере
-                    embed.AddField("Имя на сервере", member.DisplayName);
+                else 
+                {
+                    embed.AddField("Имя на сервере", member.DisplayName, true);
+                    embed.AddField("Присоединился", member.JoinedAt.ToString("HH:mm:ss dd.MM.yyyy"));
+                }
 
                 //Предупреждения
                 var warnings = 0;
