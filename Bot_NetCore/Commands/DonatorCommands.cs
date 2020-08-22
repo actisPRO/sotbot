@@ -194,7 +194,7 @@ namespace Bot_NetCore.Commands
 
         [Command("color")]
         [Description("Устанавливает донатерский цвет. Формат: #000000 для владельцев приватных ролей, либо название цвета.")]
-        public async Task Color(CommandContext ctx, string color)
+        public async Task Color(CommandContext ctx, [RemainingText] string color)
         {
             if (!Donator.Donators.ContainsKey(ctx.Member.Id))
             {
@@ -260,12 +260,20 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            throw new NotImplementedException(); //TODO
+            if (!File.Exists("generated/colors.jpeg"))
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Отсутствует файл colors.jpeg, обратитесь к администратору!");
+                return;
+            }
+
+            await ctx.RespondWithFileAsync("generated/colors.jpeg",
+                "Используйте `!d color название цвета`, чтобы получить цвет.");
         }
 
         [Command("generatecolors")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task GenerateColors(CommandContext ctx, ulong spacerId) //debug: 745801411685646396
+        public async Task GenerateColors(CommandContext ctx)
         {
             if (File.Exists("generated/color_roles.txt"))
                 using (var fs = new FileStream("generated/color_roles.txt", FileMode.Open))
@@ -282,15 +290,21 @@ namespace Bot_NetCore.Commands
             var colors = new Dictionary<string, DiscordColor>
             {
                 ["Red"] = DiscordColor.Red,
-                ["Blue"] = DiscordColor.Blue,
-                ["Yellow"] = DiscordColor.Yellow,
-                ["Blurple"] = DiscordColor.Blurple,
+                ["Dark red"] = DiscordColor.DarkRed,
                 ["Orange"] = DiscordColor.Orange,
-                ["Cyan"] = DiscordColor.Cyan,
-                ["Green"] = DiscordColor.Green,
+                ["Lilac"] = DiscordColor.Lilac,
+                ["Yellow"] = DiscordColor.Yellow,
                 ["Gold"] = DiscordColor.Gold,
+                ["Blue"] = DiscordColor.Blue,
+                ["Magenta"] = DiscordColor.Magenta,
+                ["Aquamarine"] = DiscordColor.Aquamarine,
+                ["Blurple"] = DiscordColor.Blurple,
+                ["Cyan"] = DiscordColor.Cyan,
+                ["Purple"] = DiscordColor.Purple,
+                ["Green"] = DiscordColor.Green,
+                ["Azure"] = DiscordColor.Azure,
                 ["Brown"] = DiscordColor.Brown,
-                ["White"] = DiscordColor.White
+                ["White"] = DiscordColor.White,
             };
             
             var roles = new List<ulong>();
