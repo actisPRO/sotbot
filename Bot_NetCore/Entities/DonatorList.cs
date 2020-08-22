@@ -4,7 +4,8 @@ using System.Xml.Linq;
 
 namespace Bot_NetCore.Entities
 {
-    public static class DonatorList
+    [Obsolete]
+    public static class DonatorList //TODO: удалить после миграции
     {
         public static Dictionary<ulong, DonatorLegacy> Donators = new Dictionary<ulong, DonatorLegacy>();
 
