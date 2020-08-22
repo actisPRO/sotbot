@@ -250,7 +250,7 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        [Command("colors")] //TODO: доделать
+        [Command("colors")]
         [Description("Выводит список доступных цветов.")]
         public async Task Colors(CommandContext ctx)
         {
@@ -568,6 +568,25 @@ namespace Bot_NetCore.Commands
             {
                 var sendedMessage = await channel.SendMessageAsync(message);
             }
+        }
+
+        [Command("migrate")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Migrate(CommandContext ctx)
+        {
+            foreach (var oldDonator in DonatorList.Donators.Values)
+            {
+                var donator = new Donator(oldDonator.Member, (int) oldDonator.Balance, oldDonator.ColorRole, oldDonator.Date, oldDonator.Friends, oldDonator.Hidden);
+                var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
+                if (donator.Balance < prices.RolePrice)
+                {
+                    await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
+                    donator.PrivateRole = 0;
+                }
+                Donator.Save(Bot.BotSettings.DonatorXML);
+            }
+
+            await ctx.RespondAsync("Ok");
         }
 
         private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
