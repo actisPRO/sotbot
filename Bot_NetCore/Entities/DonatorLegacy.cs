@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Bot_NetCore.Entities
 {
     [Obsolete]
-    public class DonatorLegacy
+    public class DonatorLegacy //TODO: удалить после миграции
     {
         public DonatorLegacy(ulong member, ulong colorRole, DateTime date, double balance = 0)
         {

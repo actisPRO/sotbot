@@ -570,6 +570,7 @@ namespace Bot_NetCore.Commands
             }
         }
 
+        //удалить после миграции
         [Command("migrate")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task Migrate(CommandContext ctx)

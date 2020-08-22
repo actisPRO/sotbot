@@ -83,7 +83,7 @@ namespace Bot_NetCore
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
-            DonatorList.ReadFromXML("donators.old.xml");
+            DonatorList.ReadFromXML("donators.old.xml"); //TODO: удалить после миграции
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
