@@ -74,6 +74,12 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Add(CommandContext ctx, DiscordMember member, int balance)
         {
+            if (Donator.Donators.ContainsKey(member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь уже является донатером!");
+                return;
+            }
+            
             var donator = new Donator(member.Id, balance, 0, DateTime.Now, new List<ulong>(), false);
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
             var message = $"Спасибо за поддержку нашего сообщества! **Ваш баланс: {balance} ₽.\n" +
