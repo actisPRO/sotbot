@@ -232,57 +232,66 @@ namespace Bot_NetCore.Commands
         [Description("Устанавливает донатерский цвет. Формат: #000000 для владельцев приватных ролей, либо название цвета.")]
         public async Task Color(CommandContext ctx, [RemainingText] string color)
         {
-            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Donator.Donators.ContainsKey(ctx.Member.Id)) // для обычных донатеров
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
-                return;
-            }
-
-            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
-            var donator = Donator.Donators[ctx.Member.Id];
-
-            if (donator.Balance < prices.ColorPrice)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
-            }
-            else if (donator.Balance >= prices.ColorPrice && donator.Balance < prices.RolePrice)
-            {
-                var avaliableRoles = GetColorRolesIds(ctx.Guild);
-                if (avaliableRoles == null)
+                var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
+                var donator = Donator.Donators[ctx.Member.Id];
+    
+                if (donator.Balance < prices.ColorPrice)
                 {
-                    await ctx.RespondAsync(
-                        $"{Bot.BotSettings.ErrorEmoji} Не заданы цветные роли! Обратитесь к администратору для решения проблемы.");
-                    return;
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
                 }
-
-                foreach (var role in avaliableRoles)
+                else if (donator.Balance >= prices.ColorPrice && donator.Balance < prices.RolePrice)
                 {
-                    if (role.Name.ToLower() == color.ToLower())
+                    var avaliableRoles = GetColorRolesIds(ctx.Guild);
+                    if (avaliableRoles == null)
                     {
-                        foreach (var memberRole in ctx.Member.Roles)
-                            if (avaliableRoles.Contains(memberRole))
-                            {
-                                await ctx.Member.RevokeRoleAsync(memberRole);
-                                break;
-                            }
-                                
-                        await ctx.Member.GrantRoleAsync(role);
-                        await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
-                        await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                        await ctx.RespondAsync(
+                            $"{Bot.BotSettings.ErrorEmoji} Не заданы цветные роли! Обратитесь к администратору для решения проблемы.");
                         return;
                     }
+    
+                    foreach (var role in avaliableRoles)
+                    {
+                        if (role.Name.ToLower() == color.ToLower())
+                        {
+                            foreach (var memberRole in ctx.Member.Roles)
+                                if (avaliableRoles.Contains(memberRole))
+                                {
+                                    await ctx.Member.RevokeRoleAsync(memberRole);
+                                    break;
+                                }
+                                    
+                            await ctx.Member.GrantRoleAsync(role);
+                            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
+                            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                            return;
+                        }
+                    }
+    
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Неправильно задано имя цвета! Используйте `!d colors`, чтобы получить список доступых цветов. ");
                 }
-
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Неправильно задано имя цвета! Используйте `!d colors`, чтобы получить список доступых цветов. ");
+                else if (donator.Balance >= prices.RolePrice)
+                {
+                    var role = ctx.Guild.GetRole(donator.PrivateRole);
+                    await role.ModifyAsync(x => x.Color = new DiscordColor(color));
+                    await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+    
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                }
             }
-            else if (donator.Balance >= prices.RolePrice)
+            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
             {
-                var role = ctx.Guild.GetRole(donator.PrivateRole);
+                var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
                 await role.ModifyAsync(x => x.Color = new DiscordColor(color));
                 await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-
+    
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+            }
+            else
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
             }
         }
 
