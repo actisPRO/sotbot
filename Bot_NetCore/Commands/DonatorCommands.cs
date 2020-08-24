@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -113,6 +114,41 @@ namespace Bot_NetCore.Commands
             Donator.Save(Bot.BotSettings.DonatorXML);
             await member.SendMessageAsync(message);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер!");
+        }
+
+        [Command("addsub")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task AddSubscriber(CommandContext ctx, DiscordMember member, string time)
+        {
+            if (Subscriber.Subscribers.ContainsKey(member.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь уже является подписчиком!");
+                return;
+            }
+
+            var timeSpan = Utility.TimeSpanParse(time);
+            
+            var start = DateTime.Now;
+            var end = start + timeSpan;
+
+            var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
+            await member.GrantRoleAsync(role);
+            
+            var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, role.Id, new List<ulong>());
+
+            Subscriber.Save(Bot.BotSettings.SubscriberXML);
+            
+            await member.SendMessageAsync(
+                $"Спасибо за поддержку нашего сообщества! Ваша подписка истекает **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
+                $"**Доступные возможности:**\n" +
+                $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n" +
+                $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n" +
+                $"• `{Bot.BotSettings.Prefix}d roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n" +
+                $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.");
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен подписчик!");
         }
 
         [Command("balance")]
