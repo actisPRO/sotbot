@@ -882,12 +882,6 @@ namespace Bot_NetCore.Commands
 
                 embed.AddField("Предупреждения", $"{emoji} {warnings}", true);
 
-                //Донат
-                var donate = 0;
-                if (DonatorList.Donators.ContainsKey(user.Id)) donate = (int)DonatorList.Donators[user.Id].Balance;
-                embed.AddField("Донат", donate.ToString(), true);
-
-
                 if (member != null)
                 {
                     //Модератор
@@ -924,6 +918,23 @@ namespace Bot_NetCore.Commands
                     if (!ReportList.Mutes[user.Id].Expired())
                         mute = Utility.FormatTimespan(ReportList.Mutes[user.Id].getRemainingTime());
                 embed.AddField("Мут", mute, true);
+                
+                //Донат
+                var donate = 0;
+                if (Donator.Donators.ContainsKey(user.Id)) donate = Donator.Donators[user.Id].Balance;
+                embed.AddField("Донат", donate.ToString(), true);
+                
+                //Подписка
+                var subscription = "Нет";
+                if (Subscriber.Subscribers.ContainsKey(user.Id))
+                {
+                    var subscriber = Subscriber.Subscribers[user.Id];
+                    var length = subscriber.SubscriptionEnd - subscriber.SubscriptionStart;
+
+                    subscription =
+                        $"{subscriber.SubscriptionEnd:HH:mm:ss dd.MM.yyyy} ({Utility.ToCorrectCase(length, TimeUnit.Days)})";
+                }
+                embed.AddField("Подписка", subscription, true);
 
                 //Приватный корабль
                 var privateShip = "Нет";
