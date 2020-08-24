@@ -484,6 +484,7 @@ namespace Bot_NetCore.Commands
                 Donator.Donators[member.Id].Friends.Remove(ctx.Member.Id);
                 await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[member.Id].PrivateRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
+                Donator.Save(Bot.BotSettings.DonatorXML);
             }
 
             //Удаление своей роли
@@ -493,9 +494,16 @@ namespace Bot_NetCore.Commands
                 Donator.Donators[ctx.Member.Id].Friends.Remove(member.Id);
                 await member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
+                Donator.Save(Bot.BotSettings.DonatorXML);
             }
-
-            Donator.Save(Bot.BotSettings.DonatorXML);
+            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id) &&
+                     Subscriber.Subscribers[ctx.Member.Id].Friends.Contains(member.Id))
+            {
+                Subscriber.Subscribers[ctx.Member.Id].Friends.Remove(member.Id);
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
+                Subscriber.Save(Bot.BotSettings.SubscriberXML);
+            }
         }
 
         [Command("friends")]
