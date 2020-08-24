@@ -299,7 +299,7 @@ namespace Bot_NetCore.Commands
         [Description("Выводит список доступных цветов.")]
         public async Task Colors(CommandContext ctx)
         {
-            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (!Donator.Donators.ContainsKey(ctx.Member.Id) && !Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
@@ -369,39 +369,63 @@ namespace Bot_NetCore.Commands
         [Description("Измененяет название роли донатера.")]
         public async Task Rename(CommandContext ctx, [RemainingText] string newName)
         {
-            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            {
+                var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
+
+                if (Donator.Donators[ctx.Member.Id].Balance < prices.RolePrice)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+                    return;
+                }
+                //Проверка названия на копирование админ ролей
+                try
+                {
+                    if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles)
+                        .Any(x => ctx.Guild.GetRole(x).Name.Equals(newName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимое название роли **{newName}**");
+                        return;
+                    }
+                }
+                catch (NullReferenceException ex)
+                {
+                    //Не находит на сервере одну из админ ролей
+                    throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
+                }
+
+                var role = ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole);
+                await role.ModifyAsync(x => x.Name = newName);
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
+            }
+            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                try //Проверка названия на копирование админ ролей
+                {
+                    if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles)
+                        .Any(x => ctx.Guild.GetRole(x).Name.Equals(newName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимое название роли **{newName}**");
+                        return;
+                    }
+                }
+                catch (NullReferenceException ex)
+                {
+                    //Не находит на сервере одну из админ ролей
+                    throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
+                }
+
+                var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
+                await role.ModifyAsync(x => x.Name = newName);
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
+            }
+            else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
                 return;
             }
-
-            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
-
-            if (Donator.Donators[ctx.Member.Id].Balance < prices.RolePrice)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
-                return;
-            }
-            //Проверка названия на копирование админ ролей
-            try
-            {
-                if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles)
-                    .Any(x => ctx.Guild.GetRole(x).Name.Equals(newName, StringComparison.InvariantCultureIgnoreCase)))
-                {
-                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимое название роли **{newName}**");
-                    return;
-                }
-            }
-            catch (NullReferenceException ex)
-            {
-                //Не находит на сервере одну из админ ролей
-                throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
-            }
-
-            var role = ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole);
-            await role.ModifyAsync(x => x.Name = newName);
-            await ctx.RespondAsync(
-                $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
         }
 
         [Command("friend")]
