@@ -185,11 +185,48 @@ namespace Bot_NetCore
             deleteShips.Elapsed += DeleteShipsOnElapsed;
             deleteShips.AutoReset = true;
             deleteShips.Enabled = true;
+            
+            var clearSubscriptions = new Timer(60000);
+            clearSubscriptions.Elapsed += ClearSubscriptionsOnElapsed;
+            clearSubscriptions.AutoReset = true;
+            clearSubscriptions.Enabled = true;
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
 
             await Task.Delay(-1);
+        }
+
+        private async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
+            {
+                var sub = Subscriber.Subscribers.Values.ToArray()[i];
+                if (DateTime.Now > sub.SubscriptionEnd)
+                {
+                    try
+                    {
+                        var guild = Client.Guilds[BotSettings.Guild];
+                        var member = await guild.GetMemberAsync(sub.Member);
+                        if (member != null)
+                        {
+                            await member.SendMessageAsync("Ваша подписка истекла :cry:");
+                        }
+
+                        var role = guild.GetRole(sub.PrivateRole);
+                        await role.DeleteAsync();
+
+                        Subscriber.Subscribers[sub.Member] = null;
+                        Subscriber.Save(BotSettings.SubscriberXML);
+                    }
+                    catch (Exception ex)
+                    {
+                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
+                            $"Возникла ошибка при очистке подписок {ex.StackTrace}.",
+                            DateTime.Now);
+                    }
+                }
+            }
         }
 
         private async Task ClientOnGuildAvailable(GuildCreateEventArgs e)
