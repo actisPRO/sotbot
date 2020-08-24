@@ -260,7 +260,7 @@ namespace Bot_NetCore
                         owner = await Client.Guilds[BotSettings.Guild].GetMemberAsync(ownerId);
                         await owner.SendMessageAsync(
                             "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
-                            "не планируете пользоваться этой функцией**");
+                            " не планируете пользоваться этой функцией**");
                     }
                     catch (NotFoundException)
                     {
