@@ -117,7 +117,7 @@ namespace Bot_NetCore.Commands
                 {
                     discordMember = await ctx.Guild.GetMemberAsync(member.Id);
                 }
-                catch (NotFoundException)
+                catch (Exceptions.NotFoundException)
                 {
                     continue;
                 }
@@ -345,7 +345,7 @@ namespace Bot_NetCore.Commands
                 {
                     var m = await ctx.Guild.GetMemberAsync(member.Value.Id);
                 }
-                catch (NotFoundException)
+                catch (Exceptions.NotFoundException)
                 {
                     toBePruned.Add(member.Value.Id);
                 }
@@ -469,7 +469,7 @@ namespace Bot_NetCore.Commands
 
                             root.Add(new XElement("Owner", new XAttribute("status", "False"), owner.Id));
                         }
-                        catch (NotFoundException)
+                        catch (Exceptions.NotFoundException)
                         {
                             root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), member.Id));
                         }
@@ -500,7 +500,7 @@ namespace Bot_NetCore.Commands
                     {
                         await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
                     }
-                    catch (NotFoundException)
+                    catch (Exceptions.NotFoundException)
                     {
                     }
                     catch (NullReferenceException)
