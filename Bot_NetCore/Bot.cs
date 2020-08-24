@@ -93,6 +93,7 @@ namespace Bot_NetCore
             Vote.Read(BotSettings.VotesXML);
             Note.Read(BotSettings.NotesXML);
             Donator.Read(BotSettings.DonatorXML);
+            Subscriber.Read(BotSettings.SubscriberXML);
 
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -2037,6 +2038,11 @@ namespace Bot_NetCore
         ///     ID категории ролей-цветов
         /// </summary>
         public ulong ColorSpacerRole;
+
+        /// <summary>
+        ///     Путь до файла с подписчиками
+        /// </summary>
+        public string SubscriberXML;
     }
 
     public enum CommandType

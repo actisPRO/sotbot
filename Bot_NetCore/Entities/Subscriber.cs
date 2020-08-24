@@ -14,6 +14,8 @@ namespace Bot_NetCore.Entities
         private SubscriptionType _type;
         private DateTime _subscriptionStart;
         private DateTime _subscriptionEnd;
+        private ulong _privateRole;
+        private List<ulong> _friends;
 
         public SubscriptionType Type
         {
@@ -45,13 +47,35 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        public Subscriber(ulong member, SubscriptionType type, DateTime subscriptionStart, DateTime subscriptionEnd)
+        public ulong PrivateRole
+        {
+            get => _privateRole;
+            set
+            {
+                _privateRole = value;
+                Subscribers[Member]._privateRole = value;
+            }
+        }
+
+        public List<ulong> Friends
+        {
+            get => _friends;
+            set
+            {
+                _friends = value;
+                Subscribers[Member]._friends = value;
+            }
+        }
+
+        public Subscriber(ulong member, SubscriptionType type, DateTime subscriptionStart, DateTime subscriptionEnd, ulong privateRole, List<ulong> friends)
         {
             Member = member;
 
             _type = type;
             _subscriptionStart = subscriptionStart;
             _subscriptionEnd = subscriptionEnd;
+            _privateRole = privateRole;
+            _friends = friends;
 
             Subscribers[Member] = this;
         }
@@ -72,6 +96,16 @@ namespace Bot_NetCore.Entities
                 }
                 subEl.Add(new XElement("Start", sub.SubscriptionStart));
                 subEl.Add(new XElement("End", sub.SubscriptionEnd));
+                subEl.Add(new XElement("PrivateRole", sub.PrivateRole));
+                if (sub.Friends.Count > 0)
+                {
+                    var friendsEl = new XElement("Friends");
+                    foreach (var friend in sub.Friends)
+                    {
+                        friendsEl.Add(new XElement("Friend", friend));
+                    }
+                    subEl.Add(friendsEl);
+                }
                 
                 root.Add(subEl);
             }
@@ -99,8 +133,17 @@ namespace Bot_NetCore.Entities
                 var type = SubscriptionType.Premium;
                 var start = Convert.ToDateTime(subEl.Element("Start").Value);
                 var end = Convert.ToDateTime(subEl.Element("End").Value);
+                var privateRole = Convert.ToUInt64(subEl.Element("PrivateRole").Value);
+                var friends = new List<ulong>();
+                if (subEl.Element("Friends") != null)
+                {
+                    foreach (var friendEl in subEl.Element("Friends").Elements())
+                    {
+                        friends.Add(Convert.ToUInt64(friendEl.Value));
+                    }
+                }
                 
-                var sub = new Subscriber(member, type, start, end);
+                var sub = new Subscriber(member, type, start, end, privateRole, friends);
             }
         }
     }
