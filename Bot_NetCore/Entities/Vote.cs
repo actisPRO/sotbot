@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using SeaOfThieves.Exceptions;
+using Bot_NetCore.Exceptions;
 
 namespace Bot_NetCore.Entities
 {

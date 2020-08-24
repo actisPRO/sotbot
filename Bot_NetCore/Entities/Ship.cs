@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Bot_NetCore.Exceptions;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable MemberCanBePrivate.Global

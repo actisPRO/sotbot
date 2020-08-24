@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
+using Bot_NetCore.Exceptions;
 
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable UnusedMember.Global

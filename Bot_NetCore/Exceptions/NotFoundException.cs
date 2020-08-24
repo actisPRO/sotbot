@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SeaOfThieves.Exceptions
+namespace Bot_NetCore.Exceptions
 {
     public class NotFoundException : Exception
     {

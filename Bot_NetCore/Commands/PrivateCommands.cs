@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Bot_NetCore.Entities;
+using Bot_NetCore.Exceptions;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
