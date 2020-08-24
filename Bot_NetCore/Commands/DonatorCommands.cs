@@ -570,44 +570,56 @@ namespace Bot_NetCore.Commands
         [Description("Выдает роль донатера.")]
         public async Task RoleAdd(CommandContext ctx)
         {
-            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            {
+                var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
+
+                if (Donator.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+                    return;
+                }
+
+                await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
+            }
+            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
+            }
+            else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
-                return;
             }
-
-            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
-
-            if (Donator.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
-                return;
-            }
-
-            await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
         }
 
         [Command("rolerm")]
         [Description("Убирает роль донатера.")]
         public async Task RoleRemove(CommandContext ctx)
         {
-            if (!Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            {
+                var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
+
+                if (Donator.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+                    return;
+                }
+
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
+            }
+            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
+            }
+            else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
-                return;
             }
-
-            var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
-
-            if (Donator.Donators[ctx.Member.Id].Balance < prices.WantedPrice)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
-                return;
-            }
-
-            await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
         }
 
         [Command("sethidden")]
