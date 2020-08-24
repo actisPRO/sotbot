@@ -214,9 +214,12 @@ namespace Bot_NetCore
                         }
 
                         var role = guild.GetRole(sub.PrivateRole);
-                        await role.DeleteAsync();
+                        if (role != null)
+                        {
+                            await role.DeleteAsync();
+                        }
 
-                        Subscriber.Subscribers[sub.Member] = null;
+                        Subscriber.Subscribers.Remove(sub.Member);
                         Subscriber.Save(BotSettings.SubscriberXML);
                     }
                     catch (Exception ex)
