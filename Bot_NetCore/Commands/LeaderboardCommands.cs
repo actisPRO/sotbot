@@ -252,7 +252,7 @@ namespace Bot_NetCore.Commands
             else
                 await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
 
-            //await CheckAndUpdateTopInvitersAsync(guild);
+            await CheckAndUpdateTopInvitersAsync(guild);
 
             return Task.CompletedTask;
         }
@@ -262,7 +262,7 @@ namespace Bot_NetCore.Commands
         /// </summary>
         /// <param name="guild"></param>
         /// <returns></returns>
-        public async Task CheckAndUpdateTopInvitersAsync(DiscordGuild guild)
+        public static async Task CheckAndUpdateTopInvitersAsync(DiscordGuild guild)
         {
 
             //Read data
