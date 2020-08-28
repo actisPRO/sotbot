@@ -193,6 +193,7 @@ namespace Bot_NetCore
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
+            if (!File.Exists("generated/top_inviters.xml")) File.Create("generated/top_inviters.xml");
 
             await Task.Delay(-1);
         }
@@ -2083,6 +2084,11 @@ namespace Bot_NetCore
         ///     Путь до файла с подписчиками
         /// </summary>
         public string SubscriberXML;
+
+        /// <summary>
+        ///     ID роли топового реферрала.
+        /// </summary>
+        public ulong TopMonthRole;
     }
 
     public enum CommandType

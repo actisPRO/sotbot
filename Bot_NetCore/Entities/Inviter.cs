@@ -13,6 +13,8 @@ namespace Bot_NetCore.Entities
             Ignored = ignored;
             Referrals = new Dictionary<ulong, Referral>();
 
+            UpdateActiveReferrals();
+
             InviterList.Inviters[InviterId] = this;
         }
 
@@ -22,6 +24,7 @@ namespace Bot_NetCore.Entities
         public bool Ignored { get; private set; }
         public int ActiveCount { get; private set; }
         public int CurrentMonthActiveCount { get; private set; }
+        public int LastMonthActiveCount { get; private set; }
 
         public static Inviter Create(ulong inviterId)
         {
@@ -65,8 +68,10 @@ namespace Bot_NetCore.Entities
 
         private void UpdateActiveReferrals()
         {
+            DateTime date = DateTime.Now.Date;
             ActiveCount = Referrals.Where(x => x.Value.Active == true).ToList().Count;
-            CurrentMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date == DateTime.Now.Date).ToList().Count;
+            CurrentMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == date.Month && x.Value.Date.Year == date.Year).ToList().Count;
+            LastMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == date.AddMonths(-1).Month && x.Value.Date.Year == date.AddMonths(-1).Year).ToList().Count;
         }
 
         public void UpdateState(bool state)

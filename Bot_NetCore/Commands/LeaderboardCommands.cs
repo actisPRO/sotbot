@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -112,7 +113,7 @@ namespace Bot_NetCore.Commands
 
         [Command("listinvites")]
         [Description("Выводит список приглашенных пользователем участников")]
-        public async Task ListInvites(CommandContext ctx, DiscordMember member)
+        public async Task ListInvites(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -172,7 +173,7 @@ namespace Bot_NetCore.Commands
         }
 
 
-        [Command("updatehidden")]
+        [Command("updateignored")]
         [Description("Обновить статус учитывания при выдаче наград в конце месяца")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task UpdateIgnored(CommandContext ctx, [Description("Участник")] DiscordMember member)
@@ -251,23 +252,125 @@ namespace Bot_NetCore.Commands
             else
                 await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
 
+            //await CheckAndUpdateTopInvitersAsync(guild);
+
             return Task.CompletedTask;
         }
 
-        private void CheckAndUpdateTopInviters(Dictionary<ulong, Inviter> topInviters)
+        /// <summary>
+        ///     Проверяет и обновляет награды топ пригласивших за предыдущий месяц.
+        /// </summary>
+        /// <param name="guild"></param>
+        /// <returns></returns>
+        public async Task CheckAndUpdateTopInvitersAsync(DiscordGuild guild)
         {
+
             //Read data
+            var fileName = "generated/top_inviters.xml";
+            var doc = XDocument.Load(fileName);
+            var root = doc.Root;
 
-            //Month: DateTime.Now.ToString("MMMM", new CultureInfo("ru-RU"))
-
-            //Save data if needed
-            if (true) //TODO: Condition
+            //Check for a new month, generate new top inviters and save them, then grant a role and subscribe.
+            if (DateTime.ParseExact(root.Element("lastMonth").Value, "M/yy", CultureInfo.InvariantCulture).Month != DateTime.Now.Month)
             {
-                var doc = new XDocument();
-                var root = new XElement("topLeaderboard");
+                //Read old inviters id's
+                var oldTopInviters = root.Element("inviters").Elements().Select(x => Convert.ToUInt64(x.Attribute("id").Value));
 
-                root.Add(new XElement("updatedRolesMonth", DateTime.Now.ToString("MMMM", new CultureInfo("ru-RU"))));
+                //Remove role from old inviters
+                foreach (var inviter in oldTopInviters)
+                    try
+                    {
+                        var member = await guild.GetMemberAsync(inviter);
+                        var role = guild.GetRole(Bot.BotSettings.TopMonthRole);
+                        if (member.Roles.Contains(role))
+                            await member.RevokeRoleAsync(role);
+                    }
+                    catch (NotFoundException)
+                    {
+                        //Пользователь не найден.
+                    }
+
+                //New top inviters
+                var topInviters = InviterList.Inviters.ToList()
+                    .Where(x => !x.Value.Ignored && x.Value.Active)
+                    .OrderByDescending(x => x.Value.LastMonthActiveCount)
+                    .Take(3)
+                    .ToDictionary(x => x.Key, x => x.Value);
+
+                //Grant role and sub to new top inviters
+                foreach (var inviter in topInviters)
+                    try
+                    {
+                        var member = await guild.GetMemberAsync(inviter.Key);
+                        var role = guild.GetRole(Bot.BotSettings.TopMonthRole);
+                        await member.GrantRoleAsync(role);
+
+                        //Grant sub for 30 days
+                        var timeSpan = Utility.TimeSpanParse("30d");
+
+                        var start = DateTime.Now;
+
+                        if (Subscriber.Subscribers.ContainsKey(member.Id))
+                            start = Subscriber.Subscribers[member.Id].SubscriptionEnd;
+
+                        var end = start + timeSpan;
+
+                        var styleRole = await guild.CreateRoleAsync($"{member.DisplayName} Style");
+                        await styleRole.ModifyPositionAsync(guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                        await member.GrantRoleAsync(styleRole);
+
+                        var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, styleRole.Id, new List<ulong>());
+
+                        Subscriber.Save(Bot.BotSettings.SubscriberXML);
+
+                        await member.SendMessageAsync(
+                            $"Спасибо за поддержку нашего сообщества! Ваша подписка истекает **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
+                            $"**Доступные возможности:**\n" +
+                            $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n" +
+                            $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n" +
+                            $"• `{Bot.BotSettings.Prefix}d roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                            $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n" +
+                            $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                            $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.");
+                    }
+                    catch (NotFoundException)
+                    {
+                        //Пользователь не найден.
+                    }
+
+                //Save data
+                SaveTopInviters(topInviters, fileName);
             }
+        }
+
+        /// <summary>
+        ///     Сохраняет данные о топ пригласивших за предыдущий месяц.
+        /// </summary>
+        /// <param name="topInviters"></param>
+        /// <param name="fileName"></param>
+        private static void SaveTopInviters(Dictionary<ulong, Inviter> topInviters, string fileName)
+        {
+            var doc = new XDocument();
+            var root = new XElement("topLeaderboard");
+
+            root.Add(new XElement("lastMonth", $"{DateTime.Now.AddMonths(-1):MM}/{DateTime.Now.AddMonths(-1):yy}"));
+
+            var invElement = new XElement("inviters");
+
+            foreach (var inviter in topInviters.Values)
+            {
+                var iElement = new XElement(
+                                    "inviter",
+                                    new XAttribute("id", inviter.InviterId),
+                                    new XAttribute("referrals", inviter.LastMonthActiveCount)
+                                );
+                invElement.Add(iElement);
+            }
+
+            root.Add(invElement);
+
+            doc.Add(root);
+            doc.Save(fileName);
         }
     }
 }

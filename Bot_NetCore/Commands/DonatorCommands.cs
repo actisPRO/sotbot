@@ -132,6 +132,7 @@ namespace Bot_NetCore.Commands
             var end = start + timeSpan;
 
             var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
+            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
             await member.GrantRoleAsync(role);
             
             var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, role.Id, new List<ulong>());
