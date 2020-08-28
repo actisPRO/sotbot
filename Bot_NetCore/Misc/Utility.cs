@@ -27,7 +27,7 @@ namespace Bot_NetCore.Misc
                     split.Add(msg);
                     msg = "";
                 }
-                msg += $"{row}. {s} \n";
+                msg += $"**{row}**. {s} \n";
                 if (row >= input.Count)
                     split.Add(msg);
                 row++;

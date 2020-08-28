@@ -23,7 +23,8 @@ namespace Bot_NetCore.Entities
                 var iElement = new XElement(
                     "inviter",
                     new XAttribute("id", inviter.InviterId),
-                    new XAttribute("active", inviter.Active)
+                    new XAttribute("active", inviter.Active),
+                    new XAttribute("ignored", inviter.Ignored)
                 );
                 foreach (var referral in inviter.Referrals)
                     iElement.Add(new XElement(
@@ -39,38 +40,30 @@ namespace Bot_NetCore.Entities
             doc.Save(fileName);
         }
 
-        /*[Obsolete("ReadFromXMLMigration is deprecated, please use ReadFromXML instead.")]
-        public static void ReadFromXMLMigration(string fileName)
-        {
-            //If old file exist do nothing
-            FileInfo fi = new FileInfo("old_" + fileName);
-            if (!fi.Exists)
-            {
-                //Rename old file
-                fi = new FileInfo(fileName);
-                if (fi.Exists)
-                {
-                    fi.MoveTo("old_" + fileName);
-                }
-
-                var doc = XDocument.Load("old_" + fileName);
-                foreach (var inviter in doc.Element("inviters").Elements("inviter"))
-                {
-                    var elem = new Inviter(Convert.ToUInt64(inviter.Element("inviterId").Value),
-                                              Convert.ToBoolean(inviter.Element("active").Value));
-                    foreach (var referral in inviter.Elements("referral")) elem.AddReferral(Convert.ToUInt64(referral.Value));
-                }
-                SaveToXML(fileName);
-            }
-        }*/
-
         public static void ReadFromXML(string fileName)
         {
             var doc = XDocument.Load(fileName);
             foreach (var inviter in doc.Element("inviters").Elements("inviter"))
             {
+                //Remove from here
+                var ignored = false;
+                try
+                {
+                    ignored = Convert.ToBoolean(inviter.Attribute("ignored").Value);
+                }
+                catch (NullReferenceException)
+                {
+
+                }
                 var elem = new Inviter(Convert.ToUInt64(inviter.Attribute("id").Value),
-                                          Convert.ToBoolean(inviter.Attribute("active").Value));
+                                       Convert.ToBoolean(inviter.Attribute("active").Value),
+                                       ignored);
+                //To here
+
+                //TODO: Uncomment and remove other one after first launch.
+                //var elem = new Inviter(Convert.ToUInt64(inviter.Attribute("id").Value),
+                //       Convert.ToBoolean(inviter.Attribute("active").Value),
+                //       Convert.ToBoolean(inviter.Attribute("ignored").Value));
 
                 foreach (var referral in inviter.Elements("referral"))
                     elem.AddReferral(

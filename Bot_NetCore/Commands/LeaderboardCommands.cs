@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
@@ -33,36 +34,80 @@ namespace Bot_NetCore.Commands
         [Command("showall")]
         [Description("Выводит список всех пригласивших, в том числе и спрятанных")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task ShowAll(CommandContext ctx)
+        public async Task ShowAll(CommandContext ctx, 
+            [Description("Фильтр поиска по месяцу в формате **mm**")] int month = 0,
+            [Description("Год фильтра **yy**")] int year = 0)
         {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+            await ctx.Channel.TriggerTypingAsync();
 
             var interactivity = ctx.Client.GetInteractivity();
 
+            DateTime dateFilter = DateTime.Now;
+
             List<string> inviters = new List<string>();
 
-            InviterList.Inviters.ToList()
-                .OrderByDescending(x => x.Value.Referrals.Count).ToList()
-                .ForEach(async x =>
+            var filteredData = InviterList.Inviters.OrderByDescending(x => x.Value.Referrals.Count)
+                .Where(x => x.Value.Referrals.Count > 0)
+                .ToDictionary(x => x.Key, x => x.Value);
+
+            if (month != 0)
+            {
+                if (month > 12)
                 {
-                    try
-                    {
-                        var inviter = await ctx.Guild.GetMemberAsync(x.Key);
-                        string state = x.Value.Active == true ? "Активен" : "Отключен";
-                        inviters.Add($"{inviter.DisplayName}#{inviter.Discriminator} пригласил {x.Value.Referrals.Count} Отображение: {state}");
-                    }
-                    catch (NotFoundException)
-                    {
-                        inviters.Add("Пользователь не найден");
-                    }
-                });
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить формат даты!");
+                    return;
+                }
 
-            var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters, "Полный список рефералов");
+                var date = "";
 
-            if (inviters_pagination.Count() > 1)
-                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                if (year != 0)
+                    date = $"{month}/{year}";
+                else
+                    date = $"{month}/{DateTime.Now:yy}";
+
+                dateFilter = DateTime.ParseExact(date, "M/yy", CultureInfo.InvariantCulture);
+                filteredData = filteredData.OrderByDescending(x => x.Value.Referrals.Where(x => x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count)
+                        .Where(x => x.Value.Referrals.Where(x => x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count != 0)
+                        .ToDictionary(x => x.Key, x => x.Value);
+            }
+
+            filteredData.ToList().ForEach(async x =>
+            {
+                try
+                {
+                    var inviter = await ctx.Guild.GetMemberAsync(x.Key);
+                    var referrals = 0;
+                    if (month == 0)
+                        referrals = x.Value.Referrals.Count;
+                    else
+                        referrals = x.Value.Referrals.Where(x => x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count;
+
+                    var state = x.Value.Active == true ? "Активен" : "Отключен";
+                    var ignored = x.Value.Ignored == true ? "Активен" : "Отключен";
+                    inviters.Add($"{ inviter.DisplayName}#{inviter.Discriminator} пригласил {referrals}" +
+                                 $"\nОтображение: {state} " +
+                                 $"| Подсчет в конце месяца: {ignored}");
+                }
+                catch (NotFoundException)
+                {
+                    inviters.Add("Пользователь не найден");
+                }
+            });
+
+            if (filteredData.Count > 0)
+            {
+
+                var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters, "Полный список рефералов");
+
+                if (inviters_pagination.Count() > 1)
+                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                else
+                    await ctx.RespondAsync(embed: inviters_pagination.First().Embed);
+            }
             else
-                await ctx.RespondAsync(embed: inviters_pagination.First().Embed);
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось найти пользователей в списке!");
+            }
         }
 
         [Command("listinvites")]
@@ -112,18 +157,31 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        [Command("updatemember")]
+        [Command("updateactive")]
         [Description("Обновляет статус отображения пользователя в leaderboard")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task UpdateMember(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        public async Task UpdateActive(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+            await ctx.Channel.TriggerTypingAsync();
 
             InviterList.Inviters.Where(x => x.Key == member.Id).ToList()
                 .ForEach(x => x.Value.UpdateState(!x.Value.Active));
             InviterList.SaveToXML(Bot.BotSettings.InviterXML);
 
             await UpdateLeaderboard(ctx.Guild);
+        }
+
+
+        [Command("updatehidden")]
+        [Description("Обновить статус учитывания при выдаче наград в конце месяца")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task UpdateIgnored(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        {
+            await ctx.Channel.TriggerTypingAsync();
+
+            InviterList.Inviters.Where(x => x.Key == member.Id).ToList()
+                .ForEach(x => x.Value.UpdateIgnored(!x.Value.Ignored));
+            InviterList.SaveToXML(Bot.BotSettings.InviterXML);
         }
 
         public static async Task<Task> UpdateLeaderboard(DiscordGuild guild)
@@ -140,7 +198,7 @@ namespace Bot_NetCore.Commands
                     //guild.GetMemberAsync(x.Key);
                     return true;
                 })
-                .Take(10).ToList();
+                .Take(10).ToDictionary(x => x.Key, x => x.Value);
 
             var embed = new DiscordEmbedBuilder
             {
@@ -194,6 +252,22 @@ namespace Bot_NetCore.Commands
                 await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
 
             return Task.CompletedTask;
+        }
+
+        private void CheckAndUpdateTopInviters(Dictionary<ulong, Inviter> topInviters)
+        {
+            //Read data
+
+            //Month: DateTime.Now.ToString("MMMM", new CultureInfo("ru-RU"))
+
+            //Save data if needed
+            if (true) //TODO: Condition
+            {
+                var doc = new XDocument();
+                var root = new XElement("topLeaderboard");
+
+                root.Add(new XElement("updatedRolesMonth", DateTime.Now.ToString("MMMM", new CultureInfo("ru-RU"))));
+            }
         }
     }
 }

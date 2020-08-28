@@ -6,10 +6,11 @@ namespace Bot_NetCore.Entities
 {
     public class Inviter
     {
-        public Inviter(ulong id, bool active = true)
+        public Inviter(ulong id, bool active = true, bool ignored = false)
         {
             InviterId = id;
             Active = active;
+            Ignored = ignored;
             Referrals = new Dictionary<ulong, Referral>();
 
             InviterList.Inviters[InviterId] = this;
@@ -18,6 +19,7 @@ namespace Bot_NetCore.Entities
         public ulong InviterId { get; }
         public Dictionary<ulong, Referral> Referrals { get; }
         public bool Active { get; private set; }
+        public bool Ignored { get; private set; }
         public int ActiveCount { get; private set; }
         public int CurrentMonthActiveCount { get; private set; }
 
@@ -64,12 +66,19 @@ namespace Bot_NetCore.Entities
         private void UpdateActiveReferrals()
         {
             ActiveCount = Referrals.Where(x => x.Value.Active == true).ToList().Count;
-            CurrentMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == DateTime.Now.Month).ToList().Count;
+            CurrentMonthActiveCount = Referrals.Where(x => x.Value.Active == true && x.Value.Date == DateTime.Now.Date).ToList().Count;
         }
 
         public void UpdateState(bool state)
         {
             Active = state;
+
+            InviterList.Inviters[InviterId] = this;
+        }
+
+        public void UpdateIgnored(bool ignored)
+        {
+            Ignored = ignored;
 
             InviterList.Inviters[InviterId] = this;
         }
