@@ -49,7 +49,7 @@ namespace Bot_NetCore.Commands
 
                 foreach (var ovl in command.Overloads.OrderByDescending(x => x.Priority))
                 {
-                    sb.Append('`').Append(command.Parent == null ? command.QualifiedName : $"{command.Parent.QualifiedName} {command.QualifiedName}");
+                    sb.Append('`').Append(command.QualifiedName);
 
                     foreach (var arg in ovl.Arguments)
                         sb.Append(arg.IsOptional || arg.IsCatchAll ? " [" : " <").Append(arg.Name).Append(arg.IsCatchAll ? "..." : "").Append(arg.IsOptional || arg.IsCatchAll ? ']' : '>');
