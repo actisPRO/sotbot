@@ -217,7 +217,17 @@ namespace Bot_NetCore
                         var role = guild.GetRole(sub.PrivateRole);
                         if (role != null)
                         {
-                            await role.DeleteAsync();
+                            if (Donator.Donators.ContainsKey(sub.Member))
+                            {
+                                if (Donator.Donators[sub.Member].PrivateRole == 0)
+                                {
+                                    await role.DeleteAsync();
+                                }
+                            }
+                            else
+                            {
+                                await role.DeleteAsync();
+                            }
                         }
 
                         Subscriber.Subscribers.Remove(sub.Member);
