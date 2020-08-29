@@ -233,7 +233,15 @@ namespace Bot_NetCore.Commands
         [Description("Устанавливает донатерский цвет. Формат: #000000 для владельцев приватных ролей, либо название цвета.")]
         public async Task Color(CommandContext ctx, [RemainingText] string color)
         {
-            if (Donator.Donators.ContainsKey(ctx.Member.Id)) // для обычных донатеров
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
+                await role.ModifyAsync(x => x.Color = new DiscordColor(color));
+                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+    
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id)) // для обычных донатеров
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
                 var donator = Donator.Donators[ctx.Member.Id];
@@ -281,14 +289,6 @@ namespace Bot_NetCore.Commands
     
                     await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
                 }
-            }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
-            {
-                var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
-                await role.ModifyAsync(x => x.Color = new DiscordColor(color));
-                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-    
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
             }
             else
             {
@@ -375,7 +375,29 @@ namespace Bot_NetCore.Commands
         [Description("Измененяет название роли донатера.")]
         public async Task Rename(CommandContext ctx, [RemainingText] string newName)
         {
-            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                try //Проверка названия на копирование админ ролей
+                {
+                    if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles)
+                        .Any(x => ctx.Guild.GetRole(x).Name.Equals(newName, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимое название роли **{newName}**");
+                        return;
+                    }
+                }
+                catch (NullReferenceException ex)
+                {
+                    //Не находит на сервере одну из админ ролей
+                    throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
+                }
+
+                var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
+                await role.ModifyAsync(x => x.Name = newName);
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
@@ -405,28 +427,6 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync(
                     $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
             }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
-            {
-                try //Проверка названия на копирование админ ролей
-                {
-                    if (Bot.GetMultiplySettingsSeparated(Bot.BotSettings.AdminRoles)
-                        .Any(x => ctx.Guild.GetRole(x).Name.Equals(newName, StringComparison.InvariantCultureIgnoreCase)))
-                    {
-                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимое название роли **{newName}**");
-                        return;
-                    }
-                }
-                catch (NullReferenceException ex)
-                {
-                    //Не находит на сервере одну из админ ролей
-                    throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
-                }
-
-                var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
-                await role.ModifyAsync(x => x.Name = newName);
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
-            }
             else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
@@ -437,7 +437,21 @@ namespace Bot_NetCore.Commands
         [Description("Добавляет вашему другу цвет донатера (ваш)")]
         public async Task Friend(CommandContext ctx, DiscordMember member)
         {
-            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                if (Subscriber.Subscribers[ctx.Member.Id].Friends.Count == 5)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
+                    return;
+                }
+
+                Subscriber.Subscribers[ctx.Member.Id].Friends.Add(member.Id);
+                await member.GrantRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole));
+                Subscriber.Save(Bot.BotSettings.SubscriberXML);
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
@@ -459,20 +473,6 @@ namespace Bot_NetCore.Commands
 
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
             }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
-            {
-                if (Subscriber.Subscribers[ctx.Member.Id].Friends.Count == 5)
-                {
-                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
-                    return;
-                }
-
-                Subscriber.Subscribers[ctx.Member.Id].Friends.Add(member.Id);
-                await member.GrantRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole));
-                Subscriber.Save(Bot.BotSettings.SubscriberXML);
-
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
-            }
             else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
@@ -484,7 +484,15 @@ namespace Bot_NetCore.Commands
         public async Task Unfriend(CommandContext ctx, DiscordMember member)
         {
             //Удаление роли которую дали
-            if (Donator.Donators.ContainsKey(member.Id) &&
+            if (Subscriber.Subscribers.ContainsKey(member.Id) &&
+                Subscriber.Subscribers[member.Id].Friends.Contains(ctx.Member.Id))
+            {
+                Subscriber.Subscribers[member.Id].Friends.Remove(ctx.Member.Id);
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[member.Id].PrivateRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
+                Subscriber.Save(Bot.BotSettings.DonatorXML);
+            }
+            else if (Donator.Donators.ContainsKey(member.Id) &&
                 Donator.Donators[member.Id].Friends.Contains(ctx.Member.Id))
             {
                 Donator.Donators[member.Id].Friends.Remove(ctx.Member.Id);
@@ -492,23 +500,23 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
                 Donator.Save(Bot.BotSettings.DonatorXML);
             }
-
+            
             //Удаление своей роли
-            if (Donator.Donators.ContainsKey(ctx.Member.Id) &&
-                Donator.Donators[ctx.Member.Id].Friends.Contains(member.Id))
-            {
-                Donator.Donators[ctx.Member.Id].Friends.Remove(member.Id);
-                await member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole));
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
-                Donator.Save(Bot.BotSettings.DonatorXML);
-            }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id) &&
-                     Subscriber.Subscribers[ctx.Member.Id].Friends.Contains(member.Id))
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id) &&
+                Subscriber.Subscribers[ctx.Member.Id].Friends.Contains(member.Id))
             {
                 Subscriber.Subscribers[ctx.Member.Id].Friends.Remove(member.Id);
                 await member.RevokeRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
                 Subscriber.Save(Bot.BotSettings.SubscriberXML);
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id) &&
+                      Donator.Donators[ctx.Member.Id].Friends.Contains(member.Id))
+            {
+                Donator.Donators[ctx.Member.Id].Friends.Remove(member.Id);
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
+                Donator.Save(Bot.BotSettings.DonatorXML);
             }
         }
 
@@ -516,7 +524,28 @@ namespace Bot_NetCore.Commands
         [Description("Выводит список друзей")]
         public async Task Friends(CommandContext ctx)
         {
-            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                var i = 0;
+                var friendsMsg = "";
+                foreach (var friend in Subscriber.Subscribers[ctx.Member.Id].Friends)
+                {
+                    DiscordMember discordMember = null;
+                    try
+                    {
+                        discordMember = await ctx.Guild.GetMemberAsync(friend);
+                    }
+                    catch (NotFoundException)
+                    {
+                        continue;
+                    }
+                    i++;
+                    friendsMsg += $"**{i}**. {discordMember.DisplayName}#{discordMember.Discriminator} \n";
+                }
+                await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
+                                       $"{friendsMsg}");
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
@@ -544,28 +573,7 @@ namespace Bot_NetCore.Commands
                 }
                 await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
                                        $"{friendsMsg}");
-            }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
-            {
-                var i = 0;
-                var friendsMsg = "";
-                foreach (var friend in Subscriber.Subscribers[ctx.Member.Id].Friends)
-                {
-                    DiscordMember discordMember = null;
-                    try
-                    {
-                        discordMember = await ctx.Guild.GetMemberAsync(friend);
-                    }
-                    catch (NotFoundException)
-                    {
-                        continue;
-                    }
-                    i++;
-                    friendsMsg += $"**{i}**. {discordMember.DisplayName}#{discordMember.Discriminator} \n";
-                }
-                await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
-                                       $"{friendsMsg}");
-            }
+            } 
             else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
@@ -576,7 +584,12 @@ namespace Bot_NetCore.Commands
         [Description("Выдает роль донатера.")]
         public async Task RoleAdd(CommandContext ctx)
         {
-            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
@@ -586,11 +599,6 @@ namespace Bot_NetCore.Commands
                     return;
                 }
 
-                await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
-            }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
-            {
                 await ctx.Member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдана роль донатера!");
             }
@@ -604,7 +612,12 @@ namespace Bot_NetCore.Commands
         [Description("Убирает роль донатера.")]
         public async Task RoleRemove(CommandContext ctx)
         {
-            if (Donator.Donators.ContainsKey(ctx.Member.Id))
+            if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
+            {
+                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
+            }
+            else if (Donator.Donators.ContainsKey(ctx.Member.Id))
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
 
@@ -614,11 +627,6 @@ namespace Bot_NetCore.Commands
                     return;
                 }
 
-                await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
-            }
-            else if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
-            {
                 await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно снята роль донатера!");
             }
