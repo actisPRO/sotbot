@@ -2099,6 +2099,11 @@ namespace Bot_NetCore
         ///     ID роли топового реферрала.
         /// </summary>
         public ulong TopMonthRole;
+
+        /// <summary>
+        ///     ID канал со статусом игровых серверов
+        /// </summary>
+        public ulong ServerStatusChannel;
     }
 
     public enum CommandType

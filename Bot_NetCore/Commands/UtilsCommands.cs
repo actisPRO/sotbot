@@ -286,5 +286,32 @@ namespace Bot_NetCore.Commands
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
         }
+
+        [Command("serverstatus")]
+        [Description("Обновляет статус игровых серверов")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task ServerStatus(CommandContext ctx, string status = "")
+        {
+            var name = status.ToLower() switch
+            {
+                "on" => "🟢сервера-работают🟢",
+                "off" => "🔴сервера-отключены🔴",
+                "issues" => "🟠замечены-проблемы🟠",
+                "investigating" => "🟡rare-знают-о-проблеме🟡",
+                _ => "error"
+            };
+
+            if (name == "error")
+            {
+                await ctx.RespondAsync("**Доступные статусы**\n\n" +
+                                       "`!serverstatus on` — `🟢сервера-работают🟢`\n" +
+                                       "`!serverstatus off` — `🔴сервера-отключены🔴`\n" +
+                                       "`!serverstatus issues` — `🟠замечены-проблемы🟠`\n" +
+                                       "`!serverstatus investigating` — `🟡rare-знают-о-проблеме🟡`\n");
+                return;
+            }
+
+            await ctx.Guild.GetChannel(Bot.BotSettings.ServerStatusChannel).ModifyAsync(x => x.Name = name);
+        }
     }
 }
