@@ -260,7 +260,7 @@ namespace Bot_NetCore.Commands
                 ReportList.FleetPurges.Add(member.Id, fleetPurge);
             else
                 ReportList.FleetPurges[member.Id].UpdateReport(DateTime.Now,
-                    isFleetCaptain ? new TimeSpan(Math.Max(durationTimeSpan.Ticks, ReportList.FleetPurges[member.Id].ReportDuration.Ticks)) : durationTimeSpan, //Если капитан рейда, перезаписываем только максимальное время блокировки
+                    durationTimeSpan,
                     ctx.Member.Id,
                     reason);
 
