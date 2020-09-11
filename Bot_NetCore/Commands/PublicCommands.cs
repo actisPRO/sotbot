@@ -218,7 +218,7 @@ namespace Bot_NetCore.Commands
         [Aliases("cf")]
         [Description("Создаёт голосование для создания рейда")]
         [Cooldown(1, 0, CooldownBucketType.Guild)]
-        public async Task CreateFleetAsync(CommandContext ctx,
+        public async Task CreateFleet(CommandContext ctx,
             [Description("Количество кораблей [1 - 5]")] int nShips,
             [Description("Слоты на корабле [2 - 25]")] int slots,
             [RemainingText, Description("Название рейда")] string notes)

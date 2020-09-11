@@ -185,7 +185,7 @@ namespace Bot_NetCore.Commands
             InviterList.SaveToXML(Bot.BotSettings.InviterXML);
         }
 
-        public static async Task<Task> UpdateLeaderboard(DiscordGuild guild)
+        public static async Task UpdateLeaderboard(DiscordGuild guild)
         {
             var channel = guild.GetChannel(Bot.BotSettings.InvitesLeaderboardChannel);
 
@@ -253,8 +253,6 @@ namespace Bot_NetCore.Commands
                 await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
 
             await CheckAndUpdateTopInvitersAsync(guild);
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
