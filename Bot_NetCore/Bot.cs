@@ -214,21 +214,7 @@ namespace Bot_NetCore
                             await member.SendMessageAsync("Ваша подписка истекла :cry:");
                         }
 
-                        var role = guild.GetRole(sub.PrivateRole);
-                        if (role != null)
-                        {
-                            if (Donator.Donators.ContainsKey(sub.Member))
-                            {
-                                if (Donator.Donators[sub.Member].PrivateRole == 0)
-                                {
-                                    await role.DeleteAsync();
-                                }
-                            }
-                            else
-                            {
-                                await role.DeleteAsync();
-                            }
-                        }
+                        await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
 
                         Subscriber.Subscribers.Remove(sub.Member);
                         Subscriber.Save(BotSettings.SubscriberXML);

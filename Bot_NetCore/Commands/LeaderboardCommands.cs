@@ -313,8 +313,7 @@ namespace Bot_NetCore.Commands
 
                         var end = start + timeSpan;
 
-                        var styleRole = await guild.CreateRoleAsync($"{member.DisplayName} Style");
-                        await styleRole.ModifyPositionAsync(guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                        var styleRole = await DonatorCommands.GetPrivateRoleAsync(guild, member);
                         await member.GrantRoleAsync(styleRole);
 
                         var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, styleRole.Id, new List<ulong>());
@@ -322,7 +321,7 @@ namespace Bot_NetCore.Commands
                         Subscriber.Save(Bot.BotSettings.SubscriberXML);
 
                         await member.SendMessageAsync(
-                            $"Спасибо за поддержку нашего сообщества! Ваша подписка истекает **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
+                            $"Спасибо за поддержку нашего сообщества! Вам выдана подписка за топ инвайты до: **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
                             $"**Доступные возможности:**\n" +
                             $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n" +
                             $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n" +

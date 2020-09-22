@@ -80,7 +80,7 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь уже является донатером!");
                 return;
             }
-            
+
             var donator = new Donator(member.Id, balance, 0, DateTime.Now, new List<ulong>(), false);
             var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
             var message = $"Спасибо за поддержку нашего сообщества! **Ваш баланс: {balance} ₽.\n" +
@@ -97,8 +97,7 @@ namespace Bot_NetCore.Commands
                 message += $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n";
                 message += $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n";
 
-                var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
-                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                var role = await GetPrivateRoleAsync(ctx.Guild, member);
                 await member.GrantRoleAsync(role);
                 donator.PrivateRole = role.Id;
             }
@@ -106,7 +105,7 @@ namespace Bot_NetCore.Commands
             if (balance >= prices.WantedPrice)
                 message += $"• `{Bot.BotSettings.Prefix}d roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
                            $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
-            
+
             if (balance >= prices.FriendsPrice)
                 message += $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
                            $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.";
@@ -127,18 +126,17 @@ namespace Bot_NetCore.Commands
             }
 
             var timeSpan = Utility.TimeSpanParse(time);
-            
+
             var start = DateTime.Now;
             var end = start + timeSpan;
 
-            var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
-            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+            var role = await GetPrivateRoleAsync(ctx.Guild, member);
             await member.GrantRoleAsync(role);
-            
+
             var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, role.Id, new List<ulong>());
 
             Subscriber.Save(Bot.BotSettings.SubscriberXML);
-            
+
             await member.SendMessageAsync(
                 $"Спасибо за поддержку нашего сообщества! Ваша подписка истекает **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
                 $"**Доступные возможности:**\n" +
@@ -177,7 +175,7 @@ namespace Bot_NetCore.Commands
                 message += $"• `{Bot.BotSettings.Prefix}donator color цвет (из списка)` — изменяет цвет вашего ника.\n";
             if (donator.PrivateRole != 0)
             {
-                await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
+                await DeletePrivateRoleAsync(ctx.Guild, donator.PrivateRole);
                 donator.PrivateRole = 0;
             }
 
@@ -186,12 +184,11 @@ namespace Bot_NetCore.Commands
                            $"• `{Bot.BotSettings.Prefix}donator rename` — изменяет название вашей роли донатера.\n";
             if (oldBalance < prices.RolePrice)
             {
-                var role = await ctx.Guild.CreateRoleAsync($"{member.Username} Style");
-                await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                var role = await GetPrivateRoleAsync(ctx.Guild, member);
                 await member.GrantRoleAsync(role);
                 donator.PrivateRole = role.Id;
             }
-            
+
             if (newBalance >= prices.WantedPrice)
                 message += $"• `{Bot.BotSettings.Prefix}donator roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
                            $"• `{Bot.BotSettings.Prefix}donator rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n";
@@ -216,12 +213,7 @@ namespace Bot_NetCore.Commands
 
             var donator = Donator.Donators[member.Id];
 
-            if (member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole)))
-                await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorRole),
-                        "Donator deletion");
-
-            if (donator.PrivateRole != 0)
-                await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync("Donator deletion");
+            await DeletePrivateRoleAsync(ctx.Guild, member.Id);
 
             Donator.Donators.Remove(member.Id);
             Donator.Save(Bot.BotSettings.DonatorXML);
@@ -238,14 +230,14 @@ namespace Bot_NetCore.Commands
                 var role = ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole);
                 await role.ModifyAsync(x => x.Color = new DiscordColor(color));
                 await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-    
+
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
             }
             else if (Donator.Donators.ContainsKey(ctx.Member.Id)) // для обычных донатеров
             {
                 var prices = PriceList.Prices[PriceList.GetLastDate(Donator.Donators[ctx.Member.Id].Date)];
                 var donator = Donator.Donators[ctx.Member.Id];
-    
+
                 if (donator.Balance < prices.ColorPrice)
                 {
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
@@ -259,7 +251,7 @@ namespace Bot_NetCore.Commands
                             $"{Bot.BotSettings.ErrorEmoji} Не заданы цветные роли! Обратитесь к администратору для решения проблемы.");
                         return;
                     }
-    
+
                     foreach (var role in avaliableRoles)
                     {
                         if (role.Name.ToLower() == color.ToLower())
@@ -270,14 +262,14 @@ namespace Bot_NetCore.Commands
                                     await ctx.Member.RevokeRoleAsync(memberRole);
                                     break;
                                 }
-                                    
+
                             await ctx.Member.GrantRoleAsync(role);
                             await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
                             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
                             return;
                         }
                     }
-    
+
                     await ctx.RespondAsync(
                         $"{Bot.BotSettings.ErrorEmoji} Неправильно задано имя цвета! Используйте `!d colors`, чтобы получить список доступых цветов. ");
                 }
@@ -286,7 +278,7 @@ namespace Bot_NetCore.Commands
                     var role = ctx.Guild.GetRole(donator.PrivateRole);
                     await role.ModifyAsync(x => x.Color = new DiscordColor(color));
                     await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-    
+
                     await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
                 }
             }
@@ -357,16 +349,16 @@ namespace Bot_NetCore.Commands
                 ["Purple"] = DiscordColor.Purple,
                 ["Light purple"] = new DiscordColor("876C99"),
             };
-            
+
             var roles = new List<ulong>();
             using (var fs = File.Create("generated/color_roles.txt"))
-                using (var sw = new StreamWriter(fs))
-                    foreach (var color in colors)
-                    {
-                        var role = await ctx.Guild.CreateRoleAsync(color.Key, color: color.Value);
-                        roles.Add(role.Id);
-                        await sw.WriteLineAsync(role.Id.ToString());
-                    }
+            using (var sw = new StreamWriter(fs))
+                foreach (var color in colors)
+                {
+                    var role = await ctx.Guild.CreateRoleAsync(color.Key, color: color.Value);
+                    roles.Add(role.Id);
+                    await sw.WriteLineAsync(role.Id.ToString());
+                }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно сгенерированы цветные роли!");
         }
@@ -500,7 +492,7 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
                 Donator.Save(Bot.BotSettings.DonatorXML);
             }
-            
+
             //Удаление своей роли
             if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id) &&
                 Subscriber.Subscribers[ctx.Member.Id].Friends.Contains(member.Id))
@@ -573,7 +565,7 @@ namespace Bot_NetCore.Commands
                 }
                 await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
                                        $"{friendsMsg}");
-            } 
+            }
             else
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
@@ -716,7 +708,7 @@ namespace Bot_NetCore.Commands
         {
             foreach (var oldDonator in DonatorList.Donators.Values)
             {
-                var donator = new Donator(oldDonator.Member, (int) oldDonator.Balance, oldDonator.ColorRole, oldDonator.Date, oldDonator.Friends, oldDonator.Hidden);
+                var donator = new Donator(oldDonator.Member, (int)oldDonator.Balance, oldDonator.ColorRole, oldDonator.Date, oldDonator.Friends, oldDonator.Hidden);
                 var prices = PriceList.Prices[PriceList.GetLastDate(DateTime.Now)];
                 if (donator.Balance < prices.RolePrice)
                 {
@@ -733,7 +725,7 @@ namespace Bot_NetCore.Commands
         {
             if (!File.Exists("generated/color_roles.txt"))
                 return null;
-            
+
             var colorRoles = new List<DiscordRole>();
             using (var fs = new FileStream("generated/color_roles.txt", FileMode.Open))
             using (var sr = new StreamReader(fs))
@@ -747,6 +739,60 @@ namespace Bot_NetCore.Commands
             }
 
             return colorRoles;
+        }
+
+        public static async Task<DiscordRole> GetPrivateRoleAsync(DiscordGuild guild, DiscordMember member)
+        {
+            DiscordRole role;
+
+            //Check for existing donator color role
+            if (Donator.Donators.ContainsKey(member.Id) && Donator.Donators[member.Id].PrivateRole != 0)
+            {
+                role = guild.GetRole(Donator.Donators[member.Id].PrivateRole);
+            } //Check for existing subscriber color role
+            else if (Subscriber.Subscribers.ContainsKey(member.Id))
+            {
+                role = guild.GetRole(Subscriber.Subscribers[member.Id].PrivateRole);
+            } //Otherwise create new color role
+            else
+            {
+
+                role = await guild.CreateRoleAsync($"{member.DisplayName} Style");
+                await role.ModifyPositionAsync(guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+            }
+
+            return role;
+        }
+
+        public static async Task DeletePrivateRoleAsync(DiscordGuild guild, ulong member)
+        {
+            //Check if sub color role is expired and remove if no donator role exists
+            if (Subscriber.Subscribers.ContainsKey(member) &&
+                DateTime.Now > Subscriber.Subscribers[member].SubscriptionEnd)
+            {
+                // Found role to delete
+
+                //Check if there's no donator color role
+                if (!Donator.Donators.ContainsKey(member) ||
+                    (Donator.Donators.ContainsKey(member) &&
+                     Donator.Donators[member].PrivateRole == 0))
+                {
+                    await guild.GetRole(Subscriber.Subscribers[member].PrivateRole).DeleteAsync();
+                }
+            }
+            //Delete donator role
+            else if (Donator.Donators.ContainsKey(member) &&
+                     Donator.Donators[member].PrivateRole != 0)
+            {
+                // Check if there's no sub color roles
+                if (Subscriber.Subscribers.ContainsKey(member) &&
+                    DateTime.Now > Subscriber.Subscribers[member].SubscriptionEnd)
+                {
+                    await guild.GetRole(Donator.Donators[member].PrivateRole).DeleteAsync();
+                }
+            }
+            else
+                throw new Exception("Private role not found on deleting");
         }
     }
 }
