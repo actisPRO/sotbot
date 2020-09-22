@@ -1317,8 +1317,16 @@ namespace Bot_NetCore
                 return;
             }
 
+            if (e.Exception is InvalidOperationException &&
+                e.Exception.Message == "No matching subcommands were found, and this group is not executable.")
+            {
+                await e.Context.RespondAsync(
+                    $"{BotSettings.ErrorEmoji} Не удалось найти подкоманду.");
+                return;
+            }
+
             if (e.Exception is ArgumentNullException &&
-                e.Exception.Message == "Value cannot be null. (Parameter 'key').")
+                e.Exception.Message == "Value cannot be null. (Parameter 'key')")
             {
                 await e.Context.RespondAsync(
                     $"{BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели недопустимые параметры.");
