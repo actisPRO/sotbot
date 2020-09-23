@@ -6,7 +6,7 @@ using DSharpPlus;
 namespace Bot_NetCore.Misc
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class AsyncListenerAttribute : Attribute
+    internal class AsyncListenerAttribute : Attribute
     {
         public EventTypes Target { get; }
 
