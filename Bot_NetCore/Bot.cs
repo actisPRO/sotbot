@@ -31,7 +31,7 @@ namespace Bot_NetCore
     /// <summary>
     ///     Основной класс бота
     /// </summary>
-    internal sealed class Bot
+    public class Bot
     {
         /// <summary>
         ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
@@ -134,16 +134,9 @@ namespace Bot_NetCore
 
             //Ивенты
             Client.Ready += ClientOnReady;
-            Client.GuildMemberAdded += ClientOnGuildMemberAdded;
-            Client.GuildMemberRemoved += ClientOnGuildMemberRemoved;
-            Client.MessageDeleted += ClientOnMessageDeleted;
-            Client.VoiceStateUpdated += ClientOnVoiceStateUpdated;
-            Client.MessageCreated += ClientOnMessageCreated;
-            Client.MessageReactionAdded += ClientOnMessageReactionAdded;
-            Client.InviteCreated += ClientOnInviteCreated;
-            Client.InviteDeleted += ClientOnInviteDeleted;
-            Client.ClientErrored += ClientOnErrored;
-            Client.GuildAvailable += ClientOnGuildAvailable;
+
+            AsyncListenerHandler.InstallListeners(Client, this);
+
 
             //Не используются
             //Client.MessageReactionRemoved += ClientOnMessageReactionRemoved; //Не нужный ивент
@@ -355,14 +348,6 @@ namespace Bot_NetCore
                         DateTime.Now);
                 }
             }
-        }
-
-        private Task ClientOnErrored(ClientErrorEventArgs e)
-        {
-            e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
-                $"Возникла ошибка при выполнении ивента {e.EventName}.",
-                DateTime.Now);
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -944,67 +929,6 @@ namespace Bot_NetCore
                         default:
                             return;
                     }
-                }
-        }
-
-        /// <summary>
-        ///     Отлавливаем удаленные сообщения и отправляем в лог
-        /// </summary>
-        private async Task ClientOnMessageDeleted(MessageDeleteEventArgs e)
-        {
-            if (!GetMultiplySettingsSeparated(BotSettings.IgnoredChannels).Contains(e.Channel.Id)
-                ) // в лог не должны отправляться сообщения,
-                // удаленные из лога
-                try
-                {
-                    //Каналы авто-очистки отправляются в отдельный канал.
-                    if (e.Channel.Id == BotSettings.FindChannel ||
-                        e.Channel.Id == BotSettings.FleetCreationChannel ||
-                        e.Channel.Id == BotSettings.CodexReserveChannel)
-                        await e.Guild.GetChannel(BotSettings.AutoclearLogChannel)
-                            .SendMessageAsync("**Удаление сообщения**\n" +
-                                            $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                            $"**Канал:** {e.Channel}\n" +
-                                            $"**Содержимое: ```{e.Message.Content}```**");
-                    else
-                    {
-                        using (TextFieldParser parser = new TextFieldParser("generated/attachments_messages.csv"))
-                        {
-                            parser.TextFieldType = FieldType.Delimited;
-                            parser.SetDelimiters(",");
-                            while (!parser.EndOfData)
-                            {
-                                string[] fields = parser.ReadFields();
-                                if (Convert.ToUInt64(fields[0]) == e.Message.Id)
-                                {
-                                    var attachment =
-                                        (await e.Guild.GetChannel(BotSettings.AttachmentsLog)
-                                            .GetMessageAsync(Convert.ToUInt64(fields[1]))).Attachments[0];
-
-                                    var file = $"generated/attachments/{attachment.FileName}";
-
-                                    var client = new WebClient();
-                                    client.DownloadFile(attachment.Url, file);
-                                    await e.Guild.GetChannel(BotSettings.FulllogChannel)
-                                        .SendFileAsync(file, "**Удаление сообщения**\n" +
-                                                          $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                                          $"**Канал:** {e.Channel}\n" +
-                                                          $"**Содержимое: ```{e.Message.Content}```**");
-                                    File.Delete(file);
-                                    return;
-                                }
-                            }
-                        }
-                        await e.Guild.GetChannel(BotSettings.FulllogChannel)
-                            .SendMessageAsync("**Удаление сообщения**\n" +
-                                              $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
-                                              $"**Канал:** {e.Channel}\n" +
-                                              $"**Содержимое: ```{e.Message.Content}```**");
-                    }
-                }
-                catch (NullReferenceException)
-                {
-                    //Ничего не делаем
                 }
         }
 
