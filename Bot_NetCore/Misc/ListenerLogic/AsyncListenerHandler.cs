@@ -6,7 +6,7 @@ using DSharpPlus;
 
 namespace Bot_NetCore.Misc
 {
-    public static class AsyncListenerHandler
+    internal static class AsyncListenerHandler
     {
         public static IEnumerable<ListenerMethod> ListenerMethods { get; private set; }
 
@@ -29,7 +29,7 @@ namespace Bot_NetCore.Misc
         }
     }
 
-    public class ListenerMethod
+    internal class ListenerMethod
     {
         public MethodInfo Method { get; internal set; }
         public AsyncListenerAttribute Attribute { get; internal set; }
