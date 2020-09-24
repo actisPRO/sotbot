@@ -252,7 +252,7 @@ namespace Bot_NetCore.Commands
             else
                 await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
 
-            await CheckAndUpdateTopInvitersAsync(guild);
+            //await CheckAndUpdateTopInvitersAsync(guild);
         }
 
         /// <summary>
