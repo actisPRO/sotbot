@@ -54,57 +54,7 @@ namespace Bot_NetCore.Commands
         {
             await ctx.RespondAsync(Convert.ToString(role.Id));
         }
-
-        [Command("updateDonatorMessageLegacy")]
-        [RequirePermissions(Permissions.Administrator)]
-        [Hidden]
-        public async Task UpdateDonatorMessageLegacy(CommandContext ctx)
-        {
-            var donators = new Dictionary<ulong, double>(); //список донатеров, который будем сортировать
-            foreach (var donator in DonatorList.Donators.Values)
-                if (!donator.Hidden)
-                    donators.Add(donator.Member, donator.Balance);
-
-            var ordered = donators.OrderBy(x => -x.Value);
-            var message = "**Топ донатов**\n\n```ruby\n";
-
-            var i = 0;
-            var prevValue = double.MaxValue;
-            foreach (var el in ordered)
-            {
-                if (el.Value < prevValue)
-                {
-                    prevValue = el.Value;
-                    i++;
-                }
-
-                var mention = "";
-                try
-                {
-                    var donatorMemberEntity = await ctx.Guild.GetMemberAsync(el.Key);
-
-                    mention = donatorMemberEntity.Username + "#" + donatorMemberEntity.Discriminator;
-                }
-                catch (NotFoundException) //пользователь мог покинуть сервер 
-                {
-                    mention = "Участник покинул сервер";
-                }
-
-                message += $"{i}. {mention} — {el.Value}₽\n";
-
-                if (message.Length >= 1950)
-                {
-                }
-            }
-
-            message += "```";
-            //TODO: settings.xml
-            var messageEntity = await ctx.Guild.GetChannel(459657130786422784)
-                .GetMessageAsync(Bot.BotSettings.DonatorMessage);
-            await messageEntity.ModifyAsync(message);
-            //Console.WriteLine("Message length: " + message.Length);
-        }
-
+        
         //[Command("resetfleet")]
         //public async Task ResetFleetChannels(CommandContext ctx) //Команда для сброса названий и слотов каналов рейда после "рейдеров"
         //{

@@ -72,18 +72,17 @@ namespace Bot_NetCore
             var bot = new Bot();
 
             Console.WriteLine(@"   
-                ██████╗    ██╗██╗  ██╗
-                ╚════██╗  ███║██║  ██║
-                 █████╔╝  ╚██║███████║
+                ██████╗    ██╗███████╗
+                ╚════██╗  ███║██╔════╝
+                 █████╔╝  ╚██║███████╗
                 ██╔═══╝    ██║╚════██║
-                ███████╗██╗██║     ██║
-                ╚══════╝╚═╝╚═╝     ╚═╝
+                ███████╗██╗██║███████║
+                ╚══════╝╚═╝╚═╝╚══════╝
             "); //Font Name: ANSI Shadow
 
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
-            DonatorList.ReadFromXML("donators.old.xml"); //TODO: удалить после миграции
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
