@@ -26,11 +26,13 @@ namespace Bot_NetCore.Entities
         public int CurrentMonthActiveCount { get; private set; }
         public int LastMonthActiveCount { get; private set; }
 
-        public static Inviter Create(ulong inviterId)
+        public static Inviter Create(ulong inviterId, bool isBot = false)
         {
-            InviterList.Update(new Inviter(inviterId));
+            var inviter = new Inviter(inviterId, ignored: isBot);
 
-            return new Inviter(inviterId);
+            InviterList.Update(inviter);
+
+            return inviter;
         }
 
         public void AddReferral(ulong referralId, bool state = true, DateTime? date = null)

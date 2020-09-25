@@ -35,9 +35,10 @@ namespace Bot_NetCore.Commands
         [Command("showall")]
         [Description("Выводит список всех пригласивших, в том числе и спрятанных")]
         [RequirePermissions(Permissions.Administrator)]
-        public async Task ShowAll(CommandContext ctx, 
+        public async Task ShowAll(CommandContext ctx,
             [Description("Фильтр поиска по месяцу в формате **mm**")] int month = 0,
-            [Description("Год фильтра **yy**")] int year = 0)
+            [Description("Год фильтра **yy**")] int year = 0,
+            [Description("Количество")] int elements = 0)
         {
             await ctx.Channel.TriggerTypingAsync();
 
@@ -47,8 +48,8 @@ namespace Bot_NetCore.Commands
 
             List<string> inviters = new List<string>();
 
-            var filteredData = InviterList.Inviters.OrderByDescending(x => x.Value.Referrals.Count)
-                .Where(x => x.Value.Referrals.Count > 0)
+            var filteredData = InviterList.Inviters.OrderByDescending(x => x.Value.ActiveCount)
+                .Where(x => x.Value.ActiveCount > 0)
                 .ToDictionary(x => x.Key, x => x.Value);
 
             if (month != 0)
@@ -59,41 +60,38 @@ namespace Bot_NetCore.Commands
                     return;
                 }
 
-                var date = "";
-
-                if (year != 0)
-                    date = $"{month}/{year}";
-                else
-                    date = $"{month}/{DateTime.Now:yy}";
+                if (year == 0) year = DateTime.Now.Year - 2000;
+                var date = $"{month}/{year}";
 
                 dateFilter = DateTime.ParseExact(date, "M/yy", CultureInfo.InvariantCulture);
-                filteredData = filteredData.OrderByDescending(x => x.Value.Referrals.Where(x => x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count)
-                        .Where(x => x.Value.Referrals.Where(x => x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count != 0)
+                filteredData = filteredData.OrderByDescending(x => x.Value.Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count)
+                        .Where(x => x.Value.Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == dateFilter.Month && x.Value.Date.Year == dateFilter.Year).ToList().Count != 0)
                         .ToDictionary(x => x.Key, x => x.Value);
             }
 
-            filteredData.ToList().ForEach(async x =>
-            {
-                try
+            filteredData.Take(elements != 0 ? Math.Max(elements + 1, inviters.Count) : inviters.Count).ToList()
+                .ForEach(async x =>
                 {
-                    var inviter = await ctx.Guild.GetMemberAsync(x.Key);
-                    var referrals = 0;
-                    if (month == 0)
-                        referrals = x.Value.Referrals.Count;
-                    else
-                        referrals = x.Value.Referrals.Where(x => x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count;
+                    try
+                    {
+                        var inviter = await ctx.Guild.GetMemberAsync(x.Key);
+                        var referrals = 0;
+                        if (month == 0)
+                            referrals = x.Value.ActiveCount;
+                        else
+                            referrals = x.Value.Referrals.Where(x => x.Value.Active == true && x.Value.Date.Month == dateFilter.Date.Month && x.Value.Date.Year == dateFilter.Date.Year).ToList().Count;
 
-                    var state = x.Value.Active == true ? "Активен" : "Отключен";
-                    var ignored = x.Value.Ignored == true ? "Активен" : "Отключен";
-                    inviters.Add($"{ inviter.DisplayName}#{inviter.Discriminator} пригласил {referrals}" +
-                                 $"\nОтображение: {state} " +
-                                 $"| Подсчет в конце месяца: {ignored}");
-                }
-                catch (NotFoundException)
-                {
-                    inviters.Add("Пользователь не найден");
-                }
-            });
+                        var state = x.Value.Active == true ? "Активен" : "Отключен";
+                        var ignored = x.Value.Ignored == true ? "Отключен" : "Активен";
+                        inviters.Add($"{ inviter.DisplayName}#{inviter.Discriminator} пригласил {referrals}" +
+                                        $"\nОтображение: {state} " +
+                                        $"| Подсчет в конце месяца: {ignored} \n");
+                    }
+                    catch (NotFoundException)
+                    {
+                        inviters.Add("Пользователь не найден");
+                    }
+                });
 
             if (filteredData.Count > 0)
             {
@@ -170,6 +168,8 @@ namespace Bot_NetCore.Commands
             InviterList.SaveToXML(Bot.BotSettings.InviterXML);
 
             await UpdateLeaderboard(ctx.Guild);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно обновлено отображение {member.Mention}.");
         }
 
 
@@ -183,6 +183,21 @@ namespace Bot_NetCore.Commands
             InviterList.Inviters.Where(x => x.Key == member.Id).ToList()
                 .ForEach(x => x.Value.UpdateIgnored(!x.Value.Ignored));
             InviterList.SaveToXML(Bot.BotSettings.InviterXML);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно обновлено учитывание в конце месяца {member.Mention}");
+        }
+
+        [Command("lastmonth")]
+        [Description("Выводит количество приглашенных за последний месяц")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task LastMonth(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        {
+            await ctx.Channel.TriggerTypingAsync();
+
+            if (InviterList.Inviters.ContainsKey(member.Id))
+                await ctx.RespondAsync($"Количество приглашенных: {InviterList.Inviters[member.Id].LastMonthActiveCount}");
+            else
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Участник не найден");
         }
 
         public static async Task UpdateLeaderboard(DiscordGuild guild)
@@ -252,7 +267,9 @@ namespace Bot_NetCore.Commands
             else
                 await channel.GetMessageAsync(messageId).Result.ModifyAsync(embed: embed.Build());
 
-            //await CheckAndUpdateTopInvitersAsync(guild);
+            //Проверка только в первый день месяца
+            //if(DateTime.Now.Day == 1)
+            await CheckAndUpdateTopInvitersAsync(guild);
         }
 
         /// <summary>
@@ -269,7 +286,7 @@ namespace Bot_NetCore.Commands
             var root = doc.Root;
 
             //Check for a new month, generate new top inviters and save them, then grant a role and subscribe.
-            if (DateTime.ParseExact(root.Element("lastMonth").Value, "M/yy", CultureInfo.InvariantCulture).Month != DateTime.Now.Month)
+            if (DateTime.ParseExact(root.Element("lastMonth").Value, "M/yy", CultureInfo.InvariantCulture).Month != DateTime.Now.Month - 1)
             {
                 //Read old inviters id's
                 var oldTopInviters = root.Element("inviters").Elements().Select(x => Convert.ToUInt64(x.Attribute("id").Value));
@@ -292,14 +309,34 @@ namespace Bot_NetCore.Commands
                 var topInviters = InviterList.Inviters.ToList()
                     .Where(x => !x.Value.Ignored && x.Value.Active)
                     .OrderByDescending(x => x.Value.LastMonthActiveCount)
-                    .Take(3)
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                //Grant role and sub to new top inviters
+                Dictionary<ulong, Inviter> topThreeInviters = new Dictionary<ulong, Inviter>();
                 foreach (var inviter in topInviters)
+                {
+                    try
+                    {
+                        await guild.GetMemberAsync(inviter.Key);
+                        topThreeInviters.Add(inviter.Key, inviter.Value);
+                        if (topThreeInviters.Count >= 3)
+                            break;
+                    }
+                    catch (NotFoundException)
+                    {
+                        // Do nothing
+                    }
+                }
+
+                var modLogMessage = "";
+
+                //Grant role and sub to new top inviters
+                foreach (var inviter in topThreeInviters)
                     try
                     {
                         var member = await guild.GetMemberAsync(inviter.Key);
+
+                        modLogMessage += $"{member.DisplayName}#{member.Discriminator} \n";
+                        
                         var role = guild.GetRole(Bot.BotSettings.TopMonthRole);
                         await member.GrantRoleAsync(role);
 
@@ -329,14 +366,19 @@ namespace Bot_NetCore.Commands
                             $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n" +
                             $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
                             $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.");
+                        
                     }
                     catch (NotFoundException)
                     {
                         //Пользователь не найден.
                     }
 
+                await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                    "**Пользователям выдана подписка за топ инвайты** \n" +
+                    $"{modLogMessage}");
+
                 //Save data
-                SaveTopInviters(topInviters, fileName);
+                SaveTopInviters(topThreeInviters, fileName);
             }
         }
 
