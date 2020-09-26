@@ -333,8 +333,8 @@ namespace Bot_NetCore.Commands
                 await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"бронь-инвайты-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
-                for (int i = 0; i < nShips; i++)
-                    await ctx.Guild.CreateChannelAsync($"Рейд {i + 1} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+                for (int i = 1; i < nShips; i++) //Skip if there's only 1 ship
+                    await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
             }
 
             //Чистим голосование после создания рейда

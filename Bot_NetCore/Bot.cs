@@ -72,18 +72,17 @@ namespace Bot_NetCore
             var bot = new Bot();
 
             Console.WriteLine(@"   
-                ██████╗    ██╗██╗  ██╗
-                ╚════██╗  ███║██║  ██║
-                 █████╔╝  ╚██║███████║
+                ██████╗    ██╗███████╗
+                ╚════██╗  ███║██╔════╝
+                 █████╔╝  ╚██║███████╗
                 ██╔═══╝    ██║╚════██║
-                ███████╗██╗██║     ██║
-                ╚══════╝╚═╝╚═╝     ╚═╝
+                ███████╗██╗██║███████║
+                ╚══════╝╚═╝╚═╝╚══════╝
             "); //Font Name: ANSI Shadow
 
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
-            DonatorList.ReadFromXML("donators.old.xml"); //TODO: удалить после миграции
             UserList.ReadFromXML(BotSettings.WarningsXML);
             BanList.ReadFromXML(BotSettings.BanXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
@@ -1146,7 +1145,7 @@ namespace Bot_NetCore
 
                     //Проверяем если пригласивший уже существует, если нет то создаем
                     if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id))
-                        Inviter.Create(updatedInvite.Inviter.Id);
+                        Inviter.Create(updatedInvite.Inviter.Id, e.Member.IsBot);
 
                     //Проверяем если пользователь был ранее приглашен другими и обновляем активность, если нет то вносим в список
                     if (InviterList.Inviters.ToList().Exists(x => x.Value.Referrals.ContainsKey(e.Member.Id)))

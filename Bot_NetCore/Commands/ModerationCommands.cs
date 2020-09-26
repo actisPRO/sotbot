@@ -299,14 +299,14 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("fleetpurge")]
-        [RequirePermissions(Permissions.KickMembers)]
         [Priority(0)]
         public async Task FleetPurge(CommandContext ctx, DiscordUser user, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
-            //Проверка на модератора или капитана рейда
+            //Проверка на модератора
             if (!Bot.IsModerator(ctx.Member))
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде! \n" +
+                    $"Возможно участник покинул сервер.");
                 return;
             }
 
