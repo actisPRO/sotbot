@@ -13,7 +13,7 @@ namespace Bot_NetCore.Listeners
     public class ErrorListener
     {
         [AsyncListener(EventTypes.ClientErrored)]
-        private static Task ClientOnErrored(ClientErrorEventArgs e)
+        private static Task OnErrored(ClientErrorEventArgs e)
         {
             e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
                 $"Возникла ошибка при выполнении ивента {e.EventName}.",
@@ -26,7 +26,7 @@ namespace Bot_NetCore.Listeners
         ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
         [AsyncListener(EventTypes.CommandErrored)]
-        private static async Task CommandsOnCommandErrored(CommandErrorEventArgs e)
+        public static async Task OnCommandErrored(CommandErrorEventArgs e)
         {
             if (e.Exception is CommandNotFoundException) return;
 

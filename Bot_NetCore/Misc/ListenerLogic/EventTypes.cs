@@ -48,6 +48,8 @@
         MessageReactionsCleared, // AsyncEventHandler<MessageReactionsClearEventArgs>
         WebhooksUpdated, // AsyncEventHandler<WebhooksUpdateEventArgs>
         Heartbeated, // AsyncEventHandler<HeartbeatEventArgs>
+        InviteCreated, // AsyncEventHandler<InviteCreateEventArgs>
+        InviteDeleted, // AsyncEventHandler<InviteDeleteEventArgs>
         CommandExecuted,
         CommandErrored
     }
