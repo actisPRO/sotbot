@@ -188,6 +188,12 @@ namespace Bot_NetCore.Misc
                 case EventTypes.Heartbeated:
                     client.Heartbeated += OnEventWithArgs;
                     break;
+                case EventTypes.InviteCreated:
+                    client.InviteCreated += OnEventWithArgs;
+                    break;
+                case EventTypes.InviteDeleted:
+                    client.InviteDeleted += OnEventWithArgs;
+                    break;
                 case EventTypes.CommandExecuted:
                     bot.Commands.CommandErrored += OnEventWithArgs;
                     break;

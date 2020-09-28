@@ -25,6 +25,8 @@ namespace Bot_NetCore.Misc
             foreach (var listener in ListenerMethods)
             {
                 listener.Attribute.Register(bot, client, listener.Method);
+
+                client.DebugLogger.LogMessage(LogLevel.Debug, "SoT", $"{listener.Method.DeclaringType.Name}.{listener.Method.Name} installed as {listener.Attribute.Target} event", DateTime.Now);
             }
         }
     }
