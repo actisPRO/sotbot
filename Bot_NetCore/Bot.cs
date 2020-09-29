@@ -639,6 +639,31 @@ namespace Bot_NetCore
         ///     ID канал со статусом игровых серверов
         /// </summary>
         public ulong ServerStatusChannel;
+
+        /// <summary>
+        ///     URL веб-интерфейса (/)
+        /// </summary>
+        public string WebURL;
+
+        /// <summary>
+        ///     Адрес MySQL-сервера
+        /// </summary>
+        public string DatabaseHost;
+
+        /// <summary>
+        ///     Имя базы данных
+        /// </summary>
+        public string DatabaseName;
+
+        /// <summary>
+        ///     Имя пользователя БД
+        /// </summary>
+        public string DatabaseUser;
+
+        /// <summary>
+        ///     Пароль пользователя БДы
+        /// </summary>
+        public string DatabasePassword;
     }
 
     public enum CommandType
