@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Listeners
 {
@@ -52,7 +53,7 @@ namespace Bot_NetCore.Listeners
         {
             if (e.User.IsBot) return;
 
-            //Проверка если сообщение с принятием правил
+            //Проверка если сообщение с принятием правил сообщества
             if (e.Message.Id == Bot.BotSettings.CodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
             {
                 //При надобности добавить кулдаун
@@ -104,7 +105,7 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
-            //Проверка если сообщение с принятием правил
+            //Проверка если сообщение с принятием правил рейда
             if (e.Message.Id == Bot.BotSettings.FleetCodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
             {
                 //Проверка на purge
@@ -129,9 +130,31 @@ namespace Bot_NetCore.Listeners
                     }
                     else
                         ReportList.FleetPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
+        
+                
+                var user = (DiscordMember) e.User;
+                
+                //Проверка на регистрацию и привязку Xbox
+
+                var cs =
+                    $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword};";
+                var connection = new MySqlConnection(cs);
+                await connection.OpenAsync();
+                
+                var statement = $"SELECT xbox FROM users WHERE userid='{user.Id}'";
+                var cmd = new MySqlCommand(statement, connection);
+                var res = cmd.ExecuteScalar();
+                
+                await connection.CloseAsync();
+                
+                if (res == null || res == DBNull.Value)
+                {
+                    await user.SendMessageAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} К вашему аккаунту не привязан Xbox, пожалуйста, войдите с помощью Discord на сайт {Bot.BotSettings.WebURL}login и повторите попытку.");
+                    return;
+                }
 
                 //Выдаем роль правил рейда
-                var user = (DiscordMember)e.User;
                 if (!user.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
                 {
                     await user.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
