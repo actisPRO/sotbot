@@ -68,7 +68,7 @@ namespace Bot_NetCore.Listeners
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}).");
 
             //Обновляем статус бота
-            await Bot.UpdateMembersCountAsync(e.Client, e.Guild.MemberCount);
+            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
 
             //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
             if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
@@ -293,7 +293,7 @@ namespace Bot_NetCore.Listeners
             }
 
             //Обновляем статус бота
-            await Bot.UpdateMembersCountAsync(e.Client, e.Guild.MemberCount);
+            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
         }
 
         /// <summary>

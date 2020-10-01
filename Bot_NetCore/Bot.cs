@@ -140,9 +140,11 @@ namespace Bot_NetCore
         /// <param name="client">Клиент бота</param>
         /// <param name="number">Число пользователей на сервере</param>
         /// <returns></returns>
-        public static async Task UpdateMembersCountAsync(DiscordClient client, int number)
+        public static async Task UpdateBotStatusAsync(DiscordClient client, DiscordGuild guild)
         {
-            await client.UpdateStatusAsync(new DiscordActivity($"за {number} пользователями", ActivityType.Watching));
+            await client.UpdateStatusAsync(new DiscordActivity("за Sea of Thieves RU \n" +
+                $"Участников: {guild.MemberCount} \n" +
+                $"Активных: {guild.VoiceStates.Count}", ActivityType.Watching));
         }
 
 
