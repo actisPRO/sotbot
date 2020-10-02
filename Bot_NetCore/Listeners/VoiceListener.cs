@@ -18,74 +18,75 @@ namespace Bot_NetCore.Listeners
         {
             try
             {
-                if (e.Channel.Id == Bot.BotSettings.AutocreateGalleon ||
-                    e.Channel.Id == Bot.BotSettings.AutocreateBrigantine ||
-                    e.Channel.Id == Bot.BotSettings.AutocreateSloop
-                ) // мы создаем канал, если пользователь зашел в один из каналов автосоздания
-                {
-                    if (Bot.ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
-                        if ((Bot.ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
-                        {
-                            var m = await e.Guild.GetMemberAsync(e.User.Id);
-                            await m.PlaceInAsync(e.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
-                            await m.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
-                                                     $"**{(Bot.ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
-                                                     "создавать новый корабль!");
-                            e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                                $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Discriminator}) был перемещён в комнату ожидания.",
-                                DateTime.Now);
-                            return;
-                        }
-
-                    // если проверка успешно пройдена, добавим пользователя
-                    // в словарь кулдаунов
-                    Bot.ShipCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
-
-                    //Проверка на эмиссарство
-                    var channelSymbol = Bot.BotSettings.AutocreateSymbol;
-                    ((DiscordMember)e.User).Roles.ToList().ForEach(x =>
+                if (e.Channel != null)
+                    if (e.Channel.Id == Bot.BotSettings.AutocreateGalleon ||
+                        e.Channel.Id == Bot.BotSettings.AutocreateBrigantine ||
+                        e.Channel.Id == Bot.BotSettings.AutocreateSloop
+                    ) // мы создаем канал, если пользователь зашел в один из каналов автосоздания
                     {
-                        if (x.Id == Bot.BotSettings.EmissaryGoldhoadersRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
-                        else if (x.Id == Bot.BotSettings.EmissaryTradingCompanyRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":pig:");
-                        else if (x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull:");
-                        else if (x.Id == Bot.BotSettings.EmissaryAthenaRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
-                        else if (x.Id == Bot.BotSettings.EmissaryReaperBonesRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
-                        else if (x.Id == Bot.BotSettings.HuntersRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":fish:");
-                        else if (x.Id == Bot.BotSettings.ArenaRole)
-                            channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":crossed_swords:");
+                        if (Bot.ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                            if ((Bot.ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
+                            {
+                                var m = await e.Guild.GetMemberAsync(e.User.Id);
+                                await m.PlaceInAsync(e.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
+                                await m.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
+                                                         $"**{(Bot.ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
+                                                         "создавать новый корабль!");
+                                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                                    $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Discriminator}) был перемещён в комнату ожидания.",
+                                    DateTime.Now);
+                                return;
+                            }
 
-                    });
+                        // если проверка успешно пройдена, добавим пользователя
+                        // в словарь кулдаунов
+                        Bot.ShipCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
 
-                    DiscordChannel created = null;
-                    // Проверяем канал в котором находится пользователь
+                        //Проверка на эмиссарство
+                        var channelSymbol = Bot.BotSettings.AutocreateSymbol;
+                        ((DiscordMember)e.User).Roles.ToList().ForEach(x =>
+                        {
+                            if (x.Id == Bot.BotSettings.EmissaryGoldhoadersRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
+                            else if (x.Id == Bot.BotSettings.EmissaryTradingCompanyRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":pig:");
+                            else if (x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull:");
+                            else if (x.Id == Bot.BotSettings.EmissaryAthenaRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
+                            else if (x.Id == Bot.BotSettings.EmissaryReaperBonesRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                            else if (x.Id == Bot.BotSettings.HuntersRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":fish:");
+                            else if (x.Id == Bot.BotSettings.ArenaRole)
+                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":crossed_swords:");
 
-                    if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
-                        created = await e.Guild.CreateChannelAsync(
-                            $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
-                            e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 2);
-                    else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
-                        created = await e.Guild.CreateChannelAsync(
-                            $"{channelSymbol} Бриг {e.User.Username}", ChannelType.Voice,
-                            e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 3);
-                    else // Галеон
-                        created = await e.Guild.CreateChannelAsync(
-                            $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
-                            e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 4);
+                        });
 
-                    var member = await e.Guild.GetMemberAsync(e.User.Id);
+                        DiscordChannel created = null;
+                        // Проверяем канал в котором находится пользователь
 
-                    await member.PlaceInAsync(created);
+                        if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
+                            created = await e.Guild.CreateChannelAsync(
+                                $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
+                                e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 2);
+                        else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
+                            created = await e.Guild.CreateChannelAsync(
+                                $"{channelSymbol} Бриг {e.User.Username}", ChannelType.Voice,
+                                e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 3);
+                        else // Галеон
+                            created = await e.Guild.CreateChannelAsync(
+                                $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
+                                e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 4);
 
-                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
-                        DateTime.Now);
-                }
+                        var member = await e.Guild.GetMemberAsync(e.User.Id);
+
+                        await member.PlaceInAsync(created);
+
+                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
+                            $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
+                            DateTime.Now);
+                    }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
             {
@@ -96,7 +97,8 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task FindOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
-            if (e.Channel.Id == Bot.BotSettings.FindShip)
+            if (e.Channel != null && 
+                e.Channel.Id == Bot.BotSettings.FindShip)
             {
                 var shipCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory);
 
@@ -136,7 +138,8 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task PrivateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
-            if (e.Channel.ParentId == Bot.BotSettings.PrivateCategory)
+            if (e.Channel != null && 
+                e.Channel.ParentId == Bot.BotSettings.PrivateCategory)
                 foreach (var ship in ShipList.Ships.Values)
                     if (ship.Channel == e.Channel.Id)
                     {
@@ -150,7 +153,6 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task DeleteOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
-
             e.Guild.Channels[Bot.BotSettings.AutocreateCategory].Children
                 .Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0).ToList()
                 .ForEach(async x =>
@@ -158,7 +160,6 @@ namespace Bot_NetCore.Listeners
                         try
                         {
                             await x.DeleteAsync();
-
                         }
                         catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
                         catch (NotFoundException) { }
