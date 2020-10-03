@@ -276,10 +276,16 @@ namespace Bot_NetCore.Commands
                 else if (donator.Balance >= prices.RolePrice)
                 {
                     var role = ctx.Guild.GetRole(donator.PrivateRole);
-                    await role.ModifyAsync(x => x.Color = new DiscordColor(color));
-                    await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-
-                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                    try
+                    {
+                        await role.ModifyAsync(x => x.Color = new DiscordColor(color));
+                        await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                        await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                    }
+                    catch(ArgumentException)
+                    {
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Неправильно заданый цвет! Формат: #000000 для владельцев приватных ролей.");
+                    }
                 }
             }
             else

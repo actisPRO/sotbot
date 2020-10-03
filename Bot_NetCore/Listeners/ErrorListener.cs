@@ -58,7 +58,7 @@ namespace Bot_NetCore.Listeners
             }
 
             if (e.Exception is ArgumentNullException &&
-                e.Exception.Message == "Value cannot be null. (Parameter 'key')")
+                e.Exception.Message.Contains("Value cannot be null."))
             {
                 await e.Context.RespondAsync(
                     $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели недопустимые параметры.");
