@@ -69,7 +69,11 @@ namespace Bot_NetCore.Listeners
                             await member.SendMessageAsync("Ваша подписка истекла :cry:");
                         }
 
-                        await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
+                        try
+                        {
+                            await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
+                        }
+                        catch (Exceptions.NotFoundException) { }
 
                         Subscriber.Subscribers.Remove(sub.Member);
                         Subscriber.Save(Bot.BotSettings.SubscriberXML);
