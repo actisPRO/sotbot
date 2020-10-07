@@ -117,7 +117,7 @@ namespace Bot_NetCore.Commands
                 {
                     discordMember = await ctx.Guild.GetMemberAsync(member.Id);
                 }
-                catch (Exceptions.NotFoundException)
+                catch (DSharpPlus.Exceptions.NotFoundException)
                 {
                     continue;
                 }
