@@ -9,7 +9,6 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Exceptions;
 
 namespace Bot_NetCore.Commands
 {
@@ -175,7 +174,12 @@ namespace Bot_NetCore.Commands
                 message += $"• `{Bot.BotSettings.Prefix}donator color цвет (из списка)` — изменяет цвет вашего ника.\n";
             if (donator.PrivateRole != 0)
             {
-                await DeletePrivateRoleAsync(ctx.Guild, donator.PrivateRole);
+                try
+                {
+                    await DeletePrivateRoleAsync(ctx.Guild, donator.PrivateRole);
+                }
+                catch (Exceptions.NotFoundException) { }
+
                 donator.PrivateRole = 0;
             }
 
@@ -213,7 +217,11 @@ namespace Bot_NetCore.Commands
 
             var donator = Donator.Donators[member.Id];
 
-            await DeletePrivateRoleAsync(ctx.Guild, member.Id);
+            try
+            {
+                await DeletePrivateRoleAsync(ctx.Guild, member.Id);
+            }
+            catch (Exceptions.NotFoundException) { }
 
             Donator.Donators.Remove(member.Id);
             Donator.Save(Bot.BotSettings.DonatorXML);
@@ -276,10 +284,16 @@ namespace Bot_NetCore.Commands
                 else if (donator.Balance >= prices.RolePrice)
                 {
                     var role = ctx.Guild.GetRole(donator.PrivateRole);
-                    await role.ModifyAsync(x => x.Color = new DiscordColor(color));
-                    await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
-
-                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                    try
+                    {
+                        await role.ModifyAsync(x => x.Color = new DiscordColor(color));
+                        await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                        await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                    }
+                    catch(ArgumentException)
+                    {
+                        await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Неправильно заданый цвет! Формат: #000000 для владельцев приватных ролей.");
+                    }
                 }
             }
             else
@@ -527,7 +541,7 @@ namespace Bot_NetCore.Commands
                     {
                         discordMember = await ctx.Guild.GetMemberAsync(friend);
                     }
-                    catch (NotFoundException)
+                    catch (DSharpPlus.Exceptions.NotFoundException)
                     {
                         continue;
                     }
@@ -556,7 +570,7 @@ namespace Bot_NetCore.Commands
                     {
                         discordMember = await ctx.Guild.GetMemberAsync(friend);
                     }
-                    catch (NotFoundException)
+                    catch (DSharpPlus.Exceptions.NotFoundException)
                     {
                         continue;
                     }
@@ -690,7 +704,7 @@ namespace Bot_NetCore.Commands
                     message += $"**{position}.** {user.Username}#{user.Discriminator} — {el.Value}₽\n";
                     ++str;
                 }
-                catch (NotFoundException)
+                catch (DSharpPlus.Exceptions.NotFoundException)
                 {
                 }
             }
@@ -738,7 +752,7 @@ namespace Bot_NetCore.Commands
             {
 
                 role = await guild.CreateRoleAsync($"{member.DisplayName} Style");
-                await role.ModifyPositionAsync(guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1);
+                await guild.Roles[role.Id].ModifyPositionAsync(guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1); //Через role.ModifyPositionAsync не работает
             }
 
             return role;
@@ -772,7 +786,7 @@ namespace Bot_NetCore.Commands
                 }
             }
             else
-                throw new Exception("Private role not found on deleting");
+                throw new Exceptions.NotFoundException("Private role not found on deleting");
         }
     }
 }

@@ -130,9 +130,9 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            if (channel.Users.Count() > 2)      //Не канал автосоздания
+            if (channel.Users.Count() == 2)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете проголосовать в канале в котором только 2 пользователя!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не можете проголосовать в канале в котором только 2 пользователя!");
                 return;
             }
 
