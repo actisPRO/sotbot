@@ -302,6 +302,7 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("xmltosqlbans")]
+        [RequirePermissions(Permissions.Administrator)]
         public async Task XmlToSqlBans(CommandContext ctx) //todo delete after migration
         {
             using (var connection = new MySqlConnection(Bot.ConnectionString))
