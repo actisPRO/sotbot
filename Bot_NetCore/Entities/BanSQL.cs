@@ -112,7 +112,7 @@ namespace Bot_NetCore.Entities
                 using (var cmd = new MySqlCommand())
                 {
                     var statement =
-                        $"INSERT INTO bans(id, user, moderator, reason, ban, unban) VALUES ('{id}', '{user}', '{moderator}', '{reason}', {banDateTime:yyyy-MM-dd HH:mm:ss}, {unbanDateTime:yyyy-MM-dd HH:mm:ss});";
+                        $"INSERT INTO bans(id, user, moderator, reason, ban, unban) VALUES ('{id}', '{user}', '{moderator}', '{reason}', '{banDateTime:yyyy-MM-dd HH:mm:ss}', '{unbanDateTime:yyyy-MM-dd HH:mm:ss}');";
                     cmd.CommandText = statement;
                     cmd.Connection = connection;
                     cmd.Connection.Open();
