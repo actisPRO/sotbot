@@ -860,8 +860,7 @@ namespace Bot_NetCore.Commands
                 }
 
                 //Предупреждения
-                var warnings = 0;
-                if (UserList.Users.ContainsKey(user.Id)) warnings = UserList.Users[user.Id].Warns.Count;
+                var warnings = WarnSQL.GetForUser(user.Id).Count;
 
                 //Emoji используется при выводе списка предупреждений.
                 var emoji = DiscordEmoji.FromName(ctx.Client, ":pencil:");
@@ -993,11 +992,8 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            int count;
-            if (!UserList.Users.ContainsKey(user.Id)) 
-                count = 0;
-            else 
-                count = UserList.Users[user.Id].Warns.Count;
+            var warnings = WarnSQL.GetForUser(user.Id);
+            int count = warnings.Count;
 
             if (count == 0)
             {
@@ -1011,7 +1007,7 @@ namespace Bot_NetCore.Commands
 
             for (var i = count; i > 0; i--)
             {
-                var warn = UserList.Users[user.Id].Warns[i - 1];
+                var warn = warnings[i - 1];
                 fields.Add(new CustomEmbedField($"*{i}*.", 
                     $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date.ToShortDateString()}"));
             }
