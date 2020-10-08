@@ -553,8 +553,6 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            if (!UserList.Users.ContainsKey(user.Id)) User.Create(user.Id);
-
             var id = RandomString.NextString(6);
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
@@ -563,11 +561,10 @@ namespace Bot_NetCore.Commands
              $"**Кому:** {user.Username}#{user.Discriminator}\n" +
              $"**Дата:** {DateTime.Now}\n" +
              $"**ID предупреждения:** {id}\n" +
-             $"**Количество предупреждений:** {UserList.Users[user.Id].Warns.Count + 1}\n" +
+             $"**Количество предупреждений:** {WarnSQL.GetForUser(user.Id).Count + 1}\n" +
              $"**Причина:** {reason}");
 
-            UserList.Users[user.Id].AddWarning(ctx.User.Id, DateTime.Now, reason, id, message.Id);
-            UserList.SaveToXML(Bot.BotSettings.WarningsXML);
+            WarnSQL.Create(id, user.Id, ctx.Member.Id, reason, DateTime.Now, message.Id);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {user.Username}#{user.Discriminator}!");
         }
@@ -575,7 +572,7 @@ namespace Bot_NetCore.Commands
         [Command("unwarn")]
         [Aliases("uw")]
         [RequirePermissions(Permissions.KickMembers)]
-        public async Task Unwarn(CommandContext ctx, DiscordMember member, string id)
+        public async Task Unwarn(CommandContext ctx, string id)
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -583,37 +580,19 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            if (!UserList.Users.ContainsKey(member.Id))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У этого участника нет предупреждений!");
-                return;
-            }
+            var warn = WarnSQL.Get(id);
 
-            if (UserList.Users[member.Id].Warns.Count == 0)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У этого участника нет предупреждений!");
-                return;
-            }
-
-            var warnFound = false;
-            for (var i = 0; i < UserList.Users[member.Id].Warns.Count; ++i)
-                if (UserList.Users[member.Id].Warns[i].Id == id)
-                {
-                    warnFound = true;
-                    break;
-                }
-
-            if (!warnFound)
+            if (warn == null)
             {
                 await ctx.RespondAsync(
                     $"{Bot.BotSettings.ErrorEmoji} Не найдено предупреждение с таким идентификатором.");
                 return;
             }
 
-            UserList.Users[member.Id].RemoveWarning(id);
-            UserList.SaveToXML(Bot.BotSettings.WarningsXML);
+            WarnSQL.Delete(warn.Id);
+            var member = await ctx.Client.GetUserAsync(warn.User);
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено предупреждение с {member.Mention}!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалено предупреждение с **{member.Username}#{member.Discriminator}**!");
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Снятие предупреждения**\n\n" +
@@ -621,16 +600,21 @@ namespace Bot_NetCore.Commands
                 $"**Пользователь:** {member}\n" +
                 $"**Дата:** {DateTime.Now}\n" +
                 $"**ID предупреждения:** {id}\n" +
-                $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count}\n");
+                $"**Количество предупреждений:** {WarnSQL.GetForUser(member.Id).Count}\n");
 
             try
             {
-                await member.SendMessageAsync(
+                var gMember = await ctx.Guild.GetMemberAsync(member.Id);
+                await gMember.SendMessageAsync(
                     $"Администратор **{ctx.Member.Username}** снял ваше предупреждение с ID `{id}`");
             }
             catch (UnauthorizedException)
             {
                 //user can block the bot
+            }
+            catch (NotFoundException)
+            {
+                //user is not a guild member
             }
         }
 
