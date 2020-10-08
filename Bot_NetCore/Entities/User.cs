@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Bot_NetCore.Entities
 {
+    [Obsolete]
     public class User
     {
         private User(ulong id)

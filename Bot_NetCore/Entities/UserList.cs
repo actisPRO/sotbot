@@ -9,7 +9,7 @@ namespace Bot_NetCore.Entities
     public static class UserList
     {
         public static Dictionary<ulong, User> Users = new Dictionary<ulong, User>();
-
+        [Obsolete]
         public static void Update(User user)
         {
             Users[user.Id] = user;
