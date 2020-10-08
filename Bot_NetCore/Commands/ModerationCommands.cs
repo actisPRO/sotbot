@@ -802,24 +802,26 @@ namespace Bot_NetCore.Commands
         public static async void Warn(DiscordClient client, DiscordMember moderator, DiscordGuild guild,
             DiscordMember member, string reason)
         {
-            if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
+            //if (!UserList.Users.ContainsKey(member.Id)) User.Create(member.Id);
 
             var id = RandomString.NextString(6);
+            var date = DateTime.Now;
 
             var message = await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Предупреждение**\n\n" +
              $"**От:** {moderator}\n" +
              $"**Кому:** {member}\n" +
-             $"**Дата:** {DateTime.Now}\n" +
+             $"**Дата:** {date}\n" +
              $"**ID предупреждения:** {id}\n" +
-             $"**Количество предупреждений:** {UserList.Users[member.Id].Warns.Count + 1}\n" +
+             $"**Количество предупреждений:** {WarnSQL.GetForUser(member.Id).Count + 1}\n" +
              $"**Причина:** {reason}");
 
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
 
-            UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now, reason, id, message.Id);
-            UserList.SaveToXML(Bot.BotSettings.WarningsXML);
+            //UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now, reason, id, message.Id);
+            //UserList.SaveToXML(Bot.BotSettings.WarningsXML);
+            var warn = WarnSQL.Create(id, member.Id, moderator.Id, reason, date, message.Id);
 
             try
             {
