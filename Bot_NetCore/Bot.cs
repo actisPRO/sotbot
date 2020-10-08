@@ -56,7 +56,7 @@ namespace Bot_NetCore
         /// <summary>
         ///     Соединение с БД
         /// </summary>
-        public static MySqlConnection Connection { get; private set; }
+        public static string ConnectionString { get; private set; }
 
         public static void Main(string[] args)
         {
@@ -131,22 +131,10 @@ namespace Bot_NetCore
 
             //Логгер
             Client.DebugLogger.LogMessageReceived += Listeners.LoggerListener.LogOnLogMessageReceived;
-            
-            Connection = new MySqlConnection($"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword};");
-            Connection.Open();
-            Connection.StateChange += (sender, args) =>
-            {
-                if (args.CurrentState == ConnectionState.Closed)
-                {
-                    Connection.Open();
-                }
-                else if (args.CurrentState == ConnectionState.Broken)
-                {
-                    Connection.Close();
-                    Connection.Open();
-                }
-            };
-            
+
+            ConnectionString =
+                $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword}; CharSet=utf8;";
+
             await Client.ConnectAsync();
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
