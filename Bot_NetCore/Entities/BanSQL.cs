@@ -191,5 +191,31 @@ namespace Bot_NetCore.Entities
                 }
             }
         }
+
+        public static List<BanSQL> GetExpiredBans()
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    var statement = $"SELECT * FROM bans WHERE unban <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}';";
+                    cmd.CommandText = statement;
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+
+                    var bans = new List<BanSQL>();
+                    while (reader.Read())
+                    {
+                        bans.Add(new BanSQL(reader.GetString("id"), reader.GetUInt64("user"),
+                            reader.GetUInt64("moderator"),
+                            reader.GetString("reason"), reader.GetDateTime("ban"), reader.GetDateTime("unban")));
+                    }
+
+                    return bans;
+                }
+            }
+        }
     }
 }
