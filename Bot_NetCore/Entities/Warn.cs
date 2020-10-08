@@ -2,6 +2,7 @@
 
 namespace Bot_NetCore.Entities
 {
+    [Obsolete]
     public class Warn
     {
         public DateTime Date;
