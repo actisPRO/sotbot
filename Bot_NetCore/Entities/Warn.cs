@@ -3,7 +3,7 @@
 namespace Bot_NetCore.Entities
 {
     [Obsolete]
-    public class Warn
+    public class Warn //todo delete after migration
     {
         public DateTime Date;
         public string Id;
