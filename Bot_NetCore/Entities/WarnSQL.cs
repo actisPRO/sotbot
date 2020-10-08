@@ -83,7 +83,7 @@ namespace Bot_NetCore.Entities
                 {
                     using (var cmd = new MySqlCommand())
                     {
-                        var statement = $"UPDATE warnings SET date = '{value:yyyy-MM-dd hh:mm:ss}' WHERE id = '{Id}'";
+                        var statement = $"UPDATE warnings SET date = '{value:yyyy-MM-dd HH:mm:ss}' WHERE id = '{Id}'";
                         cmd.CommandText = statement;
                         cmd.Connection = connection;
                         cmd.Connection.Open();
@@ -135,7 +135,7 @@ namespace Bot_NetCore.Entities
                 using (var cmd = new MySqlCommand())
                 {
                     var statement = $"INSERT INTO warnings(id, user, moderator, reason, date, logmessage) " +
-                                    $"VALUES ('{id}', {user}, {moderator}, '{reason}', '{date:yyyy-MM-dd hh:mm:ss}', {logMessage});";
+                                    $"VALUES ('{id}', {user}, {moderator}, '{reason}', '{date:yyyy-MM-dd HH:mm:ss}', {logMessage});";
                     cmd.CommandText = statement;
                     cmd.Connection = connection;
                     cmd.Connection.Open();
