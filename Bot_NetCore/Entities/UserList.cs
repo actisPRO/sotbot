@@ -6,10 +6,10 @@ using Bot_NetCore.Misc;
 
 namespace Bot_NetCore.Entities
 {
+    [Obsolete] //todo delete after migration
     public static class UserList
     {
         public static Dictionary<ulong, User> Users = new Dictionary<ulong, User>();
-        [Obsolete]
         public static void Update(User user)
         {
             Users[user.Id] = user;

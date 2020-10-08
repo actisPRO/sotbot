@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Bot_NetCore.Entities
 {
-    [Obsolete]
+    [Obsolete] //todo delete after migration
     public class User
     {
         private User(ulong id)
