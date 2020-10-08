@@ -4,6 +4,7 @@ using System.Xml.Linq;
 
 namespace Bot_NetCore.Entities
 {
+    [Obsolete] //todo delete after migration
     public static class BanList
     {
         public static Dictionary<ulong, BannedUser> BannedMembers = new Dictionary<ulong, BannedUser>();

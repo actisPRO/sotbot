@@ -2,7 +2,8 @@ using System;
 
 namespace Bot_NetCore.Entities
 {
-    public class BannedUser
+    [Obsolete]
+    public class BannedUser //todo delete after migration
     {
         public BannedUser(ulong id, DateTime unbanDateTime, DateTime banDateTime, ulong moderator, string reason,
             string banId)
