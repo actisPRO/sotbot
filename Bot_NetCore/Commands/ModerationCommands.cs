@@ -651,20 +651,19 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+            var banDate = DateTime.Now;
             var unbanDate = DateTime.Now.Add(durationTimeSpan);
 
             var banId = RandomString.NextString(6);
 
-            var banned = new BannedUser(member.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
-            BanList.SaveToXML(Bot.BotSettings.BanXML);
+            var ban = BanSQL.Create(banId, member.Id, ctx.Member.Id, reason, banDate, unbanDate);
 
+            var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
             try
             {
-                var guildMember = await ctx.Guild.GetMemberAsync(member.Id);
                 await guildMember.SendMessageAsync(
                     $"Вы были заблокированы на сервере **{ctx.Guild.Name}** на **{Utility.FormatTimespan(durationTimeSpan)}** до **{unbanDate} **. " +
                     $"Модератор: **{ctx.Member.Username}#{ctx.Member.Discriminator}**. **Причина:** {reason}.");
-                await guildMember.BanAsync(0, reason); //при входе каждого пользователя будем проверять на наличие бана и кикать по возможности.
             }
             catch (NotFoundException)
             {
@@ -673,6 +672,7 @@ namespace Bot_NetCore.Commands
             {
                 //user can block the bot
             }
+            await guildMember.BanAsync();
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Бан**\n\n" +
@@ -683,7 +683,7 @@ namespace Bot_NetCore.Commands
                 $"**ID бана:** {banId}\n" +
                 $"**Причина:** {reason}\n");
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан {member.Mention}! " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан **{member.Username}#{member.Discriminator}**! " +
                                    $"Снятие через: {Utility.FormatTimespan(durationTimeSpan)}!");
         }
 
@@ -706,12 +706,12 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+            var banDate = DateTime.Now;
             var unbanDate = DateTime.Now.Add(durationTimeSpan);
 
             var banId = RandomString.NextString(6);
 
-            var banned = new BannedUser(user.Id, unbanDate, DateTime.Now, ctx.Member.Id, reason, banId);
-            BanList.SaveToXML(Bot.BotSettings.BanXML);
+            var ban = BanSQL.Create(banId, user.Id, ctx.Member.Id, reason, banDate, unbanDate);
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Бан**\n\n" +
@@ -722,7 +722,7 @@ namespace Bot_NetCore.Commands
                 $"**ID бана:** {banId}\n" +
                 $"**Причина:** {reason}\n");
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан {user.Username}! " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан бан **{user.Username}#{user.Discriminator}**! " +
                                    $"Снятие через: {Utility.FormatTimespan(durationTimeSpan)}!");
         }
 
