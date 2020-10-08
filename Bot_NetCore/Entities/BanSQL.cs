@@ -29,6 +29,8 @@ namespace Bot_NetCore.Entities
                         cmd.CommandText = statement;
                         cmd.Connection = connection;
                         cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
                     }
                 }
                 
@@ -49,6 +51,8 @@ namespace Bot_NetCore.Entities
                         cmd.CommandText = statement;
                         cmd.Connection = connection;
                         cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
                     }
                 }
                 _reason = value;
@@ -68,6 +72,8 @@ namespace Bot_NetCore.Entities
                         cmd.CommandText = statement;
                         cmd.Connection = connection;
                         cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
                     }
                 }
                 _banDateTime = value;
@@ -87,6 +93,8 @@ namespace Bot_NetCore.Entities
                         cmd.CommandText = statement;
                         cmd.Connection = connection;
                         cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
                     }
                 }
                 _unbanDateTime = value;

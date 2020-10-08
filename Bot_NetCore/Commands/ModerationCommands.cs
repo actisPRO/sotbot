@@ -743,11 +743,22 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            foreach (var ban in bans)
+            for (int i = 0; i < bans.Count; i++)
             {
-                if (ban.UnbanDateTime > DateTime.Now) ban.UnbanDateTime = DateTime.Now;
+                if (bans[i].UnbanDateTime > DateTime.Now)
+                {
+                    bans[i].UnbanDateTime = DateTime.Now;
+                }
             }
-            await ctx.Guild.UnbanMemberAsync(member);
+
+            try
+            {
+                await ctx.Guild.UnbanMemberAsync(member);
+            }
+            catch
+            {
+                
+            }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Снятие бана**\n\n" +
