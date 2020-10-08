@@ -16,41 +16,76 @@ namespace Bot_NetCore.Entities
         public ulong User
         {
             get => _user;
-            set => _user = value;
+            set
+            {
+                var statement = $"UPDATE warnings SET user = '{value}' WHERE id = '{Id}'";
+                var cmd = Bot.Connection.CreateCommand();
+                cmd.CommandText = statement;
+                
+                _user = value;
+            }
         }
 
         public ulong Moderator
         {
             get => _moderator;
-            set => _moderator = value;
+            set
+            {
+                var statement = $"UPDATE warnings SET moderator = '{value}' WHERE id = '{Id}'";
+                var cmd = Bot.Connection.CreateCommand();
+                cmd.CommandText = statement;
+                
+                _moderator = value;
+            }
         }
 
         public string Reason
         {
             get => _reason;
-            set => _reason = value;
+            set
+            {
+                var statement = $"UPDATE warnings SET reason = '{value}' WHERE id = '{Id}'";
+                var cmd = Bot.Connection.CreateCommand();
+                cmd.CommandText = statement;
+                
+                _reason = value;
+            }
         }
-        
+
         public DateTime Date
         {
             get => _date;
-            set => _date = value;
+            set
+            {
+                var statement = $"UPDATE warnings SET date = '{value:yyyy-mm-ddhh:mm:ss:ff}' WHERE id = '{Id}'";
+                var cmd = Bot.Connection.CreateCommand();
+                cmd.CommandText = statement;
+                
+                _date = value;
+            }
         }
 
         public ulong LogMessage
         {
             get => _logMessage;
-            set => _logMessage = value;
+            set
+            {
+                var statement = $"UPDATE warnings SET logmessage = '{value}' WHERE id = '{Id}'";
+                var cmd = Bot.Connection.CreateCommand();
+                cmd.CommandText = statement;
+                
+                _logMessage = value;
+            }
         }
 
         private WarnSQL(string id, ulong user, ulong moderator, string reason, DateTime date, ulong logMessage)
         {
             Id = id;
-            User = user;
-            Moderator = moderator;
-            Reason = reason;
-            Date = date;
-            LogMessage = logMessage;
+            _user = user;
+            _moderator = moderator;
+            _reason = reason;
+            _date = date;
+            _logMessage = logMessage;
         }
 
         /// <summary>
@@ -60,8 +95,9 @@ namespace Bot_NetCore.Entities
             DateTime date, ulong logMessage)
         {
             var statement = $"INSERT INTO warnings(id, user, moderator, reason, date, logmessage) " +
-                            $"VALUES ('{id}', {user}, {moderator}, '{reason}', '{date:yyyy-mm-ddhh:mm:ss:ff}', {logMessage});";
-            var cmd = new MySqlCommand(statement);
+                        $"VALUES ('{id}', {user}, {moderator}, '{reason}', '{date:yyyy-mm-ddhh:mm:ss:ff}', {logMessage});";
+            var cmd = Bot.Connection.CreateCommand();
+            cmd.CommandText = statement;
 
             cmd.ExecuteNonQuery();
             
@@ -71,13 +107,15 @@ namespace Bot_NetCore.Entities
         /// <summary>
         /// Получает предупреждение из базы данных по заданному Id
         /// </summary>
-        /// <param name="connection">Соединение с БД, которое обязательно должно быть открыто</param>
+        /// <param name="connection">Соединение с БД</param>
         /// <param name="id">ID предупреждения</param>
         /// <returns>Предупреждение или null, если не существует</returns>
         public static WarnSQL Get(MySqlConnection connection, string id)
         {
             var statement = $"SELECT * FROM warnings WHERE id='{id}';";
-            var cmd = new MySqlCommand(statement, connection);
+            var cmd = Bot.Connection.CreateCommand();
+            cmd.CommandText = statement;
+            
             var reader = cmd.ExecuteReader();
 
             // отсутствуют предупреждения с указанным ID
@@ -101,7 +139,9 @@ namespace Bot_NetCore.Entities
         public static void Delete(MySqlConnection connection, string id)
         {
             var statement = $"DELETE FROM warnings WHERE id = '{id}';";
-            var cmd = new MySqlCommand(statement);
+            var cmd = Bot.Connection.CreateCommand();
+            cmd.CommandText = statement;
+            
             cmd.ExecuteNonQuery();
         }
     }
