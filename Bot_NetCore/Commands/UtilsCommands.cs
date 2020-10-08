@@ -300,5 +300,33 @@ namespace Bot_NetCore.Commands
 
             await ctx.RespondAsync("ok");
         }
+
+        [Command("xmltosqlbans")]
+        public async Task XmlToSqlBans(CommandContext ctx) //todo delete after migration
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var command = new MySqlCommand())
+                {
+                    foreach (var ban in BanList.BannedMembers.Values)
+                    {
+                        var reason = ban.Reason;
+                        reason = reason.Replace('\\', ' ');
+                        
+                        command.CommandText += 
+                            $"INSERT INTO bans(id, user, moderator, reason, ban, unban) VALUES ('{ban.BanId}', '{ban.Id}', '{ban.Moderator}', " +
+                            $"'{reason}', '{ban.BanDateTime:yyyy-MM-dd HH:mm:ss}', '{ban.UnbanDateTime:yyyy-MM-dd HH:mm:ss}');\n";
+                    }
+                    
+                    
+                    command.Connection = connection;
+                    command.Connection.Open();
+
+                    command.ExecuteNonQuery();
+                }
+
+                await ctx.RespondAsync("ok");
+            }
+        }
     }
 }
