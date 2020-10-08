@@ -75,7 +75,7 @@ namespace Bot_NetCore
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
             UserList.ReadFromXML(BotSettings.WarningsXML); //todo delete after migration
-            BanList.ReadFromXML(BotSettings.BanXML);
+            BanList.ReadFromXML(BotSettings.BanXML); //todo delete after migration
             InviterList.ReadFromXML(BotSettings.InviterXML);
             ReportList.ReadFromXML(BotSettings.ReportsXML);
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
@@ -133,7 +133,7 @@ namespace Bot_NetCore
             Client.DebugLogger.LogMessageReceived += Listeners.LoggerListener.LogOnLogMessageReceived;
 
             ConnectionString =
-                $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword}; CharSet=utf8;";
+                $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword}; CharSet=utf8mb4;";
 
             await Client.ConnectAsync();
 

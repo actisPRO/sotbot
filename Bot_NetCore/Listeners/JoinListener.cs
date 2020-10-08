@@ -122,25 +122,6 @@ namespace Bot_NetCore.Listeners
                 }
 
                 await e.Member.BanAsync();
-            }
-
-
-
-            if (BanList.BannedMembers.ContainsKey(e.Member.Id) && BanList.BannedMembers[e.Member.Id].UnbanDateTime > BanList.BannedMembers[e.Member.Id].BanDateTime)
-            {
-                var ban = BanList.BannedMembers[e.Member.Id];
-                //Отправка сообщения в лс
-                try
-                {
-                    await e.Member.SendMessageAsync($"Вы были заблокированы на этом сервере. **Причина:** " +
-                                                $"{ban.Reason}. **Блокировка истекает:** ${ban.UnbanDateTime}.");
-                }
-                catch (UnauthorizedException)
-                {
-                    //user can block the bot
-                }
-                await e.Member.BanAsync(0, "Autoban");
-
                 return;
             }
 
