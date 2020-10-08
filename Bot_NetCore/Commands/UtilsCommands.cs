@@ -11,6 +11,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Commands
 {
@@ -262,6 +263,42 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ServerStatusChannel).ModifyAsync(x => x.Name = name);
+        }
+
+        [Command("xmltosqlwarns")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task XmlToSqlWarns(CommandContext ctx) //todo delete after migration
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                connection.Open();
+                foreach (var user in UserList.Users.Values)
+                {
+                    foreach (var warn in user.Warns)
+                    {
+                        using (var cmd = new MySqlCommand())
+                        {
+                            var reason = warn.Reason.Replace("'", "\\'").Replace("\\", "\\\\");
+                            
+                            cmd.CommandText =
+                                $"INSERT INTO warnings(id, user, moderator, reason, date, logmessage) VALUES ('{warn.Id}', '{user.Id}', '{warn.Moderator}', '{reason}', '{warn.Date:yyyy-MM-dd HH:mm:ss}', '{warn.LogMessage}');";
+                            Console.WriteLine(cmd.CommandText);
+                            cmd.Connection = connection;
+
+                            try
+                            {
+                                cmd.ExecuteNonQuery();
+                            }
+                            catch
+                            {
+                                
+                            }
+                        }
+                    }
+                }
+            }
+
+            await ctx.RespondAsync("ok");
         }
     }
 }
