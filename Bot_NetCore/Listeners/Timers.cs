@@ -266,38 +266,30 @@ namespace Bot_NetCore.Listeners
             var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
 
             //Check for expired bans
-            var toUnban = from ban in BanList.BannedMembers.Values
-                          where ban.UnbanDateTime <= DateTime.Now
-                          select ban;
+            var toUnban = BanSQL.GetExpiredBans();
 
-            if (toUnban.Count() > 0)
+            if (toUnban.Any())
             {
                 foreach (var ban in toUnban)
                 {
                     try
                     {
-                        await guild.UnbanMemberAsync(ban.Id);
+                        await guild.UnbanMemberAsync(ban.User);
                     }
                     catch (NotFoundException)
                     {
                         //пользователь мог и не быть заблокирован через Discord
                     }
 
-                    ban.Unban();
-
-                    var user = await Client.GetUserAsync(ban.Id);
+                    var user = await Client.GetUserAsync(ban.User);
                     await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                        "**Снятие Бана**\n\n" +
+                        "**Снятие бана**\n\n" +
                         $"**Модератор:** {Client.CurrentUser.Username}\n" +
                         $"**Пользователь:** {user}\n" +
                         $"**Дата:** {DateTime.Now}\n");
 
                     Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
                 }
-
-                BanList.SaveToXML(Bot.BotSettings.BanXML);
-
-                Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", "Бан-лист был обновлён.", DateTime.Now);
             }
 
             //Check for expired mutes
