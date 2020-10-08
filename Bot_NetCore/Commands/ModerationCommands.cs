@@ -736,14 +736,17 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            if (!BanList.BannedMembers.ContainsKey(member.Id))
+            var bans = BanSQL.GetForUser(member.Id);
+            if (bans.Count == 0)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не был забанен!");
+                return;
             }
 
-            var bannedUser = BanList.BannedMembers[member.Id];
-            bannedUser.Unban();
-            BanList.SaveToXML(Bot.BotSettings.BanXML);
+            foreach (var ban in bans)
+            {
+                if (ban.UnbanDateTime > DateTime.Now) ban.UnbanDateTime = DateTime.Now;
+            }
             await ctx.Guild.UnbanMemberAsync(member);
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
