@@ -802,9 +802,6 @@ namespace Bot_NetCore.Commands
 
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":pencil2:"));
             //await message.CreateReactionAsync(DiscordEmoji.FromName(client, ":no_entry:"));
-
-            //UserList.Users[member.Id].AddWarning(moderator.Id, DateTime.Now, reason, id, message.Id);
-            //UserList.SaveToXML(Bot.BotSettings.WarningsXML);
             var warn = WarnSQL.Create(id, member.Id, moderator.Id, reason, date, message.Id);
 
             try
