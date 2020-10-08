@@ -190,6 +190,8 @@ namespace Bot_NetCore.Entities
                 {
                     var statement = $"DELETE FROM warnings WHERE id = '{id}';";
                     cmd.CommandText = statement;
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
 
                     cmd.ExecuteNonQuery();
                 }
