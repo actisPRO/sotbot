@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
+using MySql.Data.MySqlClient;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -50,6 +52,11 @@ namespace Bot_NetCore
         ///     Структура с настройками бота.
         /// </summary>
         public static Settings BotSettings { get; private set; }
+        
+        /// <summary>
+        ///     Соединение с БД
+        /// </summary>
+        public static MySqlConnection Connection { get; private set; }
 
         public static void Main(string[] args)
         {
@@ -124,7 +131,22 @@ namespace Bot_NetCore
 
             //Логгер
             Client.DebugLogger.LogMessageReceived += Listeners.LoggerListener.LogOnLogMessageReceived;
-
+            
+            Connection = new MySqlConnection($"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword};");
+            Connection.Open();
+            Connection.StateChange += (sender, args) =>
+            {
+                if (args.CurrentState == ConnectionState.Closed)
+                {
+                    Connection.Open();
+                }
+                else if (args.CurrentState == ConnectionState.Broken)
+                {
+                    Connection.Close();
+                    Connection.Open();
+                }
+            };
+            
             await Client.ConnectAsync();
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
