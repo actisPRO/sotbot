@@ -99,6 +99,33 @@ namespace Bot_NetCore.Listeners
         public static async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
         {
             //Проверка на бан
+            var userBans = BanSQL.GetForUser(e.Member.Id);
+            var unexpiredBans = new List<BanSQL>();
+            foreach (var ban in userBans)
+                if (ban.UnbanDateTime > DateTime.Now) unexpiredBans.Add(ban);
+            if (unexpiredBans.Any())
+            {
+                var message = "**У вас есть неистёкшие блокировки на этом сервере:** \n";
+                foreach (var ban in unexpiredBans)
+                {
+                    message +=
+                        $"• **Причина:** {ban.Reason}. **Истекает через** {Utility.FormatTimespan(ban.UnbanDateTime - DateTime.Now)} | {ban.UnbanDateTime:dd.MM.yyyy HH:mm:ss}\n";
+                }
+
+                try
+                {
+                    await e.Member.SendMessageAsync(message);
+                }
+                catch (UnauthorizedException)
+                {
+                    // if bot is in user's blacklist
+                }
+
+                await e.Member.BanAsync();
+            }
+
+
+
             if (BanList.BannedMembers.ContainsKey(e.Member.Id) && BanList.BannedMembers[e.Member.Id].UnbanDateTime > BanList.BannedMembers[e.Member.Id].BanDateTime)
             {
                 var ban = BanList.BannedMembers[e.Member.Id];
