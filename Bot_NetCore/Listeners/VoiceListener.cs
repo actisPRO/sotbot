@@ -186,7 +186,8 @@ namespace Bot_NetCore.Listeners
                     e.After.Channel.Parent.Name.StartsWith("Рейд"))
                 {
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                        .SendMessageAsync($"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                        .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":twisted_rightwards_arrows:")} " +
+                        $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
                         $"сменил канал с **{e.Before.Channel.Name}** ({e.Before.Channel.Id}) " +
                         $"на **{e.After.Channel.Name}** ({e.After.Channel.Id})");
                 }
@@ -197,8 +198,9 @@ namespace Bot_NetCore.Listeners
                 if (e.Before.Channel.Parent.Name.StartsWith("Рейд"))
                 {
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                        .SendMessageAsync($"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
-                        $"покинул канал **{e.Before.Channel.Name}** ({e.Before.Channel.Id})");
+                        .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":negative_squared_cross_mark:")} " +
+                        $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                        $"покинул канал **{e.Before.Channel.Name}** ({e.Before.Channel.Id})"); ; ;
                 }
             }
             //User joined to server voice
@@ -207,7 +209,8 @@ namespace Bot_NetCore.Listeners
                 if (e.After.Channel.Parent.Name.StartsWith("Рейд"))
                 {
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                        .SendMessageAsync($"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                        .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":white_check_mark:")} " +
+                        $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
                         $"подключился к каналу **{e.After.Channel.Name}** ({e.After.Channel.Id})");
                 }
             }
@@ -237,7 +240,7 @@ namespace Bot_NetCore.Listeners
                     {
                         await FleetLogging.LogFleetDeletionAsync(e.Guild, leftChannel.Parent);
 
-                        foreach (var emptyChannel in leftChannel.Parent.Children)
+                        foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
                             await emptyChannel.DeleteAsync();
                         await leftChannel.Parent.DeleteAsync();
                     }
