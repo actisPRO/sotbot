@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Bot_NetCore.Misc;
 using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 
 namespace Bot_NetCore.Misc
 {
@@ -57,11 +52,17 @@ namespace Bot_NetCore.Misc
             //Move new text channels to log
             var textChannels = fleetCategory.Children.Where(x => x.Type == ChannelType.Text);
             foreach (var channel in textChannels)
+            {
                 await channel.ModifyAsync(x =>
                 {
                     x.Name = $"{DateTime.Now:dd/MM} {channel.Name}";
                     x.Parent = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
                 });
+                await channel.AddOverwriteAsync(guild.EveryoneRole, Permissions.None, Permissions.AccessChannels);
+                await channel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels, Permissions.ManageMessages);
+            }
+
+            //TODO: Remove permissions from channels
 
             //Delete old fleet text channels
             var oldChannels = guild.GetChannel(Bot.BotSettings.FleetLogCategory).Children
