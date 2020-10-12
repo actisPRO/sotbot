@@ -478,6 +478,19 @@ namespace Bot_NetCore
         /// </summary>
         public ulong AttachmentsLog;
 
+
+        /// <summary>
+        ///     ID категории-логов рейдов.
+        /// </summary>
+        public ulong FleetLogCategory;
+
+
+        /// <summary>
+        ///     ID канала-лога перемещений пользователей в каналах.
+        /// </summary>
+        public ulong FleetLogChannel;
+
+
         /// <summary>
         /// </summary>
         public string BanXML;

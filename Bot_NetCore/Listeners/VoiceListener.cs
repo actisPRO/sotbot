@@ -169,6 +169,51 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
+        public static async Task UpdateClientStatusOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        {
+            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
+        }
+
+        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        public static async Task FleetLogOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        {
+            //Для проверки если канал рейда чекать если название КАТЕГОРИИ канала начинается с "рейд"
+
+            // User changed voice channel
+            if (e.Before != null && e.Before.Channel != null && e.After != null && e.After.Channel != null)
+            {
+                if (e.Before.Channel.Parent.Name.StartsWith("Рейд") ||
+                    e.After.Channel.Parent.Name.StartsWith("Рейд"))
+                {
+                    await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
+                        .SendMessageAsync($"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                        $"сменил канал с **{e.Before.Channel.Name}** ({e.Before.Channel.Id}) " +
+                        $"на **{e.After.Channel.Name}** ({e.After.Channel.Id})");
+                }
+            }
+            //User left from voice
+            else if (e.Before != null && e.Before.Channel != null)
+            {
+                if (e.Before.Channel.Parent.Name.StartsWith("Рейд"))
+                {
+                    await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
+                        .SendMessageAsync($"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                        $"покинул канал **{e.Before.Channel.Name}** ({e.Before.Channel.Id})");
+                }
+            }
+            //User joined to server voice
+            else if (e.After != null && e.After.Channel != null)
+            {
+                if (e.After.Channel.Parent.Name.StartsWith("Рейд"))
+                {
+                    await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
+                        .SendMessageAsync($"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                        $"подключился к каналу **{e.After.Channel.Name}** ({e.After.Channel.Id})");
+                }
+            }
+        }
+
+        [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task FleetDeleteOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
             //Проверка на пустые рейды
@@ -190,6 +235,8 @@ namespace Bot_NetCore.Listeners
                     //Удаляем каналы и категорию
                     if (fleetIsEmpty)
                     {
+                        await FleetLogging.LogFleetDeletionAsync(e.Guild, leftChannel.Parent);
+
                         foreach (var emptyChannel in leftChannel.Parent.Children)
                             await emptyChannel.DeleteAsync();
                         await leftChannel.Parent.DeleteAsync();
