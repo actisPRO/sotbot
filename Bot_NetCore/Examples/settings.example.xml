@@ -78,8 +78,11 @@
 	<FleetCodexRole>701810271945228358</FleetCodexRole>
 	<FleetCaptainRole>722060809269805126</FleetCaptainRole>
 
-	<PurgeCodexRole>722043389146693633</PurgeCodexRole>
-	<MuteRole>707563567930671114</MuteRole>
+    <FleetLogCategory>765280840757674014</FleetLogCategory>
+    <FleetLogChannel>765281008483958824</FleetLogChannel>
+
+    <MuteRole>707563567930671114</MuteRole>
+    <VoiceMuteRole>742090323244744814</VoiceMuteRole>
 
 	<EmissaryMessageId>703926358182592553</EmissaryMessageId>
 	<EmissaryGoldhoadersRole>703929000711553074</EmissaryGoldhoadersRole>

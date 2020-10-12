@@ -142,7 +142,7 @@ namespace Bot_NetCore.Commands
             var interactivity = ctx.Client.GetInteractivity();
 
             //Подсчёт нужных голосов
-            var votesNeeded = channel.Users.Count() switch
+            var votesNeeded = channel.Users.Where(x => !x.IsBot).Count() switch
             {
                 4 => 3, //Галеон
                 3 => 2, //Бриг
@@ -333,8 +333,13 @@ namespace Bot_NetCore.Commands
                 await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"бронь-инвайты-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
-                for (int i = 1; i < nShips; i++) //Skip if there's only 1 ship
+
+                nShips = nShips == 1 ? 0 : nShips; //Skip for if there's only 1 ship
+                for (int i = 1; i <= nShips; i++)
                     await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+
+                //Log fleet category creation
+                await FleetLogging.LogFleetCreationAsync(ctx.Guild, ctx.Member, ctx.Guild.GetChannel(fleetCategory.Id));
             }
 
             //Чистим голосование после создания рейда
