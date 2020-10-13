@@ -116,29 +116,33 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var purge = new MemberReport(member.Id,
-                DateTime.Now,
-                Utility.TimeSpanParse(duration),
-                ctx.Member.Id,
-                reason);
-
-            if (purge.ReportDuration.TotalSeconds < 1)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
-                return;
-            }
+            var id = RandomString.NextString(6);
+            var reportEnd = DateTime.Now + TimeSpanParse(duration);
+            ReportSQL purge = null;
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.CodexPurges.ContainsKey(member.Id))
-                ReportList.CodexPurges.Add(member.Id, purge);
+            var reports = ReportSQL.GetForUser(member.Id, ReportType.CodexPurge);
+            if (reports.Any())
+            {
+                purge = reports.First();
+                purge.ReportEnd = reportEnd;
+            }
             else
-                ReportList.CodexPurges[member.Id].UpdateReport(DateTime.Now,
-                    Utility.TimeSpanParse(duration),
+            {
+                purge = ReportSQL.Create(id,
+                    member.Id,
                     ctx.Member.Id,
-                    reason);
+                    reason,
+                    DateTime.Now,
+                    reportEnd,
+                    ReportType.CodexPurge);
 
-            //Сохраняем в файл
-            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+                if (purge.ReportDuration.TotalSeconds < 1)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
+                    return;
+                }
+            }
 
             //Убираем роль правил
             await member.RevokeRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
@@ -150,7 +154,7 @@ namespace Bot_NetCore.Commands
                 await member.SendMessageAsync(
                     $"**Еще раз внимательно прочитайте правила сервера**\n\n" +
                     $"**Возможность принять правила заблокирована**\n" +
-                    $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
+                    $"**Снятие через** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
                     $"**Причина:** {purge.Reason}");
             }
@@ -162,15 +166,16 @@ namespace Bot_NetCore.Commands
             //Отправка в журнал
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил**\n\n" +
-                 $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** {member}\n" +
-                 $"**Дата:** {DateTime.Now}\n" +
-                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
-                 $"**Причина:** {reason}");
+                 $"**Модератор:** {ctx.Member}\n" +
+                 $"**Пользователь:** {member}\n" +
+                 $"**Дата:** {DateTime.Now:HH:mm:ss dd.MM.yyyy}\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n | {reportEnd:HH:mm:ss dd.MM.yyyy}\n" +
+                 $"**Причина:** {reason}\n" +
+                 $"**ID:** {id}");
 
             //Ответное сообщение в чат
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила {member.Mention}. " +
-                                   $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
+                                   $"Снятие через {Utility.FormatTimespan(purge.ReportDuration)}!");
         }
 
         [Command("purge")]
