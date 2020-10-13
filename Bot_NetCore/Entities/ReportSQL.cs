@@ -15,6 +15,147 @@ namespace Bot_NetCore.Entities
         private DateTime _reportEnd;
         private ReportType _reportType;
 
+        public ulong User
+        {
+            get => _user;
+            set
+            {
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        var statement = $"UPDATE reports SET userid = '{value}' WHERE id = '{Id}'";
+                        cmd.CommandText = statement;
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
+
+                        _user = value;
+                    }
+                }
+            }
+        }
+
+        public ulong Moderator
+        {
+            get => _moderator;
+            set
+            {
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        var statement = $"UPDATE reports SET moderator = '{value}' WHERE id = '{Id}'";
+                        cmd.CommandText = statement;
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
+
+                        _moderator = value;
+                    }
+                }
+            }
+        }
+
+        public string Reason
+        {
+            get => _reason;
+            set
+            {
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        var statement = $"UPDATE reports SET reason = '{value}' WHERE id = '{Id}'";
+                        cmd.CommandText = statement;
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
+
+                        _reason = value;
+                    }
+                }
+            }
+        }
+
+        public DateTime ReportStart
+        {
+            get => _reportStart;
+            set
+            {
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        var statement = $"UPDATE reports SET report_start = '{value:yyyy-MM-dd HH:mm:ss}' WHERE id = '{Id}'";
+                        cmd.CommandText = statement;
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
+
+                        _reportStart = value;
+                    }
+                }
+            }
+        }
+
+        public DateTime ReportEnd
+        {
+            get => _reportEnd;
+            set
+            {
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        var statement = $"UPDATE reports SET report_end = '{value:yyyy-MM-dd HH:mm:ss}' WHERE id = '{Id}'";
+                        cmd.CommandText = statement;
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
+
+                        _reportEnd = value;
+                    }
+                }
+            }
+        }
+
+        public ReportType ReportType
+        {
+            get => _reportType;
+            set
+            {
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        var type = value switch
+                        {
+                            ReportType.Mute => "mute",
+                            ReportType.VoiceMute => "voicemute",
+                            ReportType.FleetPurge => "fleetpurge",
+                            ReportType.CodexPurge => "codexpurge",
+                            _ => ""
+                        };
+                        
+                        var statement = $"UPDATE reports SET report_type = '{type}' WHERE id = '{Id}'";
+                        cmd.CommandText = statement;
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+
+                        cmd.ExecuteNonQuery();
+
+                        _reportType = value;
+                    }
+                }
+            }
+        }
+
         private ReportSQL(string id, ulong user, ulong moderator, string reason, DateTime reportStart,
             DateTime reportEnd, ReportType reportType)
         {
