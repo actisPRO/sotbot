@@ -122,7 +122,7 @@ namespace Bot_NetCore.Commands
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
             var reports = ReportSQL.GetForUser(member.Id, ReportType.CodexPurge);
-            if (reports.Any())
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
                 purge = reports.First();
                 purge.ReportEnd = reportEnd;
@@ -195,7 +195,7 @@ namespace Bot_NetCore.Commands
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
             var reports = ReportSQL.GetForUser(member.Id, ReportType.CodexPurge);
-            if (reports.Any())
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
                 purge = reports.First();
                 purge.ReportEnd = reportEnd;
@@ -264,7 +264,7 @@ namespace Bot_NetCore.Commands
 
             ReportSQL fleetPurge = null;
             var reports = ReportSQL.GetForUser(member.Id, ReportType.FleetPurge);
-            if (reports.Any())
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
                 fleetPurge = reports.First();
                 fleetPurge.ReportEnd = reportEnd;
@@ -334,7 +334,7 @@ namespace Bot_NetCore.Commands
 
             ReportSQL fleetPurge = null;
             var reports = ReportSQL.GetForUser(member.Id, ReportType.FleetPurge);
-            if (reports.Any())
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
                 fleetPurge = reports.First();
                 fleetPurge.ReportEnd = reportEnd;
