@@ -113,20 +113,21 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        public static List<ReportSQL> GetForUser(ulong user)
+        public static List<ReportSQL> GetForUser(ulong userid)
         {
             var reports = new List<ReportSQL>();
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT * FROM reports WHERE id='{id}';";
+                    cmd.CommandText = $"SELECT * FROM reports WHERE userid='{userid}';";
                     cmd.Connection = connection;
                     cmd.Connection.Open();
 
                     var reader = cmd.ExecuteReader(); 
                     while (reader.Read())
                     {
+                        var id = reader.GetString("id");
                         var user = reader.GetUInt64("userid");
                         var moderator = reader.GetUInt64("moderator");
                         var reason = reader.GetString("reason");
