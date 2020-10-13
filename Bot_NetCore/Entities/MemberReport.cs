@@ -2,7 +2,8 @@
 
 namespace Bot_NetCore.Entities
 {
-    public class MemberReport
+    [Obsolete]
+    public class MemberReport // todo: remove after migration
     {
         public MemberReport(ulong id, DateTime reportDateTime, TimeSpan reportDuration, ulong moderator, string reason)
         {

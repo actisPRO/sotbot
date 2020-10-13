@@ -4,7 +4,8 @@ using System.Xml.Linq;
 
 namespace Bot_NetCore.Entities
 {
-    public static class ReportList
+    [Obsolete]
+    public static class ReportList // todo remove after migration
     {
         public static Dictionary<ulong, MemberReport> Mutes = new Dictionary<ulong, MemberReport>();
         public static Dictionary<ulong, MemberReport> VoiceMutes = new Dictionary<ulong, MemberReport>();
