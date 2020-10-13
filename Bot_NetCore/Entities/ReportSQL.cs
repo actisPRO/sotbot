@@ -13,6 +13,7 @@ namespace Bot_NetCore.Entities
         private string _reason;
         private DateTime _reportStart;
         private DateTime _reportEnd;
+        private TimeSpan _reportDuration;
         private ReportType _reportType;
 
         public ulong User
@@ -123,6 +124,12 @@ namespace Bot_NetCore.Entities
                     }
                 }
             }
+        }
+
+        public TimeSpan ReportDuration
+        {
+            get => _reportEnd - _reportStart;
+            private set => _reportDuration = value;
         }
 
         public ReportType ReportType
