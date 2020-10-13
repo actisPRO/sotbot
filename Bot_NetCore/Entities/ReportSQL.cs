@@ -261,14 +261,30 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        public static List<ReportSQL> GetForUser(ulong userid)
+        public static List<ReportSQL> GetForUser(ulong userid, ReportType filter = ReportType.All)
         {
             var reports = new List<ReportSQL>();
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT * FROM reports WHERE userid='{userid}';";
+                    if (filter == ReportType.All)
+                    {
+                        cmd.CommandText = $"SELECT * FROM reports WHERE userid='{userid}';";
+                    }
+                    else
+                    {
+                        var filterStr = filter switch
+                        {
+                            ReportType.Mute => "mute",
+                            ReportType.CodexPurge => "codexpurge",
+                            ReportType.FleetPurge => "fleetpurge",
+                            ReportType.VoiceMute => "voicemute",
+                            _ => throw new Exception("That exception won't be thrown. Well, I hope so.")
+                        };
+                        cmd.CommandText = $"SELECT * FROM reports WHERE userid='{userid}' AND report_type='{filterStr}';";
+                    }
+                    
                     cmd.Connection = connection;
                     cmd.Connection.Open();
 
@@ -305,6 +321,7 @@ namespace Bot_NetCore.Entities
         Mute,
         VoiceMute,
         CodexPurge,
-        FleetPurge
+        FleetPurge,
+        All
     }
 }
