@@ -169,7 +169,7 @@ namespace Bot_NetCore.Commands
                  $"**Модератор:** {ctx.Member}\n" +
                  $"**Пользователь:** {member}\n" +
                  $"**Дата:** {DateTime.Now:HH:mm:ss dd.MM.yyyy}\n" +
-                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n | {reportEnd:HH:mm:ss dd.MM.yyyy}\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)} | {reportEnd:HH:mm:ss dd.MM.yyyy}\n" +
                  $"**Причина:** {reason}\n" +
                  $"**ID:** {id}");
 
@@ -181,7 +181,7 @@ namespace Bot_NetCore.Commands
         [Command("purge")]
         [RequirePermissions(Permissions.KickMembers)]
         [Priority(0)]
-        public async Task Purge(CommandContext ctx, DiscordUser user, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
+        public async Task Purge(CommandContext ctx, DiscordUser member, string duration, [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -189,42 +189,47 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var purge = new MemberReport(user.Id,
-                DateTime.Now,
-                Utility.TimeSpanParse(duration),
-                ctx.Member.Id,
-                reason);
-
-            if (purge.ReportDuration.TotalSeconds < 1)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
-                return;
-            }
+            var id = RandomString.NextString(6);
+            var reportEnd = DateTime.Now + TimeSpanParse(duration);
+            ReportSQL purge = null;
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.CodexPurges.ContainsKey(user.Id))
-                ReportList.CodexPurges.Add(user.Id, purge);
+            var reports = ReportSQL.GetForUser(member.Id, ReportType.CodexPurge);
+            if (reports.Any())
+            {
+                purge = reports.First();
+                purge.ReportEnd = reportEnd;
+            }
             else
-                ReportList.CodexPurges[user.Id].UpdateReport(DateTime.Now,
-                    Utility.TimeSpanParse(duration),
+            {
+                purge = ReportSQL.Create(id,
+                    member.Id,
                     ctx.Member.Id,
-                    reason);
+                    reason,
+                    DateTime.Now,
+                    reportEnd,
+                    ReportType.CodexPurge);
 
-            //Сохраняем в файл
-            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+                if (purge.ReportDuration.TotalSeconds < 1)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
+                    return;
+                }
+            }
 
             //Отправка в журнал
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил**\n\n" +
-                 $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** {user.Username}#{user.Discriminator}\n" +
-                 $"**Дата:** {DateTime.Now}\n" +
-                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)}\n" +
-                 $"**Причина:** {reason}");
+                 $"**Модератор:** {ctx.Member}\n" +
+                 $"**Пользователь:** {member}\n" +
+                 $"**Дата:** {DateTime.Now:HH:mm:ss dd.MM.yyyy}\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(purge.ReportDuration)} | {reportEnd:HH:mm:ss dd.MM.yyyy}\n" +
+                 $"**Причина:** {reason}\n" +
+                 $"**ID:** {id}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила {user.Username}#{user.Discriminator}. " +
-                                   $"Снятие через: {Utility.FormatTimespan(purge.ReportDuration)}!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила {member.Mention}. " +
+                                   $"Снятие через {Utility.FormatTimespan(purge.ReportDuration)}!");
         }
 
         [Command("fleetpurge")]
