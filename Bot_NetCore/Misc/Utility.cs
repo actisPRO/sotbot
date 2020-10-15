@@ -95,7 +95,12 @@ namespace Bot_NetCore.Misc
             int ms = m.Groups["minutes"].Success ? int.Parse(m.Groups["minutes"].Value) : 0;
             int ss = m.Groups["seconds"].Success ? int.Parse(m.Groups["seconds"].Value) : 0;
 
-            return TimeSpan.FromSeconds(ds * 24 * 60 * 60 + hs * 60 * 60 + ms * 60 + ss);
+            var result = TimeSpan.FromSeconds(ds * 24 * 60 * 60 + hs * 60 * 60 + ms * 60 + ss);
+            if (result.TotalSeconds < 1)
+            {
+                throw new InvalidOperationException("Unable to convert time!");
+            }
+            return result;
         }
 
         public static string FormatTimespan(TimeSpan time)

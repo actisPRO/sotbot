@@ -57,8 +57,15 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
-            if (e.Exception is ArgumentNullException &&
-                e.Exception.Message.Contains("Value cannot be null."))
+            if (e.Exception is InvalidOperationException &&
+                e.Exception.Message == "Unable to convert time!")
+            {
+                await e.Context.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время.");
+                return;
+            }
+
+                if (e.Exception is ArgumentNullException &&
+                    e.Exception.Message.Contains("Value cannot be null."))
             {
                 await e.Context.RespondAsync(
                     $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели недопустимые параметры.");
