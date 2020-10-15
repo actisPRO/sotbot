@@ -127,10 +127,13 @@ namespace Bot_NetCore.Listeners
 
             //Проверка на mute
             var blocksMessage = "**У вас есть неистекшие блокировки на этом сервере!**\n";
+            var reports = ReportSQL.GetForUser(e.Member.Id);
+            var sendMessage = false;
             foreach (var report in ReportSQL.GetForUser(e.Member.Id))
             {
                 if (report.ReportEnd < DateTime.Now)
                 {
+                    sendMessage = true;
                     string blockType = report.ReportType switch
                     {
                         ReportType.Mute => "Мут",
@@ -148,6 +151,15 @@ namespace Bot_NetCore.Listeners
                     else if (report.ReportType == ReportType.CodexPurge)
                         await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
                 }
+            }
+
+            try
+            {
+                await e.Member.SendMessageAsync(blocksMessage);
+            }
+            catch (UnauthorizedException)
+            {
+                
             }
 
             //Выдача доступа к приватным кораблям
