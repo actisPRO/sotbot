@@ -858,16 +858,29 @@ namespace Bot_NetCore.Commands
                 }
 
                 var embed = new DiscordEmbedBuilder();
+
+                embed.WithColor(DiscordColor.Orange);
+
                 embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
                 embed.AddField("ID", user.Id.ToString(), true);
-                embed.WithColor(DiscordColor.Blurple);
+
+                //Баны
+                var userBans = BanSQL.GetForUser(user.Id).Where(x => x.UnbanDateTime > DateTime.Now);
+                if (userBans.Any())
+                {
+                    embed.AddField("Бан", $"{userBans.OrderBy(x => x.UnbanDateTime).FirstOrDefault().UnbanDateTime}");
+                    embed.WithColor(DiscordColor.Red);
+                }
 
                 if (member == null)
+                {
                     embed.WithDescription("Покинул сервер");
-                else 
+                }
+                else
                 {
                     embed.AddField("Имя на сервере", member.DisplayName, true);
                     embed.AddField("Присоединился", member.JoinedAt.ToString("HH:mm:ss dd.MM.yyyy"));
+                    embed.WithColor(DiscordColor.Green);
                 }
 
                 //Предупреждения
