@@ -328,15 +328,26 @@ namespace Bot_NetCore.Commands
                 //positions += $"New pos: **{newFleet.Position}** Root pos: **{rootFleetCategory.Position}**";
                 //await ctx.RespondAsync(positions);
 
-
-                //TODO: Check permissions - UPD: Seems to be ok
-                await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
+                var textChannel = await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"бронь-инвайты-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
 
                 nShips = nShips == 1 ? 0 : nShips; //Skip for if there's only 1 ship
                 for (int i = 1; i <= nShips; i++)
                     await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+
+                await ctx.Guild.GetAuditLogsAsync(1); //Костыль, каналы в категории не успевают обновляться и последний канал не учитывается
+
+                try
+                {
+                    //Отправка заготовленного сообщения в текстовый канал
+                    var message = await ctx.Guild.GetChannel(722157860217421894).GetMessageAsync(766359341632585808);
+                    message = await textChannel.SendMessageAsync(message.Content);
+                    await message.ModifyEmbedSuppressionAsync(true);
+                }
+                catch (NotFoundException)
+                { 
+                }
 
                 //Log fleet category creation
                 await FleetLogging.LogFleetCreationAsync(ctx.Guild, ctx.Member, ctx.Guild.GetChannel(fleetCategory.Id));

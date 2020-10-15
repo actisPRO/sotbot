@@ -28,7 +28,6 @@ namespace Bot_NetCore.Misc
             embed.WithTimestamp(DateTime.Now);
 
             await guild.GetChannel(Bot.BotSettings.FleetLogChannel).SendMessageAsync(embed: embed.Build());
-
         }
 
         public static async Task LogFleetDeletionAsync(DiscordGuild guild, DiscordChannel fleetCategory)
@@ -58,11 +57,20 @@ namespace Bot_NetCore.Misc
                     x.Name = $"{DateTime.Now:dd/MM} {channel.Name}";
                     x.Parent = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
                 });
-                await channel.AddOverwriteAsync(guild.EveryoneRole, Permissions.None, Permissions.AccessChannels);
-                await channel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels, Permissions.ManageMessages);
-            }
 
-            //TODO: Remove permissions from channels
+                //Delete old permissions
+                while (channel.PermissionOverwrites.Any())
+                    await channel.PermissionOverwrites.First().DeleteAsync();
+
+                //Sync with category permissions
+                foreach (var permission in guild.GetChannel(Bot.BotSettings.FleetLogCategory).PermissionOverwrites)
+                {
+                    if(permission.Type == OverwriteType.Role)
+                        await channel.AddOverwriteAsync(await permission.GetRoleAsync(), permission.Allowed, permission.Denied);
+                    else
+                        await channel.AddOverwriteAsync(await permission.GetMemberAsync(), permission.Allowed, permission.Denied);
+                }
+            }
 
             //Delete old fleet text channels
             var oldChannels = guild.GetChannel(Bot.BotSettings.FleetLogCategory).Children
