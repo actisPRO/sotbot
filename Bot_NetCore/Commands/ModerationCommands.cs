@@ -383,29 +383,27 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var mute = new MemberReport(member.Id,
-                DateTime.Now,
-                Utility.TimeSpanParse(duration),
-                ctx.Member.Id,
-                reason);
+            var durationTimeSpan = Utility.TimeSpanParse(duration);
+            var id = RandomString.NextString(6);
+            var reportEnd = DateTime.Now + durationTimeSpan;
 
-            if (mute.ReportDuration.TotalSeconds < 1)
+            ReportSQL mute = null;
+            var reports = ReportSQL.GetForUser(member.Id, ReportType.Mute);
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
-                return;
+                mute = reports.First();
+                mute.ReportEnd = reportEnd;
             }
-
-            //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.Mutes.ContainsKey(member.Id))
-                ReportList.Mutes.Add(member.Id, mute);
             else
-                ReportList.Mutes[member.Id].UpdateReport(DateTime.Now,
-                    Utility.TimeSpanParse(duration),
+            {
+                mute = ReportSQL.Create(id,
+                    member.Id,
                     ctx.Member.Id,
-                    reason);
-
-            //Сохраняем в файл
-            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+                    reason,
+                    DateTime.Now,
+                    reportEnd,
+                    ReportType.Mute);
+            }
 
             //Выдаем роль мута
             await member.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.MuteRole));
@@ -431,7 +429,8 @@ namespace Bot_NetCore.Commands
                  $"**Кому:** {member}\n" +
                  $"**Дата:** {DateTime.Now}\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
-                 $"**Причина:** {reason}");
+                 $"**Причина:** {reason}\n" +
+                 $"**ID:** {id}");
 
             //Ответное сообщение в чат
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут {member.Mention}. " +
@@ -441,7 +440,7 @@ namespace Bot_NetCore.Commands
         [Command("mute")]
         [RequirePermissions(Permissions.KickMembers)]
         [Priority(1)]
-        public async Task Mute(CommandContext ctx, DiscordUser user, string duration, [RemainingText] string reason = "Не указана")
+        public async Task Mute(CommandContext ctx, DiscordUser member, string duration, [RemainingText] string reason = "Не указана")
         {
             if (!Bot.IsModerator(ctx.Member))
             {
@@ -449,41 +448,40 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var mute = new MemberReport(user.Id,
-                DateTime.Now,
-                Utility.TimeSpanParse(duration),
-                ctx.Member.Id,
-                reason);
+            var durationTimeSpan = Utility.TimeSpanParse(duration);
+            var id = RandomString.NextString(6);
+            var reportEnd = DateTime.Now + durationTimeSpan;
 
-            if (mute.ReportDuration.TotalSeconds < 1)
+            ReportSQL mute = null;
+            var reports = ReportSQL.GetForUser(member.Id, ReportType.Mute);
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
-                return;
+                mute = reports.First();
+                mute.ReportEnd = reportEnd;
             }
-
-            //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.Mutes.ContainsKey(user.Id))
-                ReportList.Mutes.Add(user.Id, mute);
             else
-                ReportList.Mutes[user.Id].UpdateReport(DateTime.Now,
-                    Utility.TimeSpanParse(duration),
+            {
+                mute = ReportSQL.Create(id,
+                    member.Id,
                     ctx.Member.Id,
-                    reason);
-
-            //Сохраняем в файл
-            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+                    reason,
+                    DateTime.Now,
+                    reportEnd,
+                    ReportType.Mute);
+            }
 
             //Отправка в журнал
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Мут**\n\n" +
                  $"**От:** {ctx.Member}\n" +
-                 $"**Кому:** {user.Username}#{user.Discriminator}\n" +
+                 $"**Кому:** {member}\n" +
                  $"**Дата:** {DateTime.Now}\n" +
                  $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
-                 $"**Причина:** {reason}");
+                 $"**Причина:** {reason}\n" +
+                 $"**ID:** {id}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут {user.Username}#{user.Discriminator}. " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут {member.Mention}. " +
                                    $"Снятие через: {Utility.FormatTimespan(mute.ReportDuration)}!");
         }
 
@@ -498,29 +496,27 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var voiceMute = new MemberReport(member.Id,
-                DateTime.Now,
-                Utility.TimeSpanParse(duration),
-                ctx.Member.Id,
-                reason);
+            var durationTimeSpan = Utility.TimeSpanParse(duration);
+            var id = RandomString.NextString(6);
+            var reportEnd = DateTime.Now + durationTimeSpan;
 
-            if (voiceMute.ReportDuration.TotalSeconds < 1)
+            ReportSQL mute = null;
+            var reports = ReportSQL.GetForUser(member.Id, ReportType.VoiceMute);
+            if (reports.Any() && reports.First().ReportEnd > DateTime.Now)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось определить время!");
-                return;
+                mute = reports.First();
+                mute.ReportEnd = reportEnd;
             }
-
-            //Возможна только одна блокировка, если уже существует то перезаписываем
-            if (!ReportList.VoiceMutes.ContainsKey(member.Id))
-                ReportList.VoiceMutes.Add(member.Id, voiceMute);
             else
-                ReportList.VoiceMutes[member.Id].UpdateReport(DateTime.Now,
-                    Utility.TimeSpanParse(duration),
+            {
+                mute = ReportSQL.Create(id,
+                    member.Id,
                     ctx.Member.Id,
-                    reason);
-
-            //Сохраняем в файл
-            ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+                    reason,
+                    DateTime.Now,
+                    reportEnd,
+                    ReportType.VoiceMute);
+            }
 
             //Выдаем роль мута
             await member.GrantRoleAsync(ctx.Channel.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
@@ -530,7 +526,7 @@ namespace Bot_NetCore.Commands
             {
                 await member.SendMessageAsync(
                     $"**Вам выдан мут в голосовом чате**\n\n" +
-                    $"**Снятие через:** {Utility.FormatTimespan(voiceMute.ReportDuration)}\n" +
+                    $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
                     $"**Причина:** {reason}");
             }
@@ -545,12 +541,12 @@ namespace Bot_NetCore.Commands
                  $"**От:** {ctx.Member}\n" +
                  $"**Кому:** {member}\n" +
                  $"**Дата:** {DateTime.Now}\n" +
-                 $"**Снятие через:** {Utility.FormatTimespan(voiceMute.ReportDuration)}\n" +
+                 $"**Снятие через:** {Utility.FormatTimespan(mute.ReportDuration)}\n" +
                  $"**Причина:** {reason}");
 
             //Ответное сообщение в чат
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдан мут в голосовом чате {member.Mention}. " +
-                                   $"Снятие через: {Utility.FormatTimespan(voiceMute.ReportDuration)}!");
+                                   $"Снятие через: {Utility.FormatTimespan(mute.ReportDuration)}!");
         }
 
         [Command("warn")]
