@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Timers;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
@@ -169,6 +170,24 @@ namespace Bot_NetCore.Listeners
                             return;
                     }
                 }
+            
+            // temp for halloween event. remove after it
+            if (e.Message.Channel.Id == 435377838066237440 && e.Message.Content.StartsWith("h!"))
+            {
+                var delete = new Timer(60000);
+                delete.Elapsed += async (sender, args) =>
+                {
+                    try
+                    {
+                        await e.Message.DeleteAsync();
+                    }
+                    catch
+                    {
+                        
+                    }
+                };
+                delete.Enabled = true;
+            }
         }
     }
 }
