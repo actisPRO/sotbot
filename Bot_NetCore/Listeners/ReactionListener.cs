@@ -165,7 +165,7 @@ namespace Bot_NetCore.Listeners
                 
                 await connection.CloseAsync();
                 
-                if (res == null || res == DBNull.Value)
+                if (res == null || res == DBNull.Value || res.ToString() == "")
                 {
                     await user.SendMessageAsync(
                         $"{Bot.BotSettings.ErrorEmoji} К вашему аккаунту не привязан Xbox, пожалуйста, войдите с помощью Discord на сайт {Bot.BotSettings.WebURL}login и повторите попытку.");
