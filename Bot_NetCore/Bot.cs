@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
@@ -153,7 +154,7 @@ namespace Bot_NetCore
         {
             await client.UpdateStatusAsync(new DiscordActivity("за Sea of Thieves RU \n" +
                 $"Участников: {guild.MemberCount} \n" +
-                $"Активных: {guild.VoiceStates.Count}", ActivityType.Watching));
+                $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()}", ActivityType.Watching));
         }
 
 
