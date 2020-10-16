@@ -180,7 +180,9 @@ namespace Bot_NetCore.Listeners
             //Для проверки если канал рейда чекать если название КАТЕГОРИИ канала начинается с "рейд"
 
             // User changed voice channel
-            if (e.Before != null && e.Before.Channel != null && e.After != null && e.After.Channel != null)
+            if (e.Before != null && e.Before.Channel != null && 
+                e.After != null && e.After.Channel != null && 
+                e.Before.Channel.Id != e.After.Channel.Id)
             {
                 if (e.Before.Channel.Parent.Name.StartsWith("Рейд") ||
                     e.After.Channel.Parent.Name.StartsWith("Рейд"))
