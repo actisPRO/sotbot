@@ -318,21 +318,19 @@ namespace Bot_NetCore.Commands
             {
                 var rootFleetCategory = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory);
 
-                var fleetCategory = await rootFleetCategory.CloneAsync(); //await ctx.Guild.CreateChannelCategoryAsync($"Рейд {notes}");
-                                                                          //var positions = $"Created pos: **{newFleet.Position}** ";
+                var fleetCategory = await rootFleetCategory.CloneAsync(); 
+
                 await fleetCategory.ModifyAsync(x =>
                 {
                     x.Name = $"Рейд {notes}";
                     x.Position = rootFleetCategory.Position + 1;
                 });
-                //positions += $"New pos: **{newFleet.Position}** Root pos: **{rootFleetCategory.Position}**";
-                //await ctx.RespondAsync(positions);
 
                 var textChannel = await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"бронь-инвайты-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
 
-                nShips = nShips == 1 ? 0 : nShips; //Skip for if there's only 1 ship
+                nShips = nShips == 1 ? 0 : nShips; //Пропускаем в случае одного корабля, нужен только общий голосовой
                 for (int i = 1; i <= nShips; i++)
                     await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
 
@@ -347,9 +345,10 @@ namespace Bot_NetCore.Commands
                 }
                 catch (NotFoundException)
                 { 
+                    //Не удалось найти заготовленное сообщение, пропускаем
                 }
 
-                //Log fleet category creation
+                //Отправляем в лог рейдов сообщение о создании рейда
                 await FleetLogging.LogFleetCreationAsync(ctx.Guild, ctx.Member, ctx.Guild.GetChannel(fleetCategory.Id));
             }
 

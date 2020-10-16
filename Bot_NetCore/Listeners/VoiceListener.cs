@@ -181,18 +181,18 @@ namespace Bot_NetCore.Listeners
 
             // User changed voice channel
             if (e.Before != null && e.Before.Channel != null && 
-                e.After != null && e.After.Channel != null && 
-                e.Before.Channel.Id != e.After.Channel.Id)
+                e.After != null && e.After.Channel != null)
             {
-                if (e.Before.Channel.Parent.Name.StartsWith("Рейд") ||
-                    e.After.Channel.Parent.Name.StartsWith("Рейд"))
-                {
-                    await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                        .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":twisted_rightwards_arrows:")} " +
-                        $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
-                        $"сменил канал с **{e.Before.Channel.Name}** ({e.Before.Channel.Id}) " +
-                        $"на **{e.After.Channel.Name}** ({e.After.Channel.Id})");
-                }
+                if(e.Before.Channel.Id != e.After.Channel.Id)
+                    if (e.Before.Channel.Parent.Name.StartsWith("Рейд") ||
+                        e.After.Channel.Parent.Name.StartsWith("Рейд"))
+                    {
+                        await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
+                            .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":twisted_rightwards_arrows:")} " +
+                            $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
+                            $"сменил канал с **{e.Before.Channel.Name}** ({e.Before.Channel.Id}) " +
+                            $"на **{e.After.Channel.Name}** ({e.After.Channel.Id})");
+                    }
             }
             //User left from voice
             else if (e.Before != null && e.Before.Channel != null)
