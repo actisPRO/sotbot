@@ -91,7 +91,7 @@ namespace Bot_NetCore
             {
                 Token = BotSettings.Token,
 #if DEBUG
-                LogLevel = LogLevel.Debug,
+                LogLevel = LogLevel.Info,
 #endif
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
