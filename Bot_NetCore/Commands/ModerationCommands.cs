@@ -914,41 +914,63 @@ namespace Bot_NetCore.Commands
 
                 embed.AddField("Предупреждения", $"{emoji} {warnings}", true);
 
+                var mute = "Нет";
+                
+                var codex = "Не принял";
+                var hasPurge = false;
+                
+                var fleetCodex = "Не принял";
+                var hasFleetPurge = false;
+                
+                foreach (var purge in ReportSQL.GetForUser(user.Id))
+                {
+                    if (purge.ReportType == ReportType.Mute)
+                        if (purge.ReportEnd > DateTime.Now)
+                            mute = FormatTimespan(DateTime.Now - purge.ReportEnd);
+
+                    if (purge.ReportType == ReportType.CodexPurge)
+                    {
+                        if (purge.ReportEnd > DateTime.Now)
+                        {
+                            hasPurge = true;
+                            codex = FormatTimespan(DateTime.Now - purge.ReportEnd);
+                        }
+                        else if (!hasPurge && purge.ReportEnd <= DateTime.Now)
+                            codex = "Не принял*";
+                    }
+
+                    if (purge.ReportType == ReportType.FleetPurge)
+                    {
+                        if (purge.ReportEnd > DateTime.Now)
+                        {
+                            hasFleetPurge = true;
+                            fleetCodex = FormatTimespan(DateTime.Now - purge.ReportEnd);
+                        }
+                        else if (!hasFleetPurge && purge.ReportEnd <= DateTime.Now)
+                            fleetCodex = "Не принял*";
+                    }
+                }
+                
+                
+                if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
+                    codex = "Принял";
+                if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
+                    fleetCodex = "Принял";
+
                 if (member != null)
                 {
-                    //Модератор
+                    // useless
+                    /*//Модератор 
                     var moderator = "Нет";
                     if (Bot.IsModerator(member)) moderator = "Да";
-                    embed.AddField("Модератор", moderator, true);
+                    embed.AddField("Модератор", moderator, true); */
 
-                    //Правила
-                    var codex = "Не принял";
-                    if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
-                        codex = "Принял";
-                    else if (ReportList.CodexPurges.ContainsKey(user.Id))
-                        if (ReportList.CodexPurges[user.Id].Expired())
-                            codex = "Не принял*";
-                        else
-                            codex = Utility.FormatTimespan(ReportList.CodexPurges[user.Id].getRemainingTime());
+                    
                     embed.AddField("Правила", codex, true);
-
-                    //Правила рейда
-                    var fleetCodex = "Не принял";
-                    if (member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
-                        fleetCodex = "Принял";
-                    else if (ReportList.FleetPurges.ContainsKey(user.Id))
-                        if (ReportList.FleetPurges[user.Id].Expired())
-                            fleetCodex = "Не принял*";
-                        else
-                            fleetCodex = Utility.FormatTimespan(ReportList.FleetPurges[user.Id].getRemainingTime());
                     embed.AddField("Правила рейда", fleetCodex, true);
                 }
 
                 //Мут
-                var mute = "Нет";
-                if (ReportList.Mutes.ContainsKey(user.Id))
-                    if (!ReportList.Mutes[user.Id].Expired())
-                        mute = Utility.FormatTimespan(ReportList.Mutes[user.Id].getRemainingTime());
                 embed.AddField("Мут", mute, true);
                 
                 //Донат
