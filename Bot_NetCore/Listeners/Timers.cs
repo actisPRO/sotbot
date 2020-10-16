@@ -272,23 +272,23 @@ namespace Bot_NetCore.Listeners
             {
                 foreach (var ban in toUnban)
                 {
-                    try
+                    var bans = await guild.GetBansAsync();
+                    for (int i = 0; i < bans.Count; ++i)
                     {
-                        await guild.UnbanMemberAsync(ban.User);
-                    }
-                    catch (NotFoundException)
-                    {
-                        //пользователь мог и не быть заблокирован через Discord
-                    }
+                        if (bans[i].User.Id == ban.User)
+                        {
+                            await guild.UnbanMemberAsync(ban.User);
+                            var user = await Client.GetUserAsync(ban.User);
+                            await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                                "**Снятие бана**\n\n" +
+                                $"**Модератор:** {Client.CurrentUser.Username}\n" +
+                                $"**Пользователь:** {user}\n" +
+                                $"**Дата:** {DateTime.Now}\n");
 
-                    var user = await Client.GetUserAsync(ban.User);
-                    await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                        "**Снятие бана**\n\n" +
-                        $"**Модератор:** {Client.CurrentUser.Username}\n" +
-                        $"**Пользователь:** {user}\n" +
-                        $"**Дата:** {DateTime.Now}\n");
-
-                    Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
+                            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
+                            break;
+                        }
+                    }
                 }
             }
 
