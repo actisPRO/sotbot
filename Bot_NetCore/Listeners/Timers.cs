@@ -293,42 +293,34 @@ namespace Bot_NetCore.Listeners
             }
 
             //Check for expired mutes
-            var count = ReportList.Mutes.Count;
-            ReportList.Mutes.Values.Where(x => x.Expired()).ToList()
-                .ForEach(async x =>
+            var reports = ReportSQL.GetExpiredReports();
+            foreach (var report in reports)
+            {
+                if (report.ReportType == ReportType.Mute)
                 {
-                    ReportList.Mutes.Remove(x.Id);
                     try
                     {
-                        var user = await guild.GetMemberAsync(x.Id);
+                        var user = await guild.GetMemberAsync(report.User);
                         await user.RevokeRoleAsync(guild.GetRole(Bot.BotSettings.MuteRole), "Unmuted");
                     }
                     catch (NotFoundException)
                     {
                         //Пользователь не найден
                     }
-                });
-            if (count != ReportList.Mutes.Count)
-                ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
-
-            //Check for expired voice mutes
-            count = ReportList.VoiceMutes.Count;
-            ReportList.VoiceMutes.Values.Where(x => x.Expired()).ToList()
-                .ForEach(async x =>
+                }
+                else if (report.ReportType == ReportType.VoiceMute)
                 {
-                    ReportList.VoiceMutes.Remove(x.Id);
                     try
                     {
-                        var user = await guild.GetMemberAsync(x.Id);
+                        var user = await guild.GetMemberAsync(report.User);
                         await user.RevokeRoleAsync(guild.GetRole(Bot.BotSettings.VoiceMuteRole), "Unmuted");
                     }
                     catch (NotFoundException)
                     {
                         //Пользователь не найден
                     }
-                });
-            if (count != ReportList.VoiceMutes.Count)
-                ReportList.SaveToXML(Bot.BotSettings.ReportsXML);
+                }
+            }
         }
     }
 }
