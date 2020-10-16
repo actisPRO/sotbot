@@ -65,27 +65,36 @@ namespace Bot_NetCore.Listeners
                 EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);*/
 
                 //Проверка на purge
-                if (ReportList.CodexPurges.ContainsKey(e.User.Id))
-                    if (!ReportList.CodexPurges[e.User.Id].Expired()) //Проверка истекшей блокировки
+                var hasPurge = false;
+                ReportSQL validPurge = null;
+                foreach (var purge in ReportSQL.GetForUser(e.User.Id, ReportType.CodexPurge))
+                {
+                    if (purge.ReportEnd > DateTime.Now)
                     {
-                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.CodexPurges[e.User.Id].Moderator);
-                        try
-                        {
-                            await ((DiscordMember)e.User).SendMessageAsync(
-                                "**Возможность принять правила заблокирована**\n" +
-                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.CodexPurges[e.User.Id].getRemainingTime())}\n" +
-                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
-                                $"**Причина:** {ReportList.CodexPurges[e.User.Id].Reason}\n");
-                        }
-
-                        catch (UnauthorizedException)
-                        {
-                            //user can block the bot
-                        }
-                        return;
+                        validPurge = purge;
+                        hasPurge = true;
+                        break;
                     }
-                    else
-                        ReportList.CodexPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
+                }
+
+                if (hasPurge)
+                {
+                    var moderator = await e.Channel.Guild.GetMemberAsync(validPurge.Moderator);
+                    try
+                    {
+                        await ((DiscordMember) e.User).SendMessageAsync(
+                            "**Возможность принять правила заблокирована**\n" +
+                            $"**Снятие через:** {Utility.FormatTimespan(DateTime.Now - validPurge.ReportEnd)}\n" +
+                            $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                            $"**Причина:** {validPurge.Reason}\n");
+                    }
+
+                    catch (UnauthorizedException)
+                    {
+                        //user can block the bot
+                    }
+                    return;
+                }
 
                 //Выдаем роль правил
                 var user = (DiscordMember)e.User;
@@ -109,27 +118,36 @@ namespace Bot_NetCore.Listeners
             if (e.Message.Id == Bot.BotSettings.FleetCodexMessageId && e.Emoji.GetDiscordName() == ":white_check_mark:")
             {
                 //Проверка на purge
-                if (ReportList.FleetPurges.ContainsKey(e.User.Id))
-                    if (!ReportList.FleetPurges[e.User.Id].Expired()) //Проверка истекшей блокировки
+                var hasPurge = false;
+                ReportSQL validPurge = null;
+                foreach (var purge in ReportSQL.GetForUser(e.User.Id, ReportType.FleetPurge))
+                {
+                    if (purge.ReportEnd > DateTime.Now)
                     {
-                        var moderator = await e.Channel.Guild.GetMemberAsync(ReportList.FleetPurges[e.User.Id].Moderator);
-                        try
-                        {
-                            await ((DiscordMember)e.User).SendMessageAsync(
-                                "**Возможность принять правила рейда заблокирована**\n" +
-                                $"**Снятие через:** {Utility.FormatTimespan(ReportList.FleetPurges[e.User.Id].getRemainingTime())}\n" +
-                                $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
-                                $"**Причина:** {ReportList.FleetPurges[e.User.Id].Reason}\n");
-                        }
-
-                        catch (UnauthorizedException)
-                        {
-                            //user can block the bot
-                        }
-                        return;
+                        validPurge = purge;
+                        hasPurge = true;
+                        break;
                     }
-                    else
-                        ReportList.FleetPurges.Remove(e.User.Id); //Удаляем блокировку если истекла
+                }
+
+                if (hasPurge)
+                {
+                    var moderator = await e.Channel.Guild.GetMemberAsync(validPurge.Moderator);
+                    try
+                    {
+                        await ((DiscordMember) e.User).SendMessageAsync(
+                            "**Возможность принять правила заблокирована**\n" +
+                            $"**Снятие через:** {Utility.FormatTimespan(DateTime.Now - validPurge.ReportEnd)}\n" +
+                            $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
+                            $"**Причина:** {validPurge.Reason}\n");
+                    }
+
+                    catch (UnauthorizedException)
+                    {
+                        //user can block the bot
+                    }
+                    return;
+                } //Удаляем блокировку если истекла
         
                 
                 var user = (DiscordMember) e.User;

@@ -126,48 +126,41 @@ namespace Bot_NetCore.Listeners
             }
 
             //Проверка на mute
-            if (ReportList.Mutes.ContainsKey(e.Member.Id) && !ReportList.Mutes[e.Member.Id].Expired())
+            var blocksMessage = "**У вас есть неистекшие блокировки на этом сервере!**\n";
+            var reports = ReportSQL.GetForUser(e.Member.Id);
+            var sendMessage = false;
+            foreach (var report in ReportSQL.GetForUser(e.Member.Id))
             {
-                //Отправка сообщения в лс
-                try
+                if (report.ReportEnd < DateTime.Now)
                 {
-                    await e.Member.SendMessageAsync(
-                        $"**Вам выдан мут на данном сервере**\n\n" +
-                        $"**Снятие через:** {Utility.FormatTimespan(ReportList.Mutes[e.Member.Id].getRemainingTime())}\n" +
-                        $"**Причина:** {ReportList.Mutes[e.Member.Id].Reason}");
+                    sendMessage = true;
+                    string blockType = report.ReportType switch
+                    {
+                        ReportType.Mute => "Мут",
+                        ReportType.CodexPurge => "Блокировка принятия правил",
+                        ReportType.FleetPurge => "Блокировка рейдов",
+                        ReportType.VoiceMute => "Мут в голосовых каналах",
+                        _ => ""
+                    };
+                    blocksMessage += $"• **{blockType}:** истекает через {Utility.FormatTimespan(report.ReportEnd - DateTime.Now)}\n";
+                    
+                    if (report.ReportType == ReportType.Mute) 
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.MuteRole));
+                    else if (report.ReportType == ReportType.VoiceMute)
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
+                    else if (report.ReportType == ReportType.CodexPurge)
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
                 }
-                catch (UnauthorizedException)
-                {
-                    //user can block the bot
-                }
-
-                //Выдаем роль мута
-                await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.MuteRole));
             }
 
-            //Проверка на voice mute
-            if (ReportList.VoiceMutes.ContainsKey(e.Member.Id) && !ReportList.VoiceMutes[e.Member.Id].Expired())
+            try
             {
-                //Отправка сообщения в лс
-                try
-                {
-                    await e.Member.SendMessageAsync(
-                        $"**Вам выдан голосовой мут на данном сервере**\n\n" +
-                        $"**Снятие через:** {Utility.FormatTimespan(ReportList.VoiceMutes[e.Member.Id].getRemainingTime())}\n" +
-                        $"**Причина:** {ReportList.VoiceMutes[e.Member.Id].Reason}");
-                }
-                catch (UnauthorizedException)
-                {
-                    //user can block the bot
-                }
-
-                //Выдаем роль мута
-                await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
+                await e.Member.SendMessageAsync(blocksMessage);
             }
-
-            //Проверка на purge
-            if (ReportList.CodexPurges.ContainsKey(e.Member.Id) && !ReportList.CodexPurges[e.Member.Id].Expired())
-                await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
+            catch (UnauthorizedException)
+            {
+                
+            }
 
             //Выдача доступа к приватным кораблям
             try
