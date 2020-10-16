@@ -74,10 +74,7 @@ namespace Bot_NetCore
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
-            UserList.ReadFromXML(BotSettings.WarningsXML); //todo delete after migration
-            BanList.ReadFromXML(BotSettings.BanXML); //todo delete after migration
             InviterList.ReadFromXML(BotSettings.InviterXML);
-            ReportList.ReadFromXML(BotSettings.ReportsXML); //todo delete after migration
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);

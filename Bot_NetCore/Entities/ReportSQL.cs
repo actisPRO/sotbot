@@ -322,7 +322,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT * FROM reports WHERE report_end <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    cmd.CommandText = $"SELECT * FROM reports WHERE report_end <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'";
                     
                     cmd.Connection = connection;
                     cmd.Connection.Open();
