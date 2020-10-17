@@ -343,7 +343,7 @@ namespace Bot_NetCore.Commands
                     message = await textChannel.SendMessageAsync(message.Content);
                     await message.ModifyEmbedSuppressionAsync(true);
                 }
-                catch (NotFoundException)
+                catch (NullReferenceException)
                 { 
                     //Не удалось найти заготовленное сообщение, пропускаем
                 }
