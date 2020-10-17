@@ -240,7 +240,7 @@ namespace Bot_NetCore.Listeners
                     //Удаляем каналы и категорию
                     if (fleetIsEmpty)
                     {
-                        await FleetLogging.LogFleetDeletionAsync(e.Guild, leftChannel.Parent);
+                        await FleetLogging.LogFleetDeletionAsync(e.Client, e.Guild, leftChannel.Parent);
 
                         foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
                             await emptyChannel.DeleteAsync();

@@ -30,8 +30,10 @@ namespace Bot_NetCore.Misc
             await guild.GetChannel(Bot.BotSettings.FleetLogChannel).SendMessageAsync(embed: embed.Build());
         }
 
-        public static async Task LogFleetDeletionAsync(DiscordGuild guild, DiscordChannel fleetCategory)
+        public static async Task LogFleetDeletionAsync(DiscordClient client, DiscordGuild guild, DiscordChannel fleetCategory)
         {
+            client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Удаление рейда {fleetCategory.Name} - {fleetCategory.Id}", DateTime.Now);
+
             var embed = new DiscordEmbedBuilder
             {
                 Title = $"{fleetCategory.Name} удалён",
@@ -48,29 +50,30 @@ namespace Bot_NetCore.Misc
 
             await guild.GetChannel(Bot.BotSettings.FleetLogChannel).SendMessageAsync(embed: embed.Build());
 
+            //TODO: Revork this
             //Move new text channels to log
-            var textChannels = fleetCategory.Children.Where(x => x.Type == ChannelType.Text);
-            foreach (var channel in textChannels)
-            {
-                await channel.ModifyAsync(x =>
-                {
-                    x.Name = $"{DateTime.Now:dd/MM} {channel.Name}";
-                    x.Parent = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
-                });
+            //var textChannels = fleetCategory.Children.Where(x => x.Type == ChannelType.Text);
+            //foreach (var channel in textChannels)
+            //{
+            //    await channel.ModifyAsync(x =>
+            //    {
+            //        x.Name = $"{DateTime.Now:dd/MM} {channel.Name}";
+            //        x.Parent = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
+            //    });
 
-                //Delete old permissions
-                while (channel.PermissionOverwrites.Any())
-                    await channel.PermissionOverwrites.First().DeleteAsync();
+            //    //Delete old permissions
+            //    while (channel.PermissionOverwrites.Any())
+            //        await channel.PermissionOverwrites.First().DeleteAsync();
 
-                //Sync with category permissions
-                foreach (var permission in guild.GetChannel(Bot.BotSettings.FleetLogCategory).PermissionOverwrites)
-                {
-                    if(permission.Type == OverwriteType.Role)
-                        await channel.AddOverwriteAsync(await permission.GetRoleAsync(), permission.Allowed, permission.Denied);
-                    else
-                        await channel.AddOverwriteAsync(await permission.GetMemberAsync(), permission.Allowed, permission.Denied);
-                }
-            }
+            //    //Sync with category permissions
+            //    foreach (var permission in guild.GetChannel(Bot.BotSettings.FleetLogCategory).PermissionOverwrites)
+            //    {
+            //        if(permission.Type == OverwriteType.Role)
+            //            await channel.AddOverwriteAsync(await permission.GetRoleAsync(), permission.Allowed, permission.Denied);
+            //        else
+            //            await channel.AddOverwriteAsync(await permission.GetMemberAsync(), permission.Allowed, permission.Denied);
+            //    }
+            //}
 
             //Delete old fleet text channels
             var oldChannels = guild.GetChannel(Bot.BotSettings.FleetLogCategory).Children
