@@ -181,7 +181,7 @@ namespace Bot_NetCore.Listeners
                 }
             
             // temp for halloween event. remove after it
-            if (e.Message.Channel.Id == 435377838066237440 && e.Message.Content.StartsWith("h!"))
+            if (e.Message.Channel.Id == 766719037157670923 && e.Message.Content.StartsWith("h!"))
             {
                 var delete = new Timer(60000);
                 delete.Elapsed += async (sender, args) =>
