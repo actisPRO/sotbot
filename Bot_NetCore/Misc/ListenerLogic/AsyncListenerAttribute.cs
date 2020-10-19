@@ -195,7 +195,7 @@ namespace Bot_NetCore.Misc
                     client.InviteDeleted += OnEventWithArgs;
                     break;
                 case EventTypes.CommandExecuted:
-                    bot.Commands.CommandErrored += OnEventWithArgs;
+                    bot.Commands.CommandExecuted += OnEventWithArgs;
                     break;
                 case EventTypes.CommandErrored:
                     bot.Commands.CommandErrored += OnEventWithArgs;
