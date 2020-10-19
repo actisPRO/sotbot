@@ -243,13 +243,9 @@ namespace Bot_NetCore.Listeners
                         await FleetLogging.LogFleetDeletionAsync(e.Client, e.Guild, leftChannel.Parent);
 
                         //TODO: Restore this
-                        //foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
-                        //    await emptyChannel.DeleteAsync();
-
-                        //<<<<
                         foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
                             await emptyChannel.DeleteAsync();
-                        //>>>>
+
                         await leftChannel.Parent.DeleteAsync();
                     }
                 }

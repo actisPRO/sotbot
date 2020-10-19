@@ -150,9 +150,9 @@ namespace Bot_NetCore
         /// <returns></returns>
         public static async Task UpdateBotStatusAsync(DiscordClient client, DiscordGuild guild)
         {
-            //await client.UpdateStatusAsync(new DiscordActivity("за Sea of Thieves RU \n" +
-            //    $"Участников: {guild.MemberCount} \n" +
-            //    $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()}", ActivityType.Watching));
+            await client.UpdateStatusAsync(new DiscordActivity("за Sea of Thieves RU \n" +
+                $"Участников: {guild.MemberCount} \n" +
+                $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()}", ActivityType.Watching));
         }
 
 
