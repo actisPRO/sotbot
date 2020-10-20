@@ -244,6 +244,7 @@ namespace Bot_NetCore.Listeners
 
                         foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
                             await emptyChannel.DeleteAsync();
+
                         await leftChannel.Parent.DeleteAsync();
                     }
                 }

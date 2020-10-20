@@ -50,7 +50,6 @@ namespace Bot_NetCore.Misc
 
             await guild.GetChannel(Bot.BotSettings.FleetLogChannel).SendMessageAsync(embed: embed.Build());
 
-            //TODO: Revork this
             //Move new text channels to log
             var textChannels = fleetCategory.Children.Where(x => x.Type == ChannelType.Text);
             foreach (var channel in textChannels)

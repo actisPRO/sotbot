@@ -194,6 +194,8 @@ namespace Bot_NetCore.Listeners
                     {
                         
                     }
+                    delete.Stop();
+                    delete.Close();
                 };
                 delete.Enabled = true;
             }
