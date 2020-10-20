@@ -264,5 +264,33 @@ namespace Bot_NetCore.Commands
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ServerStatusChannel).ModifyAsync(x => x.Name = name);
         }
+
+        [Command("copyrole")]
+        [Description("Копирует указанную роль и настраивает права в каналах для новой роли")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task CopyRole(CommandContext ctx, DiscordRole oldRole)
+        {
+            var newRole = await ctx.Guild.CreateRoleAsync(oldRole.Name + "_CPY", oldRole.Permissions, oldRole.Color, oldRole.IsHoisted, oldRole.IsMentionable);
+
+            newRole = ctx.Guild.GetRole(newRole.Id);
+            await newRole.ModifyPositionAsync(oldRole.Position);
+
+            var resultString = "";
+            await ctx.TriggerTypingAsync();
+
+            foreach(var channel in await ctx.Guild.GetChannelsAsync())
+                foreach(var permission in channel.PermissionOverwrites)
+                    if(permission.Type == OverwriteType.Role)
+                    {
+                        var permRole = await permission.GetRoleAsync();
+                        if (permRole.Id == oldRole.Id)
+                        {
+                            await channel.AddOverwriteAsync(newRole, permission.Allowed, permission.Denied);
+                            resultString += $"```{channel} \nAllowed: {permission.Allowed.ToPermissionString()} \nDenied: {permission.Denied.ToPermissionString()}```";
+                        }
+                    }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно создана копия роли. Роль: {newRole.Mention} \n {resultString}");
+        }
     }
 }
