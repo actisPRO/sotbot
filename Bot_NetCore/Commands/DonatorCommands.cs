@@ -189,7 +189,7 @@ namespace Bot_NetCore.Commands
             if (oldBalance < prices.RolePrice)
             {
                 var role = await GetPrivateRoleAsync(ctx.Guild, member);
-                await member.GrantRoleAsync(role);
+                await member.GrantRoleAsync(ctx.Guild.GetRole(role.Id));
                 donator.PrivateRole = role.Id;
             }
 
@@ -750,9 +750,9 @@ namespace Bot_NetCore.Commands
             } //Otherwise create new color role
             else
             {
-
                 role = await guild.CreateRoleAsync($"{member.DisplayName} Style");
-                await guild.Roles[role.Id].ModifyPositionAsync(guild.GetRole(Bot.BotSettings.DonatorSpacerRole).Position - 1); //Через role.ModifyPositionAsync не работает
+                await Task.Delay(1000);
+                await guild.Roles[role.Id].ModifyPositionAsync(guild.Roles[Bot.BotSettings.DonatorSpacerRole].Position - 1);
             }
 
             return role;
@@ -779,8 +779,8 @@ namespace Bot_NetCore.Commands
                      Donator.Donators[member].PrivateRole != 0)
             {
                 // Check if there's no sub color roles
-                if (Subscriber.Subscribers.ContainsKey(member) &&
-                    DateTime.Now > Subscriber.Subscribers[member].SubscriptionEnd)
+                if (!Subscriber.Subscribers.ContainsKey(member) ||
+                    (Subscriber.Subscribers.ContainsKey(member) && DateTime.Now > Subscriber.Subscribers[member].SubscriptionEnd))
                 {
                     await guild.GetRole(Donator.Donators[member].PrivateRole).DeleteAsync();
                 }

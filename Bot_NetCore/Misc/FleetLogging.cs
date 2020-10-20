@@ -50,15 +50,21 @@ namespace Bot_NetCore.Misc
 
             await guild.GetChannel(Bot.BotSettings.FleetLogChannel).SendMessageAsync(embed: embed.Build());
 
+            var fleetLogCategory = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
+
             //Move new text channels to log
             var textChannels = fleetCategory.Children.Where(x => x.Type == ChannelType.Text);
             foreach (var channel in textChannels)
             {
+                var lastPosition = fleetLogCategory.Children.OrderBy(x => x.Position).LastOrDefault().Position;
+
                 await channel.ModifyAsync(x =>
                 {
                     x.Name = $"{DateTime.Now:dd/MM} {channel.Name}";
                     x.Parent = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
                 });
+
+                await channel.ModifyPositionAsync(lastPosition + 1);
 
                 //Delete old permissions
                 channel.PermissionOverwrites.ToList().ForEach(async x => await x.DeleteAsync());

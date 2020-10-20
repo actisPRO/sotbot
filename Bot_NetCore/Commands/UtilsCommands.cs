@@ -270,6 +270,8 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.KickMembers)]
         public async Task CopyRole(CommandContext ctx, DiscordRole oldRole)
         {
+            await ctx.RespondAsync("Копирование роли запущено, это может занять некоторое время.");
+
             var newRole = await ctx.Guild.CreateRoleAsync(oldRole.Name + "_CPY", oldRole.Permissions, oldRole.Color, oldRole.IsHoisted, oldRole.IsMentionable);
 
             newRole = ctx.Guild.GetRole(newRole.Id);
