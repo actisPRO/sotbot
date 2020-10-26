@@ -60,8 +60,9 @@ namespace Bot_NetCore.Misc
 
                 await channel.ModifyAsync(x =>
                 {
-                    x.Name = $"{DateTime.Now:dd/MM} {channel.Name}";
+                    x.Name = $"{DateTime.Now:dd} {channel.Name}";
                     x.Parent = guild.GetChannel(Bot.BotSettings.FleetLogCategory);
+                    x.Topic = DateTime.Now.ToString();
                 });
 
                 await channel.ModifyPositionAsync(lastPosition + 1);
@@ -85,7 +86,7 @@ namespace Bot_NetCore.Misc
                 {
                     try
                     {
-                        return (DateTime.Now - DateTime.ParseExact(x.Name.Substring(0, 4), "ddMM", CultureInfo.InvariantCulture)).Days > 3;
+                        return (DateTime.Now - DateTime.Parse(x.Topic)).TotalHours > 36;
                     }
                     catch (ArgumentNullException)
                     {
