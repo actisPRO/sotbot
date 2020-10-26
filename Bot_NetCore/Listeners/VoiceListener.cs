@@ -13,6 +13,11 @@ namespace Bot_NetCore.Listeners
 {
     public static class VoiceListener
     {
+        /// <summary>
+        ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
+        /// </summary>
+        public static Dictionary<DiscordUser, DateTime> ShipCooldowns = new Dictionary<DiscordUser, DateTime>();
+
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task CreateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
@@ -24,13 +29,13 @@ namespace Bot_NetCore.Listeners
                         e.Channel.Id == Bot.BotSettings.AutocreateSloop
                     ) // мы создаем канал, если пользователь зашел в один из каналов автосоздания
                     {
-                        if (Bot.ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
-                            if ((Bot.ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
+                        if (ShipCooldowns.ContainsKey(e.User)) // проверка на кулдаун
+                            if ((ShipCooldowns[e.User] - DateTime.Now).Seconds > 0)
                             {
                                 var m = await e.Guild.GetMemberAsync(e.User.Id);
                                 await m.PlaceInAsync(e.Guild.GetChannel(Bot.BotSettings.WaitingRoom));
                                 await m.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
-                                                         $"**{(Bot.ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
+                                                         $"**{(ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
                                                          "создавать новый корабль!");
                                 e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
                                     $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Discriminator}) был перемещён в комнату ожидания.",
@@ -40,7 +45,7 @@ namespace Bot_NetCore.Listeners
 
                         // если проверка успешно пройдена, добавим пользователя
                         // в словарь кулдаунов
-                        Bot.ShipCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
+                        ShipCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
 
                         //Проверка на эмиссарство
                         var channelSymbol = Bot.BotSettings.AutocreateSymbol;
