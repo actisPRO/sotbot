@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Bot_NetCore.Attributes;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -101,6 +102,8 @@ namespace Bot_NetCore.Listeners
                     else if (check is RequirePrefixesAttribute)
                         msg += "\n Команда работает только с определённым префиксом.";
                     else if (check is RequireRolesAttribute)
+                        msg += "\n У вас нет доступа к этой команде!";
+                    else if (check is RequireUserRolesAttribute)
                         msg += "\n У вас нет доступа к этой команде!";
                     else if (check is RequireUserPermissionsAttribute)
                         msg += "\n У вас нет доступа к этой команде!";
