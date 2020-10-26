@@ -30,11 +30,6 @@ namespace Bot_NetCore
     internal sealed class Bot
     {
         /// <summary>
-        ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
-        /// </summary>
-        public static Dictionary<DiscordUser, DateTime> ShipCooldowns = new Dictionary<DiscordUser, DateTime>();
-
-        /// <summary>
         ///     DiscordClient бота.
         /// </summary>
         public DiscordClient Client { get; set; }
