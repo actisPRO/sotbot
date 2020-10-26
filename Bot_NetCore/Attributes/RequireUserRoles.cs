@@ -9,7 +9,7 @@ using DSharpPlus.CommandsNext.Attributes;
 namespace Bot_NetCore.Attributes
 {
     /// <summary>
-    /// Defines that usage of this command is restricted to members with specified role. Note that it's much preferred to restrict access using <see cref="RequirePermissionsAttribute"/>.
+    /// Defines that usage of this command is restricted to members with specified role or admin permission. Note that it's much preferred to restrict access using <see cref="RequirePermissionsAttribute"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public sealed class RequireUserRolesAttribute : CheckBaseAttribute
@@ -25,7 +25,7 @@ namespace Bot_NetCore.Attributes
         public RoleCheckMode CheckMode { get; }
 
         /// <summary>
-        /// Defines that usage of this command is restricted to members with specified role. Note that it's much preferred to restrict access using <see cref="RequirePermissionsAttribute"/>.
+        /// Defines that usage of this command is restricted to members with specified role or admin permission. Note that it's much preferred to restrict access using <see cref="RequirePermissionsAttribute"/>.
         /// </summary>
         /// <param name="checkMode">Role checking mode.</param>
         /// <param name="roleIDs">IDs of the role to be verified by this check.</param>
@@ -39,6 +39,9 @@ namespace Bot_NetCore.Attributes
         {
             if (ctx.Guild == null || ctx.Member == null)
                 return Task.FromResult(false);
+
+            if (ctx.Member.Roles.Any(x => x.CheckPermission(DSharpPlus.Permissions.Administrator) == DSharpPlus.PermissionLevel.Allowed))
+                return Task.FromResult(true);
 
             var rns = ctx.Member.Roles.Select(xr => xr.Id);
             var rnc = rns.Count();

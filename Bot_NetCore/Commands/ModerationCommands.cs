@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
@@ -852,6 +853,24 @@ namespace Bot_NetCore.Commands
                 //user can block the bot
             }
         }
+
+        [Command("addcaptain")]
+        [Description("Выдает роль капитана.")]
+        [RequireUserRoles(RoleCheckMode.Any, 769224121036832769)]
+        public async Task AddCaptain(CommandContext ctx, [Description("Пользователь")] DiscordMember member)
+        {
+            await member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole));
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлена роль капитана.");
+        }
+
+        [Command("delcaptain")]
+        [Description("Убирает роль капитана.")]
+        [RequireUserRoles(RoleCheckMode.Any, 769224121036832769)]
+        public async Task DeleteCaptain(CommandContext ctx, [Description("Пользователь")] DiscordMember member)
+        {
+            await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole));
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно убрана роль капитана.");
+        }
     }
 
     [Group("whois")]
@@ -915,13 +934,13 @@ namespace Bot_NetCore.Commands
                 embed.AddField("Предупреждения", $"{emoji} {warnings}", true);
 
                 var mute = "Нет";
-                
+
                 var codex = "Не принял";
                 var hasPurge = false;
-                
+
                 var fleetCodex = "Не принял";
                 var hasFleetPurge = false;
-                
+
                 foreach (var purge in ReportSQL.GetForUser(user.Id))
                 {
                     if (purge.ReportType == ReportType.Mute)
@@ -950,8 +969,8 @@ namespace Bot_NetCore.Commands
                             fleetCodex = "Не принял*";
                     }
                 }
-                
-                
+
+
                 if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
                     codex = "Принял";
                 if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
@@ -965,19 +984,19 @@ namespace Bot_NetCore.Commands
                     if (Bot.IsModerator(member)) moderator = "Да";
                     embed.AddField("Модератор", moderator, true); */
 
-                    
+
                     embed.AddField("Правила", codex, true);
                     embed.AddField("Правила рейда", fleetCodex, true);
                 }
 
                 //Мут
                 embed.AddField("Мут", mute, true);
-                
+
                 //Донат
                 var donate = 0;
                 if (Donator.Donators.ContainsKey(user.Id)) donate = Donator.Donators[user.Id].Balance;
                 embed.AddField("Донат", donate.ToString(), true);
-                
+
                 //Подписка
                 var subscription = "Нет";
                 if (Subscriber.Subscribers.ContainsKey(user.Id))
@@ -1077,7 +1096,7 @@ namespace Bot_NetCore.Commands
             for (var i = count; i > 0; i--)
             {
                 var warn = warnings[i - 1];
-                fields.Add(new CustomEmbedField($"*{i}*.", 
+                fields.Add(new CustomEmbedField($"*{i}*.",
                     $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date.ToShortDateString()}"));
             }
 
@@ -1114,7 +1133,7 @@ namespace Bot_NetCore.Commands
 
         [Command("addnote")]
         [Description("Добавить заметку.")]
-        public async Task AddNote(CommandContext ctx, [Description("Пользователь")] DiscordUser user, [Description("Заметка")] [RemainingText] string content)
+        public async Task AddNote(CommandContext ctx, [Description("Пользователь")] DiscordUser user, [Description("Заметка")][RemainingText] string content)
         {
             string oldContent = null;
             if (Note.Notes.ContainsKey(user.Id))
