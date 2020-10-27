@@ -322,7 +322,11 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT * FROM reports WHERE report_end <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'";
+                    //Проверяет только самое последнее предупреждение на 
+                    cmd.CommandText = $"SELECT * FROM reports " +
+                        $"INNER JOIN(SELECT userid, report_type, MAX(report_start) as max_report_start FROM reports GROUP BY userid, report_type) groupedR " +
+                        $"ON reports.userid = groupedR.userid AND reports.report_type = groupedR.report_type AND report_start = max_report_start " +
+                        $"WHERE report_end <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'";
                     
                     cmd.Connection = connection;
                     cmd.Connection.Open();
