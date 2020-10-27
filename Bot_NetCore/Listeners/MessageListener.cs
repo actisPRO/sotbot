@@ -115,7 +115,7 @@ namespace Bot_NetCore.Listeners
                     }
                     return;
                 }
-                
+
                 //Выдаем роль правил
                 var user = (DiscordMember)e.Author;
                 if (!user.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
@@ -179,7 +179,24 @@ namespace Bot_NetCore.Listeners
                             return;
                     }
                 }
-            
+
+            if (e.Channel.Id == Bot.BotSettings.FindChannel && e.Message.Embeds.Count() == 0 && !e.Message.Pinned)
+            {
+                var delete = new Timer(5000);
+                delete.Elapsed += async (sender, args) =>
+                {
+                    try
+                    {
+                        await e.Message.DeleteAsync();
+                    }
+                    catch { }
+
+                    delete.Stop();
+                    delete.Close();
+                };
+                delete.Enabled = true;
+            }
+
             // temp for halloween event. remove after it
             if (e.Message.Channel.Id == 766719037157670923 && e.Message.Content.StartsWith("h!"))
             {
@@ -190,10 +207,8 @@ namespace Bot_NetCore.Listeners
                     {
                         await e.Message.DeleteAsync();
                     }
-                    catch
-                    {
-                        
-                    }
+                    catch { }
+
                     delete.Stop();
                     delete.Close();
                 };

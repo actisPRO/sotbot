@@ -86,7 +86,7 @@ namespace Bot_NetCore.Listeners
                 var ex = e.Exception as ChecksFailedException;
                 foreach (var check in ex.FailedChecks)
                     if (check is CooldownAttribute)
-                        msg += $"\n Подождите {Utility.FormatTimespan((check as CooldownAttribute).Reset)} после последнего запуска команды.";
+                        msg += $"\n {Utility.FormatTimespan((check as CooldownAttribute).Reset)} до нового ввода команды.";
                     else if (check is RequireBotPermissionsAttribute)
                         msg += "\n У бота недостаточно прав.";
                     else if (check is RequireOwnerAttribute)

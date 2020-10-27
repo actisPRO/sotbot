@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Bot_NetCore.Listeners;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -15,6 +16,79 @@ namespace Bot_NetCore.Commands
 {
     public class PublicCommands : BaseCommandModule
     {
+        [Command("invite")]
+        [Aliases("i")]
+        [Description("Создаёт приглашение в поиске игроков")]
+        [Cooldown(1, 60, CooldownBucketType.User)]
+        public async Task Invite(CommandContext ctx, [Description("Описание (На афину, на форт и т.д.)")][RemainingText] string description)
+        {
+            //Проверка на использование канала с поиском игроков
+            if (ctx.Channel.Id != Bot.BotSettings.FindChannel)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда может использоваться только в канале поиска игроков!");
+                return;
+            }
+
+            //Удаляем сообщение с командой
+            try
+            {
+                await ctx.Message.DeleteAsync();
+            }
+            catch (NotFoundException) { }
+
+            //Проверка если пользователь в канале
+            if (ctx.Member.VoiceState == null ||
+                ctx.Member.VoiceState.Channel.Parent.Id == Bot.BotSettings.WaitingRoom)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
+                return;
+            }
+
+            var channel = ctx.Member.VoiceState?.Channel;
+
+            if (channel.Users.Count() >= channel.UserLimit)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш канал уже заполнен!");
+                return;
+            }
+
+            if (VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы уже отправили приглашение!");
+                return;
+            }
+
+            await ctx.TriggerTypingAsync();
+
+            var invite = await channel.CreateInviteAsync();
+            var usersNeeded = channel.UserLimit - channel.Users.Count();
+
+            var content = "";
+
+            content += ($"{DiscordEmoji.FromName(ctx.Client, ":loudspeaker:")} {description}\n\n");
+
+            foreach (var member in channel.Users)
+                content += $"{DiscordEmoji.FromName(ctx.Client, ":pirate_flag1:")} {member.Mention}\n";
+
+            for (int i = 0; i < usersNeeded; i++)
+                content += $"{DiscordEmoji.FromName(ctx.Client, ":pirate_flag1:")} ☐\n";
+
+            content += $"\n**Подключиться:** {invite}";
+
+            //Embed
+            var embed = new DiscordEmbedBuilder
+            {
+                Description = content
+            };
+            embed.WithAuthor($"{channel.Name} \n В поиске матросов. +{usersNeeded}", url: invite.ToString(), iconUrl: ctx.Member.AvatarUrl);
+            embed.WithThumbnail(ctx.Guild.IconUrl);
+            embed.WithTimestamp(DateTime.Now);
+
+            var msg = await ctx.RespondAsync(embed: embed.Build());
+
+            VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
+        }
+
         [Command("votekick")]
         [Aliases("vk")]
         [Description("Создаёт голосование против другого игрока")]

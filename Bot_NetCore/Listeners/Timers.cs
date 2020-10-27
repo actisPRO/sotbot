@@ -239,8 +239,18 @@ namespace Bot_NetCore.Listeners
                     {
                         var messages = await channel.Key.GetMessagesAsync();
                         var toDelete = messages.ToList()
-                            .Where(x => !x.Pinned).ToList()                                                                           //Не закрепленные сообщения
-                            .Where(x => DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0);     //Опубликованные ранее определенного времени
+                            .Where(x => !x.Pinned).ToList()                                             //Не закрепленные сообщения
+                            .Where(x =>
+                            {
+                                if (x.IsEdited)
+                                    return DateTimeOffset.Now.Subtract(x.EditedTimestamp.Value.Add(new TimeSpan(0, 5, 0))).TotalSeconds > 0;
+                                return DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0;
+                            });     //Опубликованные ранее определенного времени
+
+                        //Clear FindChannelInvites from deleted messages
+                        foreach (var message in toDelete)
+                            if (VoiceListener.FindChannelInvites.ContainsValue(message.Id))
+                                VoiceListener.FindChannelInvites.Remove(VoiceListener.FindChannelInvites.FirstOrDefault(x => x.Value == message.Id).Key);
 
                         if (toDelete.Count() > 0)
                         {
