@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Exceptions;
 
 namespace Bot_NetCore.Commands
 {
@@ -704,7 +705,7 @@ namespace Bot_NetCore.Commands
                     message += $"**{position}.** {user.Username}#{user.Discriminator} — {el.Value}₽\n";
                     ++str;
                 }
-                catch (DSharpPlus.Exceptions.NotFoundException)
+                catch (NotFoundException)
                 {
                 }
             }

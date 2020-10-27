@@ -18,6 +18,11 @@ namespace Bot_NetCore.Listeners
         /// </summary>
         public static Dictionary<DiscordUser, DateTime> ShipCooldowns = new Dictionary<DiscordUser, DateTime>();
 
+        /// <summary>
+        ///     Словарь, содержащий в качестве ключа id голосового канала, а в качестве значения - id сообщения в поиске игроков.
+        /// </summary>
+        public static Dictionary<ulong, ulong> FindChannelInvites = new Dictionary<ulong, ulong>();
+
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task CreateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
@@ -102,7 +107,7 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task FindOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
-            if (e.Channel != null && 
+            if (e.Channel != null &&
                 e.Channel.Id == Bot.BotSettings.FindShip)
             {
                 var shipCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory);
@@ -143,7 +148,7 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task PrivateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
-            if (e.Channel != null && 
+            if (e.Channel != null &&
                 e.Channel.ParentId == Bot.BotSettings.PrivateCategory)
                 foreach (var ship in ShipList.Ships.Values)
                     if (ship.Channel == e.Channel.Id)
@@ -185,10 +190,10 @@ namespace Bot_NetCore.Listeners
             //Для проверки если канал рейда чекать если название КАТЕГОРИИ канала начинается с "рейд"
 
             // User changed voice channel
-            if (e.Before != null && e.Before.Channel != null && 
+            if (e.Before != null && e.Before.Channel != null &&
                 e.After != null && e.After.Channel != null)
             {
-                if(e.Before.Channel.Id != e.After.Channel.Id)
+                if (e.Before.Channel.Id != e.After.Channel.Id)
                     if (e.Before.Channel.Parent.Name.StartsWith("Рейд") ||
                         e.After.Channel.Parent.Name.StartsWith("Рейд"))
                     {
@@ -252,6 +257,75 @@ namespace Bot_NetCore.Listeners
 
                         await leftChannel.Parent.DeleteAsync();
                     }
+                }
+            }
+        }
+
+        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        public static async Task UpdateFindChannelEmbedOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        {
+            List<DiscordChannel> channels = new List<DiscordChannel>();
+            if (e.Before != null && e.Before.Channel != null)
+                channels.Add(e.Before.Channel);
+            if (e.After != null && e.After.Channel != null)
+                if(!channels.Contains(e.After.Channel))
+                    channels.Add(e.After.Channel);
+
+            foreach (var channel in channels)
+            {
+                try
+                {
+                    if (FindChannelInvites.ContainsKey(channel.Id))
+                    {
+
+                        var channelMessages = await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessagesAsync(50);
+                        var embedMessage = channelMessages.FirstOrDefault(x => x.Id == FindChannelInvites[channel.Id]);
+
+                        if (channel.Users.Count() == 0)
+                        {
+                            await embedMessage.DeleteAsync();
+                        }
+                        else
+                        {
+                            var oldEmbed = embedMessage.Embeds.FirstOrDefault();
+
+                            var oldContent = oldEmbed.Description.Split("\n\n");
+
+                            //Index 0 for description
+                            var content = $"{oldContent[0]}\n\n";
+
+                            //Index 1 for users in channel
+                            foreach (var member in channel.Users)
+                                content += $"{DiscordEmoji.FromName(e.Client, ":pirate_flag1:")} {member.Mention}\n";
+
+                            var usersNeeded = channel.UserLimit - channel.Users.Count();
+                            for (int i = 0; i < usersNeeded; i++)
+                                content += $"{DiscordEmoji.FromName(e.Client, ":pirate_flag1:")} ☐\n";
+
+                            //Index 2 for invite link
+                            content += $"\n{oldContent[2]}";
+
+                            //Embed
+                            var embed = new DiscordEmbedBuilder
+                            {
+                                Description = content
+                            };
+
+                            embed.WithAuthor($"{channel.Name} \n В поиске матросов. +{usersNeeded}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
+                            embed.WithThumbnail(oldEmbed.Thumbnail.Url.ToString());
+                            embed.WithTimestamp(DateTime.Now);
+
+                            await embedMessage.ModifyAsync(embed: embed.Build());
+                        }
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
+                        $"Не удалось обновить сообщение с эмбедом для голосового канала. Канал будет удалён из привязки к сообщению.",
+                        DateTime.Now);
+                    FindChannelInvites.Remove(channel.Id);
+                    return;
                 }
             }
         }
