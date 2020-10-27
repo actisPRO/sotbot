@@ -311,9 +311,13 @@ namespace Bot_NetCore.Listeners
                                 Description = content
                             };
 
-                            embed.WithAuthor($"{channel.Name} \n В поиске матросов. +{usersNeeded}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
+                            var roomStatus = usersNeeded != 0 ? $"В поиске матросов. +{usersNeeded}" : "Заполнен";
+
+                            embed.WithAuthor($"{channel.Name} \n {roomStatus}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
                             embed.WithThumbnail(oldEmbed.Thumbnail.Url.ToString());
                             embed.WithTimestamp(DateTime.Now);
+                            if(usersNeeded == 0)
+                                embed.WithFooter($"Канал заполнен {DiscordEmoji.FromName(e.Client, ":lock:")}");
 
                             await embedMessage.ModifyAsync(embed: embed.Build());
                         }

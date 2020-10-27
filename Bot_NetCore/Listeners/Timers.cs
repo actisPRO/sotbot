@@ -242,9 +242,11 @@ namespace Bot_NetCore.Listeners
                             .Where(x => !x.Pinned).ToList()                                             //Не закрепленные сообщения
                             .Where(x =>
                             {
-                                if (x.IsEdited)
+                                if (x.IsEdited && x.Embeds.Count() != 0 &&
+                                    x.Embeds.FirstOrDefault().Footer.Text.Contains("заполнен"))
                                     return DateTimeOffset.Now.Subtract(x.EditedTimestamp.Value.Add(new TimeSpan(0, 5, 0))).TotalSeconds > 0;
-                                return DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0;
+                                else
+                                    return DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0;
                             });     //Опубликованные ранее определенного времени
 
                         //Clear FindChannelInvites from deleted messages
