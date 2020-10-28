@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -77,7 +79,10 @@ namespace Bot_NetCore
             Note.Read(BotSettings.NotesXML);
             Donator.Read(BotSettings.DonatorXML);
             Subscriber.Read(BotSettings.SubscriberXML);
-
+            
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");            
+            
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
 
@@ -133,7 +138,7 @@ namespace Bot_NetCore
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
             if (!File.Exists("generated/top_inviters.xml")) File.Create("generated/top_inviters.xml");
-
+            
             await Task.Delay(-1);
         }
 
