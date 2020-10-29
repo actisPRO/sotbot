@@ -861,6 +861,11 @@ namespace Bot_NetCore.Commands
         {
             await member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole));
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлена роль капитана.");
+            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
+                ("**Выдана роль капитана**\n\n" +
+                 $"**Модератор:** {ctx.Member}\n" +
+                 $"**Кому:** {member}\n" +
+                 $"**Дата:** {DateTime.Now}\n");
         }
 
         [Command("delcaptain")]
@@ -870,6 +875,11 @@ namespace Bot_NetCore.Commands
         {
             await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole));
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно убрана роль капитана.");
+            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
+                ("**Снята роль капитана**\n\n" +
+                 $"**Модератор:** {ctx.Member}\n" +
+                 $"**Кому:** {member}\n" +
+                 $"**Дата:** {DateTime.Now}\n");
         }
     }
 
