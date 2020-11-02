@@ -252,7 +252,10 @@ namespace Bot_NetCore.Listeners
                         //Clear FindChannelInvites from deleted messages
                         foreach (var message in toDelete)
                             if (VoiceListener.FindChannelInvites.ContainsValue(message.Id))
+                            {
                                 VoiceListener.FindChannelInvites.Remove(VoiceListener.FindChannelInvites.FirstOrDefault(x => x.Value == message.Id).Key);
+                                await VoiceListener.SaveFindChannelMessagesAsync();
+                            }
 
                         if (toDelete.Count() > 0)
                         {

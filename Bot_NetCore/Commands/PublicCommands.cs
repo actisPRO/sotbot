@@ -98,6 +98,8 @@ namespace Bot_NetCore.Commands
             var msg = await ctx.RespondAsync(embed: embed.Build());
 
             VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
+
+            await VoiceListener.SaveFindChannelMessagesAsync();
         }
 
         [Command("votekick")]

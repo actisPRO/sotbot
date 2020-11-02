@@ -26,6 +26,12 @@ namespace Bot_NetCore.Listeners
         public static async Task ClientOnGuildAvailable(GuildCreateEventArgs e)
         {
             await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
+
+            try
+            {
+                VoiceListener.ReadFindChannelMesages();
+            } 
+            catch { }
         }
     }
 }

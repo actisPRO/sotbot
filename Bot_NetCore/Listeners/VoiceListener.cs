@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
@@ -8,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Bot_NetCore.Listeners
 {
@@ -286,6 +288,8 @@ namespace Bot_NetCore.Listeners
                             try
                             {
                                 await embedMessage.DeleteAsync();
+                                FindChannelInvites.Remove(channel.Id);
+                                await SaveFindChannelMessagesAsync();
                             }
                             catch (NotFoundException) { }
                         }
@@ -341,9 +345,33 @@ namespace Bot_NetCore.Listeners
                         $"Не удалось обновить сообщение с эмбедом для голосового канала. Канал будет удалён из привязки к сообщению.",
                         DateTime.Now);
                     FindChannelInvites.Remove(channel.Id);
+                    await SaveFindChannelMessagesAsync();
                     return;
                 }
             }
+        }
+
+        public static void ReadFindChannelMesages()
+        {
+            //Read
+            using (TextFieldParser parser = new TextFieldParser("generated/find_channel_invites.csv"))
+            {
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                while (!parser.EndOfData)
+                {
+                    string[] fields = parser.ReadFields();
+                    FindChannelInvites[Convert.ToUInt64(fields[0])] = Convert.ToUInt64(fields[1]);
+                }
+            }
+        }
+
+        public static async Task SaveFindChannelMessagesAsync()
+        {
+            using (var fs = new FileStream("generated/find_channel_invites.csv", FileMode.Truncate))
+            using (var sw = new StreamWriter(fs))
+                foreach(var elem in FindChannelInvites)
+                    await sw.WriteLineAsync($"{elem.Key},{elem.Value}");
         }
     }
 }
