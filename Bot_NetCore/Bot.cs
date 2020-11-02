@@ -137,6 +137,7 @@ namespace Bot_NetCore
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
+            if (!File.Exists("generated/find_channel_invites.csv")) File.Create("generated/find_channel_invites.csv");
             if (!File.Exists("generated/top_inviters.xml")) File.Create("generated/top_inviters.xml");
             
             await Task.Delay(-1);
