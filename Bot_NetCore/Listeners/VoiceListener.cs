@@ -283,7 +283,11 @@ namespace Bot_NetCore.Listeners
 
                         if (channel.Users.Count() == 0)
                         {
-                            await embedMessage.DeleteAsync();
+                            try
+                            {
+                                await embedMessage.DeleteAsync();
+                            }
+                            catch (NotFoundException) { }
                         }
                         else
                         {
@@ -296,11 +300,21 @@ namespace Bot_NetCore.Listeners
 
                             //Index 1 for users in channel
                             foreach (var member in channel.Users)
-                                content += $"{DiscordEmoji.FromName(e.Client, ":pirate_flag1:")} {member.Mention}\n";
+                                content += $"{DiscordEmoji.FromName(e.Client, ":doubloon:")} {member.Mention}\n";
 
                             var usersNeeded = channel.UserLimit - channel.Users.Count();
+
+                            var embedThumbnail = usersNeeded switch
+                            {
+                                0 => "https://cdn.discordapp.com/attachments/736006872997429349/772920756937162772/Full.png",
+                                1 => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif",
+                                2 => "https://cdn.discordapp.com/attachments/736006872997429349/772920822771089428/2.gif",
+                                3 => "https://cdn.discordapp.com/attachments/736006872997429349/772920778009477140/3.gif",
+                                _ => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif" //TODO: Add NA image
+                            };
+
                             for (int i = 0; i < usersNeeded; i++)
-                                content += $"{DiscordEmoji.FromName(e.Client, ":pirate_flag1:")} ☐\n";
+                                content += $"{DiscordEmoji.FromName(e.Client, ":gold:")} ☐\n";
 
                             //Index 2 for invite link
                             content += $"\n{oldContent[2]}";
@@ -308,16 +322,14 @@ namespace Bot_NetCore.Listeners
                             //Embed
                             var embed = new DiscordEmbedBuilder
                             {
-                                Description = content
+                                Description = content,
+                                Color = usersNeeded == 0 ? new DiscordColor("#2c3e50") : new DiscordColor("#e67e22")
                             };
 
-                            var roomStatus = usersNeeded != 0 ? $"В поиске матросов. +{usersNeeded}" : "Заполнен";
-
-                            embed.WithAuthor($"{channel.Name} \n {roomStatus}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
-                            embed.WithThumbnail(oldEmbed.Thumbnail.Url.ToString());
+                            embed.WithAuthor($"{channel.Name}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
+                            embed.WithThumbnail(embedThumbnail);
                             embed.WithTimestamp(DateTime.Now);
-                            if(usersNeeded == 0)
-                                embed.WithFooter($"Канал заполнен {DiscordEmoji.FromName(e.Client, ":lock:")}");
+                            embed.WithFooter(usersNeeded != 0 ? $"В поиске команды. +{usersNeeded}" : $"Канал заполнен {DiscordEmoji.FromName(e.Client, ":no_entry:")}");
 
                             await embedMessage.ModifyAsync(embed: embed.Build());
                         }

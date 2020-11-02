@@ -63,26 +63,37 @@ namespace Bot_NetCore.Commands
             var invite = await channel.CreateInviteAsync();
             var usersNeeded = channel.UserLimit - channel.Users.Count();
 
+            var embedThumbnail = usersNeeded switch
+            {
+                0 => "https://cdn.discordapp.com/attachments/736006872997429349/772920756937162772/Full.png",
+                1 => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif",
+                2 => "https://cdn.discordapp.com/attachments/736006872997429349/772920822771089428/2.gif",
+                3 => "https://cdn.discordapp.com/attachments/736006872997429349/772920778009477140/3.gif",
+                _ => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif" //TODO: Add NA image
+            };
+
             var content = "";
 
             content += ($"{DiscordEmoji.FromName(ctx.Client, ":loudspeaker:")} {description}\n\n");
 
             foreach (var member in channel.Users)
-                content += $"{DiscordEmoji.FromName(ctx.Client, ":pirate_flag1:")} {member.Mention}\n";
+                content += $"{DiscordEmoji.FromName(ctx.Client, ":doubloon:")} {member.Mention}\n";
 
             for (int i = 0; i < usersNeeded; i++)
-                content += $"{DiscordEmoji.FromName(ctx.Client, ":pirate_flag1:")} ☐\n";
+                content += $"{DiscordEmoji.FromName(ctx.Client, ":gold:")} ☐\n";
 
             content += $"\n**Подключиться:** {invite}";
 
             //Embed
             var embed = new DiscordEmbedBuilder
             {
-                Description = content
+                Description = content,
+                Color = new DiscordColor("#e67e22")
             };
-            embed.WithAuthor($"{channel.Name} \n В поиске матросов. +{usersNeeded}", url: invite.ToString(), iconUrl: ctx.Member.AvatarUrl);
-            embed.WithThumbnail(ctx.Guild.IconUrl);
+            embed.WithAuthor($"{channel.Name}", url: invite.ToString(), iconUrl: ctx.Member.AvatarUrl);
+            embed.WithThumbnail(embedThumbnail);
             embed.WithTimestamp(DateTime.Now);
+            embed.WithFooter($"В поиске команды. +{usersNeeded}");
 
             var msg = await ctx.RespondAsync(embed: embed.Build());
 
