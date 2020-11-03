@@ -65,6 +65,27 @@ namespace Bot_NetCore.Entities
             }
         }
 
+        public static bool IsBlacklisted(ulong user)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = $"SELECT * FROM blacklist WHERE discord_id='{user}';";
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    if (!reader.Read())
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+            }
+        }
+
         public ulong DiscordId => _discordId;
 
         public string Username => _username;
