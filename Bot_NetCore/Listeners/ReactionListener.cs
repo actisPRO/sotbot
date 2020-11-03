@@ -178,6 +178,7 @@ namespace Bot_NetCore.Listeners
                 {
                     await user.SendMessageAsync(
                         $"{Bot.BotSettings.ErrorEmoji} Вы находитесь в чёрном списке рейдов и вам навсегда ограничен доступ к ним.");
+                    return;
                 }
 
                 //Выдаем роль правил рейда

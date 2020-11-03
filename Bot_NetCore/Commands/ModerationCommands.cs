@@ -970,6 +970,7 @@ namespace Bot_NetCore.Commands
                     }
                 }
 
+                if (BlacklistEntry.IsBlacklisted(user.Id)) fleetCodex = "В ЧС";
 
                 if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
                     codex = "Принял";
@@ -1002,7 +1003,7 @@ namespace Bot_NetCore.Commands
                 if (Subscriber.Subscribers.ContainsKey(user.Id))
                 {
                     var subscriber = Subscriber.Subscribers[user.Id];
-                    var length = subscriber.SubscriptionEnd - subscriber.SubscriptionStart;
+                    var length = subscriber.SubscriptionEnd - DateTime.Now;
 
                     subscription =
                         $"{subscriber.SubscriptionEnd:HH:mm:ss dd.MM.yyyy} ({Utility.ToCorrectCase(length, TimeUnit.Days)})";
