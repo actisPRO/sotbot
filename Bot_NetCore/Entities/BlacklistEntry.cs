@@ -49,6 +49,22 @@ namespace Bot_NetCore.Entities
             }
         }
 
+        public static void Remove(string id)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    var statement = $"DELETE FROM blacklist WHERE id = '{id}';";
+                    cmd.CommandText = statement;
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public ulong DiscordId => _discordId;
 
         public string Username => _username;
