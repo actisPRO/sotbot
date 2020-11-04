@@ -171,6 +171,15 @@ namespace Bot_NetCore.Listeners
                         $"{Bot.BotSettings.ErrorEmoji} К вашему аккаунту не привязан Xbox, пожалуйста, войдите с помощью Discord на сайт {Bot.BotSettings.WebURL}login и повторите попытку.");
                     return;
                 }
+                
+                // Проверка ЧС
+
+                if (BlacklistEntry.IsBlacklisted(user.Id))
+                {
+                    await user.SendMessageAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Вы находитесь в чёрном списке рейдов и вам навсегда ограничен доступ к ним.");
+                    return;
+                }
 
                 //Выдаем роль правил рейда
                 if (!user.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
