@@ -19,7 +19,7 @@ namespace Bot_NetCore.Commands
         [Command("invite")]
         [Aliases("i")]
         [Description("Создаёт приглашение в поиске игроков")]
-        [Cooldown(1, 60, CooldownBucketType.User)]
+        [Cooldown(1, 30, CooldownBucketType.User)]
         public async Task Invite(CommandContext ctx, [Description("Описание (На афину, на форт и т.д.)")][RemainingText] string description)
         {
             //Проверка на использование канала с поиском игроков
@@ -44,6 +44,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+            //Проверка на условия голосового канала
             var channel = ctx.Member.VoiceState?.Channel;
 
             if (channel.Users.Count() >= channel.UserLimit)
@@ -52,6 +53,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+            //Проверка если сообщение было уже отправлено
             if (VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы уже отправили приглашение!");
@@ -63,15 +65,33 @@ namespace Bot_NetCore.Commands
             var invite = await channel.CreateInviteAsync();
             var usersNeeded = channel.UserLimit - channel.Users.Count();
 
-            var embedThumbnail = usersNeeded switch
+            var embedThumbnail = "";
+            //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
+            if (channel.Parent.Name.StartsWith("Рейд"))
             {
-                0 => "https://cdn.discordapp.com/attachments/736006872997429349/772920756937162772/Full.png",
-                1 => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif",
-                2 => "https://cdn.discordapp.com/attachments/736006872997429349/772920822771089428/2.gif",
-                3 => "https://cdn.discordapp.com/attachments/736006872997429349/772920778009477140/3.gif",
-                _ => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif" //TODO: Add NA image
-            };
+                if (channel.Name.StartsWith("Рейд"))
+                    usersNeeded = Math.Max(0, (usersNeeded - 1));
 
+                embedThumbnail = usersNeeded switch
+                {
+                    0 => Bot.BotSettings.ThumbnailFull,
+                    _ => Bot.BotSettings.ThumbnailRaid
+                };
+            }
+            //Если это не канал рейда, вставляем подходящую картинку по слотам, или NA если число другое
+            else
+            {
+                embedThumbnail = usersNeeded switch
+                {
+                    0 => Bot.BotSettings.ThumbnailFull,
+                    1 => Bot.BotSettings.ThumbnailOne,
+                    2 => Bot.BotSettings.ThumbnailTwo,
+                    3 => Bot.BotSettings.ThumbnailThree,
+                    _ => Bot.BotSettings.ThumbnailNA
+                };
+            }
+
+            //Собираем данные для эмбеда
             var content = "";
 
             content += ($"{DiscordEmoji.FromName(ctx.Client, ":loudspeaker:")} {description}\n\n");
@@ -97,6 +117,7 @@ namespace Bot_NetCore.Commands
 
             var msg = await ctx.RespondAsync(embed: embed.Build());
 
+            //Добавялем в словарь связку канал - сообщение и сохраняем в файл
             VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
 
             await VoiceListener.SaveFindChannelMessagesAsync();

@@ -56,7 +56,10 @@ namespace Bot_NetCore.Listeners
 
                         //Проверка на эмиссарство
                         var channelSymbol = Bot.BotSettings.AutocreateSymbol;
-                        ((DiscordMember)e.User).Roles.ToList().ForEach(x =>
+
+                        var member = await e.Guild.GetMemberAsync(e.User.Id);
+
+                        member.Roles.ToList().ForEach(x =>
                         {
                             if (x.Id == Bot.BotSettings.EmissaryGoldhoadersRole)
                                 channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
@@ -90,8 +93,6 @@ namespace Bot_NetCore.Listeners
                             created = await e.Guild.CreateChannelAsync(
                                 $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 4);
-
-                        var member = await e.Guild.GetMemberAsync(e.User.Id);
 
                         await member.PlaceInAsync(created);
 
@@ -296,8 +297,35 @@ namespace Bot_NetCore.Listeners
                         else
                         {
                             var oldEmbed = embedMessage.Embeds.FirstOrDefault();
-
                             var oldContent = oldEmbed.Description.Split("\n\n");
+
+                            var usersNeeded = channel.UserLimit - channel.Users.Count();
+
+                            var embedThumbnail = "";
+                            //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
+                            if (channel.Parent.Name.StartsWith("Рейд"))
+                            {
+                                if (channel.Name.StartsWith("Рейд"))
+                                    usersNeeded = Math.Max(0, (usersNeeded - 1));
+
+                                embedThumbnail = usersNeeded switch
+                                {
+                                    0 => Bot.BotSettings.ThumbnailFull,
+                                    _ => Bot.BotSettings.ThumbnailRaid
+                                };
+                            }
+                            //Если это не канал рейда, вставляем подходящую картинку по слотам, или NA если число другое
+                            else
+                            {
+                                embedThumbnail = usersNeeded switch
+                                {
+                                    0 => Bot.BotSettings.ThumbnailFull,
+                                    1 => Bot.BotSettings.ThumbnailOne,
+                                    2 => Bot.BotSettings.ThumbnailTwo,
+                                    3 => Bot.BotSettings.ThumbnailThree,
+                                    _ => Bot.BotSettings.ThumbnailNA
+                                };
+                            }
 
                             //Index 0 for description
                             var content = $"{oldContent[0]}\n\n";
@@ -305,17 +333,6 @@ namespace Bot_NetCore.Listeners
                             //Index 1 for users in channel
                             foreach (var member in channel.Users)
                                 content += $"{DiscordEmoji.FromName(e.Client, ":doubloon:")} {member.Mention}\n";
-
-                            var usersNeeded = channel.UserLimit - channel.Users.Count();
-
-                            var embedThumbnail = usersNeeded switch
-                            {
-                                0 => "https://cdn.discordapp.com/attachments/736006872997429349/772920756937162772/Full.png",
-                                1 => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif",
-                                2 => "https://cdn.discordapp.com/attachments/736006872997429349/772920822771089428/2.gif",
-                                3 => "https://cdn.discordapp.com/attachments/736006872997429349/772920778009477140/3.gif",
-                                _ => "https://cdn.discordapp.com/attachments/736006872997429349/772920731754823680/1.gif" //TODO: Add NA image
-                            };
 
                             for (int i = 0; i < usersNeeded; i++)
                                 content += $"{DiscordEmoji.FromName(e.Client, ":gold:")} ☐\n";

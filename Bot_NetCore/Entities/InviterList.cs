@@ -45,25 +45,9 @@ namespace Bot_NetCore.Entities
             var doc = XDocument.Load(fileName);
             foreach (var inviter in doc.Element("inviters").Elements("inviter"))
             {
-                //Remove from here
-                var ignored = false;
-                try
-                {
-                    ignored = Convert.ToBoolean(inviter.Attribute("ignored").Value);
-                }
-                catch (NullReferenceException)
-                {
-
-                }
                 var elem = new Inviter(Convert.ToUInt64(inviter.Attribute("id").Value),
-                                       Convert.ToBoolean(inviter.Attribute("active").Value),
-                                       ignored);
-                //To here
-
-                //TODO: Uncomment and remove other one after first launch.
-                //var elem = new Inviter(Convert.ToUInt64(inviter.Attribute("id").Value),
-                //       Convert.ToBoolean(inviter.Attribute("active").Value),
-                //       Convert.ToBoolean(inviter.Attribute("ignored").Value));
+                       Convert.ToBoolean(inviter.Attribute("active").Value),
+                       Convert.ToBoolean(inviter.Attribute("ignored").Value));
 
                 foreach (var referral in inviter.Elements("referral"))
                     elem.AddReferral(
