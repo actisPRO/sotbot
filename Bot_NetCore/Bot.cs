@@ -688,6 +688,36 @@ namespace Bot_NetCore
         ///     Пароль пользователя БДы
         /// </summary>
         public string DatabasePassword;
+
+        /// <summary>
+        ///     URL изображения для поиска игроков.
+        /// </summary>
+        public string ThumbnailFull;
+
+        /// <summary>
+        ///     URL изображения для поиска игроков.
+        /// </summary>
+        public string ThumbnailOne;
+
+        /// <summary>
+        ///     URL изображения для поиска игроков.
+        /// </summary>
+        public string ThumbnailTwo;
+
+        /// <summary>
+        ///     URL изображения для поиска игроков.
+        /// </summary>
+        public string ThumbnailThree;
+
+        /// <summary>
+        ///     URL изображения для поиска игроков.
+        /// </summary>
+        public string ThumbnailNA;
+
+        /// <summary>
+        ///     URL изображения для поиска игроков.
+        /// </summary>
+        public string ThumbnailRaid;
     }
 
     public enum CommandType
