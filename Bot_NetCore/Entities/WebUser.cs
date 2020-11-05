@@ -45,7 +45,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT * FROM users WHERE userid = @discordId;";
+                    cmd.CommandText = "SELECT * FROM users WHERE userid = @discordId;";
                     cmd.Parameters.AddWithValue("@discordId", discordId);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
