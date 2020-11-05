@@ -78,7 +78,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT * FROM users;";
+                    cmd.CommandText = "SELECT * FROM users;";
                     cmd.Connection = connection;
                     cmd.Connection.Open();
 
