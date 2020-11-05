@@ -154,24 +154,23 @@ namespace Bot_NetCore.Listeners
                 
                 //Проверка на регистрацию и привязку Xbox
 
-                var cs =
-                    $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword};";
-                var connection = new MySqlConnection(cs);
-                await connection.OpenAsync();
-                
-                var statement = $"SELECT xbox FROM users WHERE userid='{user.Id}'";
-                var cmd = new MySqlCommand(statement, connection);
-                var res = cmd.ExecuteScalar();
-                
-                await connection.CloseAsync();
-                
-                if (res == null || res == DBNull.Value || res.ToString() == "")
+                var webUser = WebUser.GetByDiscordId(user.Id);
+                if (webUser == null)
                 {
                     await user.SendMessageAsync(
-                        $"{Bot.BotSettings.ErrorEmoji} К вашему аккаунту не привязан Xbox, пожалуйста, войдите с помощью Discord на сайт {Bot.BotSettings.WebURL}login и повторите попытку.");
+                        $"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вам нужно авторизоваться с помощью Discord на сайте {Bot.BotSettings.WebURL}login.");
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), user);
                     return;
                 }
-                
+
+                if (webUser.Xbox == "")
+                {
+                    await user.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны привязать Xbox к своему аккаунту, затем перейдите по ссылке " +
+                                                $"{Bot.BotSettings.WebURL}xbox - это обновит базу данных.");
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), user);
+                    return;
+                }
+
                 // Проверка ЧС
 
                 if (BlacklistEntry.IsBlacklisted(user.Id))
