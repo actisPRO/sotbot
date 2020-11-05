@@ -141,65 +141,69 @@ namespace Bot_NetCore.Listeners
 
         private static async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
+            var channelMessages = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel)
+                        .GetMessagesAsync();
             for (int i = 0; i < Vote.Votes.Count; ++i)
             {
                 var vote = Vote.Votes.Values.ToArray()[i];
                 try
                 {
-                    var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel)
-                        .GetMessageAsync(vote.Message);
-                    if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
+                    var message = channelMessages.FirstOrDefault(x => x.Id == vote.Message);
+                    if (message != null)
                     {
-                        if (message.Reactions.Count == 0) continue;
-
-                        var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
-                        var embed = Utility.GenerateVoteEmbed(
-                            author,
-                            vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
-                            vote.Topic, vote.End,
-                            vote.Voters.Count,
-                            vote.Yes,
-                            vote.No,
-                            vote.Id);
-
-                        await message.ModifyAsync(embed: embed);
-                        await message.DeleteAllReactionsAsync();
-                    }
-                    else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
-                    {
-                        var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
-                        var embed = Utility.GenerateVoteEmbed(
-                            author,
-                            vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
-                            vote.Topic, vote.End,
-                            vote.Voters.Count,
-                            vote.Yes,
-                            vote.No,
-                            vote.Id);
-
-                        var doc = new XDocument();
-                        var root = new XElement("Voters");
-                        foreach (var voter in vote.Voters)
-                            root.Add(new XElement("Voter", voter));
-                        doc.Add(root);
-                        doc.Save($"generated/voters-{vote.Id}.xml");
-
-                        var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
-                        await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
-
-                        await message.DeleteAsync();
-                    }
-                    else if (DateTime.Now < vote.End) // починка голосования
-                    {
-                        if (message.Reactions.Count < 2)
+                        if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
                         {
+                            if (message.Reactions.Count == 0) continue;
+
+                            var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
+                            var embed = Utility.GenerateVoteEmbed(
+                                author,
+                                vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                                vote.Topic, vote.End,
+                                vote.Voters.Count,
+                                vote.Yes,
+                                vote.No,
+                                vote.Id);
+
+                            await message.ModifyAsync(embed: embed);
                             await message.DeleteAllReactionsAsync();
-                            await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
-                            await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
+                        }
+                        else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
+                        {
+                            var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
+                            var embed = Utility.GenerateVoteEmbed(
+                                author,
+                                vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                                vote.Topic, vote.End,
+                                vote.Voters.Count,
+                                vote.Yes,
+                                vote.No,
+                                vote.Id);
+
+                            var doc = new XDocument();
+                            var root = new XElement("Voters");
+                            foreach (var voter in vote.Voters)
+                                root.Add(new XElement("Voter", voter));
+                            doc.Add(root);
+                            doc.Save($"generated/voters-{vote.Id}.xml");
+
+                            var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
+                            await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
+
+                            await message.DeleteAsync();
+                        }
+                        else if (DateTime.Now < vote.End) // починка голосования
+                        {
+                            if (message.Reactions.Count < 2)
+                            {
+                                await message.DeleteAllReactionsAsync();
+                                await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+                                await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
+                            }
                         }
                     }
                 }
-                catch (NotFoundException)
+                catch (ArgumentNullException)
                 {
                     //Do nothing, message not found
                 }
@@ -270,9 +274,9 @@ namespace Bot_NetCore.Listeners
 
             if (toUnban.Any())
             {
+                var bans = await guild.GetBansAsync();
                 foreach (var ban in toUnban)
                 {
-                    var bans = await guild.GetBansAsync();
                     for (int i = 0; i < bans.Count; ++i)
                     {
                         if (bans[i].User.Id == ban.User)
@@ -302,6 +306,7 @@ namespace Bot_NetCore.Listeners
                     {
                         var user = await guild.GetMemberAsync(report.User);
                         await user.RevokeRoleAsync(guild.GetRole(Bot.BotSettings.MuteRole), "Unmuted");
+                        ReportSQL.Delete(report.Id);
                     }
                     catch (NotFoundException)
                     {
@@ -314,6 +319,7 @@ namespace Bot_NetCore.Listeners
                     {
                         var user = await guild.GetMemberAsync(report.User);
                         await user.RevokeRoleAsync(guild.GetRole(Bot.BotSettings.VoiceMuteRole), "Unmuted");
+                        ReportSQL.Delete(report.Id);
                     }
                     catch (NotFoundException)
                     {
