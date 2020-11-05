@@ -39,7 +39,7 @@ namespace Bot_NetCore.Entities
         /// </summary>
         /// <param name="discordId">Discord ID of the user</param>
         /// <returns>WebUser entity or null if there is no user with the specified Discord ID</returns>
-        public WebUser GetByDiscordId(ulong discordId)
+        public static WebUser GetByDiscordId(ulong discordId)
         {
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
@@ -70,7 +70,7 @@ namespace Bot_NetCore.Entities
             return null;
         }
 
-        public List<WebUser> GetAll()
+        public static List<WebUser> GetAll()
         {
             var result = new List<WebUser>();
             
