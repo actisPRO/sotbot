@@ -952,9 +952,9 @@ namespace Bot_NetCore.Commands
                     // Country
                     using (var reader = new DatabaseReader("data/GeoLite2-City.mmdb"))
                     {
-                        var city = reader.City(webUser.Ip);
                         try
                         {
+                            var city = reader.City(webUser.Ip);
                             embed.AddField("Страна", $":flag_{city.Country.IsoCode.ToLower()}:", true);
                         }
                         catch (AddressNotFoundException)
