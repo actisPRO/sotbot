@@ -908,15 +908,13 @@ namespace Bot_NetCore.Commands
                 {
                     member = await ctx.Guild.GetMemberAsync(user.Id);
                 }
-                catch
+                catch (NotFoundException)
                 {
-
+                    // is not a member of the guild
                 }
 
                 var embed = new DiscordEmbedBuilder();
-
                 embed.WithColor(DiscordColor.Orange);
-
                 embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
                 embed.AddField("ID", user.Id.ToString(), true);
 
@@ -1019,19 +1017,23 @@ namespace Bot_NetCore.Commands
 
                 if (member != null)
                 {
-                    // useless
-                    /*//Модератор 
-                    var moderator = "Нет";
-                    if (Bot.IsModerator(member)) moderator = "Да";
-                    embed.AddField("Модератор", moderator, true); */
-
-
                     embed.AddField("Правила", codex, true);
                     embed.AddField("Правила рейда", fleetCodex, true);
                 }
 
                 //Мут
                 embed.AddField("Мут", mute, true);
+                
+                // Verfication
+                var webUser = WebUser.GetByDiscordId(user.Id);
+                if (webUser == null)
+                {
+                    embed.AddField("Верифицирован", "Нет", true);
+                }
+                else
+                {
+                    embed.AddField("Верифицирован", "Да", true);
+                }
 
                 //Донат
                 var donate = 0;
