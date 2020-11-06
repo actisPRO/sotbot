@@ -12,6 +12,8 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using MaxMind.GeoIP2;
+using MaxMind.GeoIP2.Exceptions;
 using static Bot_NetCore.Misc.Utility;
 
 namespace Bot_NetCore.Commands
@@ -897,6 +899,8 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+            await ctx.TriggerTypingAsync();
+
             try
             {
                 DiscordMember member = null;
@@ -935,6 +939,32 @@ namespace Bot_NetCore.Commands
 
                 //Предупреждения
                 var warnings = WarnSQL.GetForUser(user.Id).Count;
+                
+                // Web
+                var webUser = WebUser.GetByDiscordId(user.Id);
+                if (webUser == null)
+                {
+                    embed.AddField("Привязка", "Нет", true);
+                }
+                else
+                {
+                    embed.AddField("Привязка", "Да", true);
+                    // Country
+                    using (var reader = new DatabaseReader("data/GeoLite2-City.mmdb"))
+                    {
+                        var city = reader.City(webUser.Ip);
+                        try
+                        {
+                            embed.AddField("Страна", $":flag_{city.Country.IsoCode.ToLower()}:", true);
+                        }
+                        catch (AddressNotFoundException)
+                        {
+                            
+                        }
+                    }
+
+                    embed.AddField("Xbox", webUser.Xbox, true);
+                }
 
                 //Emoji используется при выводе списка предупреждений.
                 var emoji = DiscordEmoji.FromName(ctx.Client, ":pencil:");
