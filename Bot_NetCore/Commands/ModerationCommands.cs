@@ -1023,17 +1023,6 @@ namespace Bot_NetCore.Commands
 
                 //Мут
                 embed.AddField("Мут", mute, true);
-                
-                // Verfication
-                var webUser = WebUser.GetByDiscordId(user.Id);
-                if (webUser == null)
-                {
-                    embed.AddField("Верифицирован", "Нет", true);
-                }
-                else
-                {
-                    embed.AddField("Верифицирован", "Да", true);
-                }
 
                 //Донат
                 var donate = 0;
