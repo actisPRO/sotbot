@@ -23,7 +23,8 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.MessageReactionRemoved)]
         public static async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
         {
-            if (e.User.IsBot) return;
+            var discordUser = await e.Client.GetUserAsync(e.User.Id);
+            if (discordUser.IsBot) return;
 
             //Проверка если сообщение с принятием правил
             if (e.Message.Id == Bot.BotSettings.CodexMessageId)
@@ -37,7 +38,7 @@ namespace Bot_NetCore.Listeners
                 //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
 
                 //Забираем роль
-                var user = (DiscordMember)e.User;
+                var user = (DiscordMember)discordUser;
                 if (user.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
                     await user.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
 
