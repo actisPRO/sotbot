@@ -84,7 +84,7 @@ namespace Bot_NetCore.Listeners
                     var moderator = await e.Channel.Guild.GetMemberAsync(validPurge.Moderator);
                     try
                     {
-                        await ((DiscordMember) discordUser).SendMessageAsync(
+                        await (await e.Guild.GetMemberAsync(discordUser.Id)).SendMessageAsync(
                             "**Возможность принять правила заблокирована**\n" +
                             $"**Снятие через:** {Utility.FormatTimespan(DateTime.Now - validPurge.ReportEnd)}\n" +
                             $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
@@ -137,7 +137,7 @@ namespace Bot_NetCore.Listeners
                     var moderator = await e.Channel.Guild.GetMemberAsync(validPurge.Moderator);
                     try
                     {
-                        await ((DiscordMember) discordUser).SendMessageAsync(
+                        await (await e.Guild.GetMemberAsync(discordUser.Id)).SendMessageAsync(
                             "**Возможность принять правила заблокирована**\n" +
                             $"**Снятие через:** {Utility.FormatTimespan(DateTime.Now - validPurge.ReportEnd)}\n" +
                             $"**Модератор:** {moderator.Username}#{moderator.Discriminator}\n" +
@@ -150,9 +150,8 @@ namespace Bot_NetCore.Listeners
                     }
                     return;
                 } //Удаляем блокировку если истекла
-        
-                
-                var member = (DiscordMember) discordUser;
+
+                var member = await e.Guild.GetMemberAsync(discordUser.Id);
                 
                 //Проверка на регистрацию и привязку Xbox
 
@@ -207,7 +206,7 @@ namespace Bot_NetCore.Listeners
                 EmojiCooldowns[discordUser] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
 
                 //Проверка у пользователя уже существующих ролей эмисарства и их удаление
-                var member = (DiscordMember) discordUser;
+                var member = await e.Guild.GetMemberAsync(discordUser.Id);
                 member.Roles.Where(x => x.Id == Bot.BotSettings.EmissaryGoldhoadersRole ||
                                 x.Id == Bot.BotSettings.EmissaryTradingCompanyRole ||
                                 x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole ||
