@@ -859,7 +859,7 @@ namespace Bot_NetCore.Commands
 
         [Command("addcaptain")]
         [Description("Выдает роль капитана.")]
-        [RequireUserRoles(RoleCheckMode.Any, 769224121036832769)]
+        [RequireCustomRole(RoleType.Helper)]
         public async Task AddCaptain(CommandContext ctx, [Description("Пользователь")] DiscordMember member)
         {
             await member.GrantRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole));
@@ -873,7 +873,7 @@ namespace Bot_NetCore.Commands
 
         [Command("delcaptain")]
         [Description("Убирает роль капитана.")]
-        [RequireUserRoles(RoleCheckMode.Any, 769224121036832769)]
+        [RequireCustomRole(RoleType.Helper)]
         public async Task DeleteCaptain(CommandContext ctx, [Description("Пользователь")] DiscordMember member)
         {
             await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole));
