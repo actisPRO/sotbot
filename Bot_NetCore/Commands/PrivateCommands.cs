@@ -18,6 +18,7 @@ namespace Bot_NetCore.Commands
     [Group("private")]
     [Aliases("p")]
     [Description("Команды приватных кораблей.")]
+    [RequireGuild]
     public class PrivateCommands : BaseCommandModule
     {
         [Command("new")]

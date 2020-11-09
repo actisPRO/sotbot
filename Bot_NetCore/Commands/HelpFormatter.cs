@@ -87,7 +87,8 @@ namespace Bot_NetCore.Commands
 
             var fieldValue = string.Join("\n\n", new string[] { withoutDescription, withDescription });
 
-            this.EmbedBuilder.AddField(this.Command != null ? "Подкоманды" : "Команды", fieldValue, false);
+            if (!string.IsNullOrWhiteSpace(fieldValue))
+                this.EmbedBuilder.AddField(this.Command != null ? "Подкоманды" : "Команды", fieldValue, false);
 
             //Default page
             if (this.Command == null)
@@ -97,7 +98,8 @@ namespace Bot_NetCore.Commands
                                .OrderBy(x => x.Name.Length)
                                .Select(x => $"{Formatter.InlineCode(x.Name)} - {x.Description}"));
 
-                this.EmbedBuilder.AddField("Группы команд", groupCommands, false);
+                if(groupCommands != "")
+                    this.EmbedBuilder.AddField("Группы команд", groupCommands, false);
             }
             return this;
         }

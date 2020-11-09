@@ -14,6 +14,7 @@ using DSharpPlus.Interactivity;
 
 namespace Bot_NetCore.Commands
 {
+    [RequireGuild]
     public class PublicCommands : BaseCommandModule
     {
         [Command("invite")]
