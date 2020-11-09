@@ -512,6 +512,11 @@ namespace Bot_NetCore
         public ulong Developer;
 
         /// <summary>
+        ///     ID роли хелпреа.
+        /// </summary>
+        public ulong HelperRole;
+
+        /// <summary>
         ///     Путь до файла с блокировкой правил.
         /// </summary>
         public string ReportsXML;

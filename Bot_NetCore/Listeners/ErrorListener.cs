@@ -103,7 +103,7 @@ namespace Bot_NetCore.Listeners
                         msg += "\n Команда работает только с определённым префиксом.";
                     else if (check is RequireRolesAttribute)
                         msg += "\n У вас нет доступа к этой команде!";
-                    else if (check is RequireUserRolesAttribute)
+                    else if (check is RequireCustomRole)
                         msg += "\n У вас нет доступа к этой команде!";
                     else if (check is RequireUserPermissionsAttribute)
                         msg += "\n У вас нет доступа к этой команде!";
