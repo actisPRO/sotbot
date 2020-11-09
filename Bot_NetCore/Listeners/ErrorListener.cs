@@ -92,7 +92,7 @@ namespace Bot_NetCore.Listeners
                     else if (check is RequireOwnerAttribute)
                         msg += "\n Команда для приватных сообщений.";
                     else if (check is RequireGuildAttribute)
-                        msg += "\n Доступна только на определённом  сервере.";
+                        msg += "\n Использование команды доступно только на сервере.";
                     else if (check is RequireNsfwAttribute)
                         msg += "\n Команда для использования только в NSFW канале.";
                     else if (check is RequireOwnerAttribute)
@@ -115,8 +115,8 @@ namespace Bot_NetCore.Listeners
             var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
 
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
-                $"Участник {e.Context.Member.Username}#{e.Context.Member.Discriminator} " +
-                $"({e.Context.Member.Id}) пытался запустить команду {command}, но произошла ошибка.",
+                $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
+                $"({e.Context.User.Id}) пытался запустить команду {command}, но произошла ошибка.",
                 DateTime.Now);
 
             await e.Context.RespondAsync(
@@ -124,11 +124,13 @@ namespace Bot_NetCore.Listeners
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
-            var errChannel = e.Context.Guild.GetChannel(Bot.BotSettings.ErrorLog);
+            var guild = await e.Context.Client.GetGuildAsync(Bot.BotSettings.Guild);
+
+            var errChannel = guild.GetChannel(Bot.BotSettings.ErrorLog);
 
             var message = $"**Команда:** {command}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
-                          $"**Пользователь:** {e.Context.Member}\n" +
+                          $"**Пользователь:** {e.Context.User}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +
                           $"**Трассировка стека:** \n```{e.Exception.StackTrace}```";
 

@@ -3,18 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Commands
 {
+    [RequireGuild]
     public class UtilsCommands : BaseCommandModule
     {
         public bool keepRainbow;

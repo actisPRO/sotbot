@@ -14,6 +14,7 @@ namespace Bot_NetCore.Commands
     [Group("vote")]
     [Aliases("v")]
     [Description("Команды голосований.")]
+    [RequireGuild]
     [RequirePermissions(Permissions.KickMembers)]
     public class VotingCommands : BaseCommandModule
     {

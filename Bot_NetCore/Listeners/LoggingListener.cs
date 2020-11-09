@@ -17,7 +17,7 @@ namespace Bot_NetCore.Listeners
 
             e.Context.Client.DebugLogger.LogMessage(LogLevel.Info,
                     "Bot",
-                    $"Пользователь {e.Context.Member.Username}#{e.Context.Member.Discriminator} ({e.Context.Member.Id}) выполнил команду {command}",
+                    $"Пользователь {e.Context.User.Username}#{e.Context.User.Discriminator} ({e.Context.User.Id}) выполнил команду {command}",
                     DateTime.Now);
             await Task.CompletedTask; //Пришлось добавить, выдавало ошибку при компиляции
         }

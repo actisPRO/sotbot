@@ -18,6 +18,7 @@ using static Bot_NetCore.Misc.Utility;
 
 namespace Bot_NetCore.Commands
 {
+    [RequireGuild]
     public class ModerationCommands : BaseCommandModule
     {
         [Command("clearchannel")]
@@ -888,6 +889,7 @@ namespace Bot_NetCore.Commands
     [Group("whois")]
     [Description("Информация о пользователе.")]
     [RequirePermissions(Permissions.KickMembers)]
+    [RequireGuild]
     public class WhoisCommand : BaseCommandModule
     {
         [GroupCommand]

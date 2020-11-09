@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext;
@@ -12,8 +11,9 @@ using DSharpPlus.Interactivity;
 namespace Bot_NetCore.Commands
 {
     [Group("blacklist")]
-    [Aliases("bl")] 
+    [Aliases("bl")]
     [Hidden]
+    [RequireGuild]
     public class BlacklistCommands : BaseCommandModule
     {
         [Command("add")]
