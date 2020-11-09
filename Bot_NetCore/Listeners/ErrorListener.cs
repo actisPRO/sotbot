@@ -93,6 +93,8 @@ namespace Bot_NetCore.Listeners
                         msg += "\n Команда для приватных сообщений.";
                     else if (check is RequireGuildAttribute)
                         msg += "\n Использование команды доступно только на сервере.";
+                    else if (check is RequireDirectMessageAttribute)
+                        msg += "\n Использование команды доступно только в личных сообщениях.";
                     else if (check is RequireNsfwAttribute)
                         msg += "\n Команда для использования только в NSFW канале.";
                     else if (check is RequireOwnerAttribute)
