@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
+using Bot_NetCore.Listeners;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -18,9 +19,9 @@ namespace Bot_NetCore.Commands
             { SupportType.Admin, ":red_circle:"},
             { SupportType.Moderator, ":green_circle:"},
             { SupportType.Developer, ":white_circle:"},
+            { SupportType.Donate, ":blue_circle:"},
             { SupportType.FleetCaptain, ":purple_circle:"},
-            { SupportType.Events, ":orange_circle:"},
-            { SupportType.Tech, ":blue_circle:"}
+            { SupportType.Events, ":orange_circle:"}
         };
 
         private static IReadOnlyDictionary<SupportType, string> SupportNames = new Dictionary<SupportType, string>()
@@ -28,14 +29,15 @@ namespace Bot_NetCore.Commands
             { SupportType.Admin, "Администрация"},
             { SupportType.Moderator, "Модерация"},
             { SupportType.Developer, "Разработчики"},
-            { SupportType.FleetCaptain, "Капитаны рейда"},
-            { SupportType.Events, "Ивенты"},
-            { SupportType.Tech, "Технические Вопросы"}
+            { SupportType.Donate, "Донат/Реклама"},
+            { SupportType.FleetCaptain, "Рейды"},
+            { SupportType.Events, "Ивенты"}
         };
 
         [Command("support")]
         [Description("Создает запрос тикета")]
         [RequireDirectMessage]
+        [Cooldown(2, 30, CooldownBucketType.User)]
         public async Task Support(CommandContext ctx)
         {
             //TODO: Check for blacklisted users.
@@ -45,196 +47,206 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var guild = await ctx.Client.GetGuildAsync(Bot.BotSettings.Guild);
+            DmMessageListener.DmHandled.Add(ctx.User);
 
-
-            //Создание эмбеда тикета и заполнение по шаблону
-            var ticketEmbed = new DiscordEmbedBuilder
+            try
             {
-                Title = "Sea of Thieves RU | Создание тикета",
-                Description = "Выберите категорию вашего запроса через реакцию",
-                Color = new DiscordColor("#e67e22")
-            };
+                var guild = await ctx.Client.GetGuildAsync(Bot.BotSettings.Guild);
 
-            ticketEmbed.WithThumbnail(guild.IconUrl);
 
-            ticketEmbed.AddField($"{SupportEmoji[SupportType.Admin]} {SupportNames[SupportType.Admin]}", "text", true);
-            ticketEmbed.AddField($"{SupportEmoji[SupportType.Moderator]} {SupportNames[SupportType.Moderator]}", "text", true);
-            ticketEmbed.AddField($"{SupportEmoji[SupportType.Developer]} {SupportNames[SupportType.Developer]}", "text", true);
-            ticketEmbed.AddField($"{SupportEmoji[SupportType.FleetCaptain]} {SupportNames[SupportType.FleetCaptain]}", "text", true);
-            ticketEmbed.AddField($"{SupportEmoji[SupportType.Events]} {SupportNames[SupportType.Events]}", "text", true);
-            ticketEmbed.AddField($"{SupportEmoji[SupportType.Tech]} {SupportNames[SupportType.Tech]}", "text", true);
-
-            ticketEmbed.WithFooter("Дождитесь загрузки всех вариантов ответа. У вас есть минута на выбор варианта");
-
-            var ticketMessage = await ctx.RespondAsync(embed: ticketEmbed.Build());
-
-            var interactivity = ctx.Client.GetInteractivity();
-
-            //Создаем предложенные реакции.
-            foreach (var emoji in SupportEmoji.Values)
-            {
-                await ticketMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
-                await Task.Delay(400);
-            }
-
-            //Шаблон закрытого тикета
-            var errorEmbed = new DiscordEmbedBuilder()
-            {
-                Title = "Sea of Thieves RU | Создание тикета закрыто",
-                Description = "Произошла ошибка при создании тикета.",
-                Color = new DiscordColor("#e74c3c"),
-            };
-            errorEmbed.WithThumbnail(guild.IconUrl);
-            errorEmbed.WithTimestamp(DateTime.Now);
-
-            //Ждем одну из предложенных реакций. (Минута времени)
-            var em = await interactivity.WaitForReactionAsync(x => SupportEmoji.Values.Contains(x.Emoji.GetDiscordName()), ctx.User, TimeSpan.FromSeconds(60));
-
-            if (!em.TimedOut)
-            {
-                new Task(async () =>
+                //Создание эмбеда тикета и заполнение по шаблону
+                var ticketEmbed = new DiscordEmbedBuilder
                 {
-                    foreach (var emoji in SupportEmoji.Values)
-                    {
-                        await ticketMessage.DeleteOwnReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
-                        await Task.Delay(400);
-                    }
-                }).Start();
-
-                var selectedCategory = SupportEmoji.FirstOrDefault(x => x.Value == em.Result.Emoji.GetDiscordName()).Key;
-
-                //Успешное продолжение создания тикета
-                //Запрос описания проблемы
-                ticketEmbed = new DiscordEmbedBuilder
-                {
-                    Title = "Sea of Thieves RU | Ожидание вопроса",
-                    Description = "Опишите ваш вопрос коротким сообщением.\n‎",
+                    Title = "Sea of Thieves RU | Создание тикета",
+                    Description = "Выберите категорию вашего запроса через реакцию‎\n‎",
                     Color = new DiscordColor("#e67e22")
                 };
-                ticketEmbed.WithThumbnail(guild.IconUrl);
 
-                ticketEmbed.AddField("Выбранная категория", $"{SupportEmoji[selectedCategory]} {SupportNames[selectedCategory]}", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.Admin]} {SupportNames[SupportType.Admin]}", "Связь с администрацией, используйте только для **ВАЖНЫХ** вопросов", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.Moderator]} {SupportNames[SupportType.Moderator]}", "Вопросы по поводу модерации, нарушений и так далее. (Отвечают модераторы и администраторы)", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.Developer]} {SupportNames[SupportType.Developer]}", "По вопросам бота, техническим вопросам, помощь с командами и их ошибками.", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.Donate]} {SupportNames[SupportType.Donate]}", "По вопросам рекламы и при проблемах с донатами.", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.FleetCaptain]} {SupportNames[SupportType.FleetCaptain]}", "По вопросам рейдов и нарушений в рейдах. (Ошибки при выдаче роли -> к `Разработчикам`)", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.Events]} {SupportNames[SupportType.Events]}", "По вопросам ивентов на сервере. Как игровых так и внутри сервера.", true);
 
-                ticketEmbed.WithFooter("‎\nУ вас есть 5 минут для ввода вопроса.");
+                ticketEmbed.WithFooter("‎\n" +
+                    "За злоупотребление системой тикетов, вы будете заблокированы.\n" +
+                    "Дождитесь загрузки всех вариантов ответа. У вас есть минута на выбор варианта");
 
-                await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
+                var ticketMessage = await ctx.RespondAsync(embed: ticketEmbed.Build());
 
-                var emsg = await interactivity.WaitForMessageAsync(x => x.Author.Id == ctx.User.Id && !x.Content.StartsWith(Bot.BotSettings.Prefix), TimeSpan.FromMinutes(5));
+                var interactivity = ctx.Client.GetInteractivity();
 
-                if (!emsg.TimedOut)
+                //Создаем предложенные реакции.
+                foreach (var emoji in SupportEmoji.Values)
                 {
-                    //Запрос подтверждения тикета.
-                    ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
+                    await ticketMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
+                    await Task.Delay(400);
+                }
+
+                //Шаблон закрытого тикета
+                var errorEmbed = new DiscordEmbedBuilder()
+                {
+                    Title = "Sea of Thieves RU | Создание тикета закрыто",
+                    Description = "Произошла ошибка при создании тикета.",
+                    Color = new DiscordColor("#e74c3c"),
+                };
+                errorEmbed.WithThumbnail(guild.IconUrl);
+                errorEmbed.WithTimestamp(DateTime.Now);
+
+                //Ждем одну из предложенных реакций. (Минута времени)
+                var em = await interactivity.WaitForReactionAsync(x => SupportEmoji.Values.Contains(x.Emoji.GetDiscordName()), ctx.User, TimeSpan.FromSeconds(60));
+
+                if (!em.TimedOut)
+                {
+                    new Task(async () =>
                     {
-                        Title = "Sea of Thieves RU | Подтверждение тикета",
-                        Description = "Подтвердите ваш тикет для отправки. \n" +
-                        "`✅ отравить` `❌ отменить` \n‎",
+                        foreach (var emoji in SupportEmoji.Values)
+                        {
+                            await ticketMessage.DeleteOwnReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
+                            await Task.Delay(400);
+                        }
+                    }).Start();
+
+                    var selectedCategory = SupportEmoji.FirstOrDefault(x => x.Value == em.Result.Emoji.GetDiscordName()).Key;
+
+                    //Успешное продолжение создания тикета
+                    //Запрос описания проблемы
+                    ticketEmbed = new DiscordEmbedBuilder
+                    {
+                        Title = "Sea of Thieves RU | Ожидание вопроса",
+                        Description = "Опишите ваш вопрос коротким сообщением.\n‎",
                         Color = new DiscordColor("#e67e22")
                     };
+                    ticketEmbed.WithThumbnail(guild.IconUrl);
 
-                    ticketEmbed.AddField("Вопрос", emsg.Result.Content, true);
+                    ticketEmbed.AddField("Выбранная категория", $"{SupportEmoji[selectedCategory]} {SupportNames[selectedCategory]}", true);
 
-                    ticketEmbed.WithFooter("‎\nДождитесь загрузки всех вариантов ответа. У вас есть минута на выбор варианта");
+                    ticketEmbed.WithFooter("‎\nУ вас есть 5 минут для ввода вопроса.");
 
                     await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
 
-                    //Реакции подтверждения
-                    var yesEmoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
-                    var noEmoji = DiscordEmoji.FromName(ctx.Client, ":x:");
+                    var emsg = await interactivity.WaitForMessageAsync(x => x.Author.Id == ctx.User.Id && !x.Content.StartsWith(Bot.BotSettings.Prefix), TimeSpan.FromMinutes(5));
 
-                    await ticketMessage.CreateReactionAsync(yesEmoji);
-                    await Task.Delay(400);
-                    await ticketMessage.CreateReactionAsync(noEmoji);
-
-                    //Ждем ответа на подтверждение
-                    em = await interactivity.WaitForReactionAsync(x => x.Emoji == yesEmoji || x.Emoji == noEmoji, ctx.User, TimeSpan.FromSeconds(60));
-
-                    if (!em.TimedOut)
+                    if (!emsg.TimedOut)
                     {
-                        await ticketMessage.DeleteOwnReactionAsync(yesEmoji);
-                        await Task.Delay(400);
-                        await ticketMessage.DeleteOwnReactionAsync(noEmoji);
-
-                        if (em.Result.Emoji == yesEmoji)
+                        //Запрос подтверждения тикета.
+                        ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
                         {
+                            Title = "Sea of Thieves RU | Подтверждение тикета",
+                            Description = "Подтвердите ваш тикет для отправки. \n" +
+                            "`✅ отравить` `❌ отменить` \n‎",
+                            Color = new DiscordColor("#e67e22")
+                        };
 
-                            var supportChannel = await guild.CreateChannelAsync($"{DiscordEmoji.FromName(ctx.Client, SupportEmoji[selectedCategory])} {ctx.User.Username}", ChannelType.Text,
-                                guild.GetChannel(Bot.BotSettings.SupportCategory));
+                        ticketEmbed.AddField("Вопрос", emsg.Result.Content, true);
 
-                            //Выдача прав на канал
-                            await supportChannel.AddOverwriteAsync(await guild.GetMemberAsync(ctx.User.Id), Permissions.AccessChannels);
+                        ticketEmbed.WithFooter("‎\nДождитесь загрузки всех вариантов ответа. У вас есть минута на выбор варианта");
 
-                            if (selectedCategory == SupportType.FleetCaptain)
-                                await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels);
+                        await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
 
+                        //Реакции подтверждения
+                        var yesEmoji = DiscordEmoji.FromName(ctx.Client, ":white_check_mark:");
+                        var noEmoji = DiscordEmoji.FromName(ctx.Client, ":x:");
 
-                            ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
+                        await ticketMessage.CreateReactionAsync(yesEmoji);
+                        await Task.Delay(400);
+                        await ticketMessage.CreateReactionAsync(noEmoji);
+
+                        //Ждем ответа на подтверждение
+                        em = await interactivity.WaitForReactionAsync(x => x.Emoji == yesEmoji || x.Emoji == noEmoji, ctx.User, TimeSpan.FromSeconds(60));
+
+                        if (!em.TimedOut)
+                        {
+                            await ticketMessage.DeleteOwnReactionAsync(yesEmoji);
+                            await Task.Delay(400);
+                            await ticketMessage.DeleteOwnReactionAsync(noEmoji);
+
+                            if (em.Result.Emoji == yesEmoji)
                             {
-                                Description = "Тикет был создан.\n‎",
-                                Color = new DiscordColor("#2ecc71")
-                            };
-                            ticketEmbed.WithFooter("‎\nТикет успешно создан");
-                            ticketEmbed.WithTimestamp(DateTime.Now);
+                                //Создание канала для ответа
+                                var supportChannel = await guild.CreateChannelAsync($"{DiscordEmoji.FromName(ctx.Client, SupportEmoji[selectedCategory])} {ctx.User.Username}", ChannelType.Text,
+                                    guild.GetChannel(Bot.BotSettings.SupportCategory));
 
-                            await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
+                                //Выдача прав на канал
+                                await supportChannel.AddOverwriteAsync(await guild.GetMemberAsync(ctx.User.Id), Permissions.AccessChannels);
 
-                            await ctx.RespondAsync($"Ваш запрос был отравлен. Ждите ответ в {supportChannel.Mention}.");
+                                if (selectedCategory == SupportType.FleetCaptain)
+                                    await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels);
 
-                            ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
-                            {
-                                Title = "Sea of Thieves RU | Тикет",
-                                Description = "Ожидайте ответ на ваш запрос.\n‎",
-                                Color = new DiscordColor("#e74c3c")
+
+                                ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
+                                {
+                                    Description = "Тикет был создан.\n‎",
+                                    Color = new DiscordColor("#2ecc71")
+                                };
+                                ticketEmbed.WithFooter("‎\nТикет успешно создан");
+                                ticketEmbed.WithTimestamp(DateTime.Now);
+
+                                await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
+
+                                await ctx.RespondAsync($"Ваш запрос был отравлен. Ждите ответ в {supportChannel.Mention}.");
+
+                                ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
+                                {
+                                    Title = "Sea of Thieves RU | Тикет",
+                                    Description = "Ожидайте ответ на ваш запрос.\n‎",
+                                    Color = new DiscordColor("#e74c3c")
+                                }
+                                .WithAuthor(ctx.User.ToString(), iconUrl: ctx.User.AvatarUrl)
+                                .WithFooter("‎\nВ ожидании ответа.");
+
+                                await supportChannel.SendMessageAsync($"Тикет от пользователя: {ctx.User.Mention}", embed: ticketEmbed.Build());
                             }
-                            .WithAuthor(ctx.User.ToString(), iconUrl: ctx.User.AvatarUrl)
-                            .WithFooter("‎\nВ ожидании ответа.");
+                            else
+                            {
+                                ticketEmbed = new DiscordEmbedBuilder(errorEmbed)
+                                    .WithDescription("Тикет был отменён.");
 
-                            await supportChannel.SendMessageAsync($"Тикет от пользователя: {ctx.User.Mention}", embed: ticketEmbed.Build());
+                                await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
+                            }
                         }
                         else
                         {
+                            await ticketMessage.DeleteOwnReactionAsync(yesEmoji);
+                            await Task.Delay(400);
+                            await ticketMessage.DeleteOwnReactionAsync(noEmoji);
+
                             ticketEmbed = new DiscordEmbedBuilder(errorEmbed)
-                                .WithDescription("Тикет был отменён.");
+                                .WithDescription("Время выбора истекло.");
 
                             await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
                         }
                     }
                     else
                     {
-                        await ticketMessage.DeleteOwnReactionAsync(yesEmoji);
-                        await Task.Delay(400);
-                        await ticketMessage.DeleteOwnReactionAsync(noEmoji);
-
                         ticketEmbed = new DiscordEmbedBuilder(errorEmbed)
-                            .WithDescription("Время выбора истекло.");
+                            .WithDescription("Время ввода вопроса истекло.");
 
                         await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
                     }
                 }
                 else
                 {
+                    new Task(async () =>
+                    {
+                        foreach (var emoji in SupportEmoji.Values)
+                        {
+                            await ticketMessage.DeleteOwnReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
+                            await Task.Delay(400);
+                        }
+                    }).Start();
                     ticketEmbed = new DiscordEmbedBuilder(errorEmbed)
-                        .WithDescription("Время ввода вопроса истекло.");
+                        .WithDescription("Время выбора категории тикета истекло.");
 
                     await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
                 }
+                DmMessageListener.DmHandled.Remove(ctx.User);
             }
-
-            else
+            catch(Exception ex)
             {
-                new Task(async () =>
-                {
-                    foreach (var emoji in SupportEmoji.Values)
-                    {
-                        await ticketMessage.DeleteOwnReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
-                        await Task.Delay(400);
-                    }
-                }).Start();
-                ticketEmbed = new DiscordEmbedBuilder(errorEmbed)
-                    .WithDescription("Время выбора категории тикета истекло.");
-
-                await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
+                DmMessageListener.DmHandled.Remove(ctx.User);
+                throw ex;
             }
         }
 
@@ -291,7 +303,17 @@ namespace Bot_NetCore.Commands
                 if (!em.TimedOut)
                 {
                     var selectedCategory = SupportEmoji.FirstOrDefault(x => x.Value == em.Result.Emoji.GetDiscordName()).Key;
-                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Категория тикета была изменена на {SupportEmoji[selectedCategory]} {SupportNames[selectedCategory]}. Модератор: {ctx.User}");
+
+                    var circleEmoji = DiscordEmoji.FromName(ctx.Client, SupportEmoji[selectedCategory]);
+                    var newChannelName = circleEmoji + ctx.Channel.Name.Substring(1, ctx.Channel.Name.Length -1);
+                    await ctx.Channel.ModifyAsync(x => x.Name = newChannelName);
+
+                    if (selectedCategory == SupportType.FleetCaptain)
+                        await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), allow: Permissions.AccessChannels);
+                    else
+                        await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), deny: Permissions.AccessChannels);
+
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Категория тикета была изменена на `{circleEmoji} {SupportNames[selectedCategory]}`. Модератор: {ctx.User}");
                 }
                 else
                 {
@@ -372,6 +394,7 @@ namespace Bot_NetCore.Commands
         Admin,
         Moderator,
         Developer,
+        Donate,
         FleetCaptain,
         Events,
         Tech
