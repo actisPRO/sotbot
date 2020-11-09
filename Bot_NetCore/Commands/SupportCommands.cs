@@ -1,31 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Bot_NetCore.Entities;
-using Bot_NetCore.Misc;
+using Bot_NetCore.Attributes;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
-using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Commands
 {
-    [Group("support")]
-    [Description("Команда создания тикета.")]
-    public class SupportCommands : BaseCommandModule
+    public class DmSupportCommands : BaseCommandModule
     {
         private static IReadOnlyDictionary<SupportType, string> SupportEmoji = new Dictionary<SupportType, string>()
         {
             { SupportType.Admin, ":red_circle:"},
-            { SupportType.Moderator, ":orange_circle:"},
+            { SupportType.Moderator, ":green_circle:"},
             { SupportType.Developer, ":white_circle:"},
             { SupportType.FleetCaptain, ":purple_circle:"},
-            { SupportType.Events, ":green_circle:"},
+            { SupportType.Events, ":orange_circle:"},
             { SupportType.Tech, ":blue_circle:"}
         };
 
@@ -39,13 +33,13 @@ namespace Bot_NetCore.Commands
             { SupportType.Tech, "Технические Вопросы"}
         };
 
-        [GroupCommand]
+        [Command("support")]
         [Description("Создает запрос тикета")]
         [RequireDirectMessage]
         public async Task Support(CommandContext ctx)
         {
             //TODO: Check for blacklisted users.
-            if(ctx.User.IsBot) //Always true
+            if (ctx.User.IsBot) //Always true
             {
                 await ctx.RespondAsync("Вы были заблокированы для создания тикетов. Свяжитесь с администрацией для выяснения");
                 return;
@@ -164,7 +158,7 @@ namespace Bot_NetCore.Commands
 
                         if (em.Result.Emoji == yesEmoji)
                         {
-                            
+
                             var supportChannel = await guild.CreateChannelAsync($"{DiscordEmoji.FromName(ctx.Client, SupportEmoji[selectedCategory])} {ctx.User.Username}", ChannelType.Text,
                                 guild.GetChannel(Bot.BotSettings.SupportCategory));
 
@@ -185,7 +179,7 @@ namespace Bot_NetCore.Commands
 
                             await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
 
-                            await ctx.RespondAsync($"Ваш запрос был отравлен. Ждите ответа в {supportChannel.Mention}.");
+                            await ctx.RespondAsync($"Ваш запрос был отравлен. Ждите ответ в {supportChannel.Mention}.");
 
                             ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
                             {
@@ -244,14 +238,142 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        private enum SupportType
+        [Group("ticket")]
+        [Description("Команды управления тикетами.")]
+        [RequireGuild]
+        [RequireCustomRole(RoleType.FleetCaptain)]
+        public class SupportCommands : BaseCommandModule
         {
-            Admin,
-            Moderator,
-            Developer,
-            FleetCaptain,
-            Events,
-            Tech
+            [Command("change")]
+            [Description("Меняет категорию тикета")]
+            public async Task Change(CommandContext ctx)
+            {
+                if(ctx.Channel.Parent.Id != Bot.BotSettings.SupportCategory)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда используется только в каналах поддержки.");
+                    return;
+                }
+                await ctx.Message.DeleteAsync();
+                await ctx.TriggerTypingAsync();
+
+                //Создание эмбеда тикета и заполнение по шаблону
+                var changeEmbed = new DiscordEmbedBuilder
+                {
+                    Title = "Sea of Thieves RU | Изменение тикета",
+                    Description = "Выберите категорию для переноса.\n",
+                    Color = new DiscordColor("#e67e22")
+                };
+
+                changeEmbed.WithThumbnail(ctx.Guild.IconUrl);
+
+                foreach (var suit in (SupportType[])Enum.GetValues(typeof(SupportType)))
+                {
+                    changeEmbed.Description += $"\n{SupportEmoji[suit]} {SupportNames[suit]}";
+                }
+
+
+                changeEmbed.WithFooter("Дождитесь загрузки всех вариантов ответа. У вас есть минута на выбор варианта");
+
+                var changeMessage = await ctx.RespondAsync(embed: changeEmbed.Build());
+
+                var interactivity = ctx.Client.GetInteractivity();
+
+                //Создаем предложенные реакции.
+                foreach (var emoji in SupportEmoji.Values)
+                {
+                    await changeMessage.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, emoji));
+                    await Task.Delay(400);
+                }
+
+                //Ждем одну из предложенных реакций. (Минута времени)
+                var em = await interactivity.WaitForReactionAsync(x => SupportEmoji.Values.Contains(x.Emoji.GetDiscordName()), ctx.User, TimeSpan.FromSeconds(60));
+
+                if (!em.TimedOut)
+                {
+                    var selectedCategory = SupportEmoji.FirstOrDefault(x => x.Value == em.Result.Emoji.GetDiscordName()).Key;
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Категория тикета была изменена на {SupportEmoji[selectedCategory]} {SupportNames[selectedCategory]}. Модератор: {ctx.User}");
+                }
+                else
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Время ответа вышло.");
+                }
+                await changeMessage.DeleteAsync();
+            }
+
+            [Command("close")]
+            [Aliases("c")]
+            [Description("Закрывает тикет вместе с каналом")]
+            public async Task Close(CommandContext ctx)
+            {
+                if (ctx.Channel.Parent.Id != Bot.BotSettings.SupportCategory)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда используется только в каналах поддержки.");
+                    return;
+                }
+
+                //Убираем у пользователя возможность писать в данном канале.
+                var overwritesToBeBlocked = ctx.Channel.PermissionOverwrites.Where(x => x.Type == OverwriteType.Member);
+                foreach (var overwrite in overwritesToBeBlocked)
+                    await overwrite.UpdateAsync(deny: Permissions.SendMessages, reason: "закрытие тикета");
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Тикет был успешно закрыт. Модератор: {ctx.User}");
+            }
+
+            [Command("delete")]
+            [Aliases("d")]
+            [Description("Удаляет тикет вместе с каналом")]
+            public async Task Delete(CommandContext ctx)
+            {
+                if (ctx.Channel.Parent.Id != Bot.BotSettings.SupportCategory)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда используется только в каналах поддержки.");
+                    return;
+                }
+                await ctx.Message.DeleteAsync();
+
+                await ctx.Channel.DeleteAsync();
+            }
+
+            [Command("block")]
+            [Description("Блокирует доступ к команде `!support`")]
+            [RequireCustomRole(RoleType.Moderator)]
+            public async Task Block(CommandContext ctx)
+            {
+                await ctx.Message.DeleteAsync();
+
+                //TODO: !ticket block
+                throw new NotImplementedException();
+            }
+
+            [Command("unblock")]
+            [Description("Разрешает доступ к команде `!support`")]
+            [RequireCustomRole(RoleType.Moderator)]
+            public async Task Unblock(CommandContext ctx)
+            {
+                await ctx.Message.DeleteAsync();
+
+                //TODO: !ticket unblock
+                throw new NotImplementedException();
+            }
+
+            [Command("blocked")]
+            [Description("Список заблокированных в `!support`")]
+            public async Task Blocked(CommandContext ctx)
+            {
+                await ctx.Message.DeleteAsync();
+
+                //TODO: !ticket blocked
+                throw new NotImplementedException();
+            }
         }
+    }
+    public enum SupportType
+    {
+        Admin,
+        Moderator,
+        Developer,
+        FleetCaptain,
+        Events,
+        Tech
     }
 }

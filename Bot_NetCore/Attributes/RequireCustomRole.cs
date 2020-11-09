@@ -43,7 +43,7 @@ namespace Bot_NetCore.Attributes
             if ((ctx.Channel.PermissionsFor(usr) & Permissions.Administrator) != 0)
                 return await Task.FromResult(true);
 
-            if (Bot.IsModerator(ctx.Member))
+            if (SpecifiedRole != RoleType.Admin && Bot.IsModerator(ctx.Member))
                 return await Task.FromResult(true);
 
             switch (SpecifiedRole)
