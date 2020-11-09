@@ -5,7 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -19,7 +18,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
-using MySql.Data.MySqlClient;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -102,7 +100,7 @@ namespace Bot_NetCore
             var ccfg = new CommandsNextConfiguration
             {
                 StringPrefixes = new[] { BotSettings.Prefix },
-                EnableDms = false,
+                EnableDms = true,
                 CaseSensitive = false,
                 EnableMentionPrefix = true
             };
@@ -371,6 +369,10 @@ namespace Bot_NetCore
         /// </summary>
         public ulong WaitingRoom;
 
+        /// <summary>
+        ///     ID категории поддержки.
+        /// </summary>
+        public ulong SupportCategory;
 
         /// <summary>
         ///     ID категории рейдов.

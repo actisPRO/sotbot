@@ -16,6 +16,7 @@ namespace Bot_NetCore.Commands
     [Group("donator")]
     [Aliases("d")]
     [Description("Команды доната.")]
+    [RequireGuild]
     public class DonatorCommands : BaseCommandModule
     {
         [Command("setprice")]
