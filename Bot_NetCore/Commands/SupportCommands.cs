@@ -44,7 +44,7 @@ namespace Bot_NetCore.Commands
         {
             if (SupportBlacklistEntry.IsBlacklisted(ctx.User.Id))
             {
-                await ctx.RespondAsync("Вы были заблокированы для создания тикетов. Свяжитесь с администрацией для выяснения");
+                await ctx.RespondAsync("Создание тикетов заблокировано. Свяжитесь с администрацией для выяснения");
                 return;
             }
 
@@ -71,7 +71,7 @@ namespace Bot_NetCore.Commands
                 ticketEmbed.AddField($"{SupportEmoji[SupportType.Events]} {SupportNames[SupportType.Events]}", "По вопросам ивентов на сервере. Как игровых так и внутри сервера.", true);
 
                 ticketEmbed.WithFooter("‎\n" +
-                    "За злоупотребление системой тикетов, вы будете заблокированы.\n" +
+                    "При злоупотреблении системой тикетов вы будете заблокированы.\n" +
                     "Дождитесь загрузки всех вариантов ответа. У вас есть минута на выбор варианта");
 
                 var ticketMessage = await ctx.RespondAsync(embed: ticketEmbed.Build());
