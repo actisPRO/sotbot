@@ -669,9 +669,8 @@ namespace Bot_NetCore.Commands
             try
             {
                 await channel.DeleteMessagesAsync(await channel.GetMessagesAsync(100));
-                await channel.DeleteMessageAsync(await channel.GetMessageAsync(channel.LastMessageId));
             }
-            catch (ArgumentException)
+            catch (NotFoundException)
             {
                 // выбрасывается, если нет сообщений в канале
             }
