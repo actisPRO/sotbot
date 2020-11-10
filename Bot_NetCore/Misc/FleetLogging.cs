@@ -41,7 +41,7 @@ namespace Bot_NetCore.Misc
             };
 
             var channels = "";
-            foreach (var channel in fleetCategory.Children.OrderBy(x => x.Position))
+            foreach (var channel in fleetCategory.Children.OrderBy(x => x.Position).OrderBy(x => x.Type))
                 channels += $"**{channel.Name}** \t\t `{channel.Id}` \n";
             embed.AddField("Каналы", channels);
 
@@ -68,7 +68,7 @@ namespace Bot_NetCore.Misc
 
                 new Task(async () =>
                    {
-                                              channel.PermissionOverwrites.ToList().ForEach(async x =>
+                       channel.PermissionOverwrites.ToList().ForEach(async x =>
                        {
                            await x.DeleteAsync();
                            await Task.Delay(400);
@@ -77,7 +77,6 @@ namespace Bot_NetCore.Misc
                        //Sync with category permissions
                        foreach (var permission in guild.GetChannel(Bot.BotSettings.FleetLogCategory).PermissionOverwrites)
                        {
-                           Console.WriteLine($"Loading perms: {channel}");
                            if (permission.Type == OverwriteType.Role)
                                await channel.AddOverwriteAsync(await permission.GetRoleAsync(), permission.Allowed, permission.Denied);
                            else
@@ -85,7 +84,8 @@ namespace Bot_NetCore.Misc
 
                            await Task.Delay(400);
                        }
-                   }).Start();
+                   }
+                ).Start();
             }
 
             //Delete old fleet text channels
