@@ -31,6 +31,7 @@ namespace Bot_NetCore.Commands
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
             var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new Dictionary<ulong, bool>());
@@ -53,6 +54,7 @@ namespace Bot_NetCore.Commands
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync("@everyone", embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
             var vote = new Vote(topic, 0, 0, end, message.Id, ctx.Member.Id, id, new Dictionary<ulong, bool>());

@@ -42,6 +42,7 @@ namespace Bot_NetCore.Commands
                                   $"Используйте реакцию для подтверждения, или для отказа.");
 
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
             var ship = Ship.Create(name, 0, message.Id, DateTime.Now);

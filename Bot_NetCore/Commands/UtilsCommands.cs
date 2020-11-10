@@ -192,7 +192,11 @@ namespace Bot_NetCore.Commands
 
             foreach (var field in typeof(Settings).GetFields())
             {
-                if (field.Name == "Token") continue;
+                if (field.Name == "Token" ||
+                    field.Name == "DatabaseHost" ||
+                    field.Name == "DatabaseName" ||
+                    field.Name == "DatabaseUser" ||
+                    field.Name == "DatabasePassword") continue;
                 settings.Add($"**{field.Name}** = {field.GetValue(Bot.BotSettings)}");
             }
 
@@ -226,12 +230,19 @@ namespace Bot_NetCore.Commands
 
             //Добавляем реакции к сообщению
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":bone:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":fish:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":axe:"));
+            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
         }

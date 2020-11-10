@@ -198,6 +198,7 @@ namespace Bot_NetCore.Listeners
                             {
                                 await message.DeleteAllReactionsAsync();
                                 await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+                                await Task.Delay(400);
                                 await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
                             }
                         }

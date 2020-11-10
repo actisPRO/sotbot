@@ -237,7 +237,7 @@ namespace Bot_NetCore.Commands
         [Command("createfleet")]
         [Aliases("cf")]
         [Description("Создаёт голосование для создания рейда")]
-        [Cooldown(1, 0, CooldownBucketType.Guild)]
+        [Cooldown(1, 30, CooldownBucketType.Guild)]
         public async Task CreateFleet(CommandContext ctx,
             [Description("Количество кораблей [1 - 5]")] int nShips,
             [Description("Слоты на корабле [2 - 25]")] int slots,
@@ -245,7 +245,7 @@ namespace Bot_NetCore.Commands
         {
             notes = notes.Substring(0, Math.Min(notes.Length, 25));
 
-            if (nShips < 1 || nShips > 10 ||
+            if (nShips < 1 || nShips > 5 ||
                 slots < 2 || slots > 25)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимые параметры рейда!");
