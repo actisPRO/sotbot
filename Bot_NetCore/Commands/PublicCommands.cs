@@ -37,13 +37,22 @@ namespace Bot_NetCore.Commands
             }
             catch (NotFoundException) { }
 
-            //Проверка если пользователь в канале
-            if (ctx.Member.VoiceState == null ||
-                ctx.Member.VoiceState.Channel.Parent.Id == Bot.BotSettings.WaitingRoom)
+            try 
+            {
+                //Проверка если пользователь в канале
+                if (ctx.Member.VoiceState == null ||
+                    ctx.Member.VoiceState.Channel.Id == Bot.BotSettings.WaitingRoom)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
+                    return;
+                }
+            } 
+            catch (NullReferenceException)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
                 return;
             }
+
 
             //Проверка на условия голосового канала
             var channel = ctx.Member.VoiceState?.Channel;

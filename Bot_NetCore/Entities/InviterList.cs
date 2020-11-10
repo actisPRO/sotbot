@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Bot_NetCore.Entities
@@ -53,7 +54,7 @@ namespace Bot_NetCore.Entities
                     elem.AddReferral(
                         Convert.ToUInt64(referral.Attribute("id").Value),
                         Convert.ToBoolean(referral.Attribute("active").Value),
-                        Convert.ToDateTime(referral.Attribute("date").Value)
+                        DateTime.ParseExact(referral.Attribute("date").Value, "dd'.'MM'.'yyyy", CultureInfo.InvariantCulture)
                     );
             }
         }

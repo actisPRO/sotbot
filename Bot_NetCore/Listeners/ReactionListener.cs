@@ -37,9 +37,9 @@ namespace Bot_NetCore.Listeners
                 //EmojiCooldowns[e.User] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
 
                 //Забираем роль
-                var user = (DiscordMember)discordUser;
-                if (user.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
-                    await user.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
+                var member = await e.Guild.GetMemberAsync(discordUser.Id);
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
+                    await member.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
 
                 return;
             }
@@ -98,7 +98,7 @@ namespace Bot_NetCore.Listeners
                 }
 
                 //Выдаем роль правил
-                var member = (DiscordMember)discordUser;
+                var member = await e.Guild.GetMemberAsync(discordUser.Id);
                 if (!member.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
                 {
                     //Выдаем роль правил

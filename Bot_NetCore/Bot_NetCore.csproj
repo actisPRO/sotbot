@@ -17,14 +17,6 @@
         <PackageReference Include="MaxMind.GeoIP2" Version="3.3.0" />
         <PackageReference Include="MySql.Data" Version="8.0.21" />
     </ItemGroup>
-    
-    <Target Name="CopyPackageAssembliesToSubFolder" AfterTargets="ResolveReferences">
-        <ItemGroup>
-            <ReferenceCopyLocalPaths Condition=" '%(ReferenceCopyLocalPaths.NuGetPackageId)' != '' "
-              Update="%(ReferenceCopyLocalPaths)"
-              DestinationSubDirectory="libs\" />
-        </ItemGroup>
-    </Target>
 
     <ItemGroup>
       <Content Include="Examples\actions.example.xml" />
