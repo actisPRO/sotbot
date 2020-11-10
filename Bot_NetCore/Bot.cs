@@ -507,6 +507,11 @@ namespace Bot_NetCore
         public string AdminRoles;
 
         /// <summary>
+        ///     ID роли модераторов.
+        /// </summary>
+        public ulong ModeratorsRole;
+
+        /// <summary>
         ///     Этому пользователю будут отправляться уведомление об ошибках.
         /// </summary>
         public ulong Developer;

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
+using Bot_NetCore.Entities;
 using Bot_NetCore.Listeners;
+using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -14,7 +16,7 @@ namespace Bot_NetCore.Commands
 {
     public class DmSupportCommands : BaseCommandModule
     {
-        private static IReadOnlyDictionary<SupportType, string> SupportEmoji = new Dictionary<SupportType, string>()
+        private static readonly IReadOnlyDictionary<SupportType, string> SupportEmoji = new Dictionary<SupportType, string>()
         {
             { SupportType.Admin, ":red_circle:"},
             { SupportType.Moderator, ":green_circle:"},
@@ -24,7 +26,7 @@ namespace Bot_NetCore.Commands
             { SupportType.Events, ":orange_circle:"}
         };
 
-        private static IReadOnlyDictionary<SupportType, string> SupportNames = new Dictionary<SupportType, string>()
+        private static readonly IReadOnlyDictionary<SupportType, string> SupportNames = new Dictionary<SupportType, string>()
         {
             { SupportType.Admin, "Администрация"},
             { SupportType.Moderator, "Модерация"},
@@ -37,11 +39,10 @@ namespace Bot_NetCore.Commands
         [Command("support")]
         [Description("Создает запрос тикета")]
         [RequireDirectMessage]
-        [Cooldown(2, 30, CooldownBucketType.User)]
+        [Cooldown(1, 30, CooldownBucketType.User)]
         public async Task Support(CommandContext ctx)
         {
-            //TODO: Check for blacklisted users.
-            if (ctx.User.IsBot) //Always true
+            if (SupportBlacklistEntry.IsBlacklisted(ctx.User.Id))
             {
                 await ctx.RespondAsync("Вы были заблокированы для создания тикетов. Свяжитесь с администрацией для выяснения");
                 return;
@@ -171,9 +172,21 @@ namespace Bot_NetCore.Commands
                                 //Выдача прав на канал
                                 await supportChannel.AddOverwriteAsync(await guild.GetMemberAsync(ctx.User.Id), Permissions.AccessChannels);
 
-                                if (selectedCategory == SupportType.FleetCaptain)
-                                    await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels);
-
+                                switch (selectedCategory)
+                                {
+                                    case SupportType.Admin:
+                                    case SupportType.Developer: 
+                                    case SupportType.Donate:
+                                        //Do nothing
+                                        break;
+                                    case SupportType.Moderator:
+                                    case SupportType.Events:
+                                        await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.ModeratorsRole), Permissions.AccessChannels);
+                                        break;
+                                    case SupportType.FleetCaptain:
+                                        await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels);
+                                        break;
+                                }
 
                                 ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
                                 {
@@ -257,7 +270,8 @@ namespace Bot_NetCore.Commands
         public class SupportCommands : BaseCommandModule
         {
             [Command("change")]
-            [Description("Меняет категорию тикета")]
+            [Description("Меняет категорию тикета. Лимит испоьзования: 2 раза в 10 минут")]
+            [Cooldown(2, 600, CooldownBucketType.Channel)] //Апи дискорда ограничивает обюновление данных канала 2 раза в 10 минут. (Тупость такой большой рейтлимит ставить)
             public async Task Change(CommandContext ctx)
             {
                 if(ctx.Channel.Parent.Id != Bot.BotSettings.SupportCategory)
@@ -305,13 +319,27 @@ namespace Bot_NetCore.Commands
                     var selectedCategory = SupportEmoji.FirstOrDefault(x => x.Value == em.Result.Emoji.GetDiscordName()).Key;
 
                     var circleEmoji = DiscordEmoji.FromName(ctx.Client, SupportEmoji[selectedCategory]);
-                    var newChannelName = circleEmoji + ctx.Channel.Name.Substring(1, ctx.Channel.Name.Length -1);
+                    var newChannelName = circleEmoji + ctx.Channel.Name[1..];
                     await ctx.Channel.ModifyAsync(x => x.Name = newChannelName);
 
-                    if (selectedCategory == SupportType.FleetCaptain)
-                        await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), allow: Permissions.AccessChannels);
-                    else
-                        await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), deny: Permissions.AccessChannels);
+                    switch (selectedCategory)
+                    {
+                        case SupportType.Admin:
+                        case SupportType.Developer:
+                        case SupportType.Donate:
+                            await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.ModeratorsRole), deny: Permissions.AccessChannels);
+                            await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), deny: Permissions.AccessChannels);
+                            break;
+                        case SupportType.Moderator:
+                        case SupportType.Events:
+                            await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.ModeratorsRole), Permissions.AccessChannels);
+                            await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), deny: Permissions.AccessChannels);
+                            break;
+                        case SupportType.FleetCaptain:
+                            await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.ModeratorsRole), Permissions.AccessChannels);
+                            await ctx.Channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels);
+                            break;
+                    }
 
                     await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Категория тикета была изменена на `{circleEmoji} {SupportNames[selectedCategory]}`. Модератор: {ctx.User}");
                 }
@@ -359,33 +387,96 @@ namespace Bot_NetCore.Commands
             [Command("block")]
             [Description("Блокирует доступ к команде `!support`")]
             [RequireCustomRole(RoleType.Moderator)]
-            public async Task Block(CommandContext ctx)
+            public async Task Block(CommandContext ctx, [Description("Пользователь")] DiscordUser user, [Description("Причина"), RemainingText] string reason = "Не указана")
             {
-                await ctx.Message.DeleteAsync();
+                await ctx.TriggerTypingAsync();
 
-                //TODO: !ticket block
-                throw new NotImplementedException();
+                if (SupportBlacklistEntry.IsBlacklisted(user.Id))
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь уже заблокирован");
+                    return;
+                }
+
+                SupportBlacklistEntry.Create(user.Id, DateTime.Now, ctx.User.Id, reason);
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Пользователь успешно добавлен в ЧС поддержки.");
+
+                await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                    "**Добавление пользователя в ЧС поддержки**\n\n" +
+                    $"**Модератор:** {ctx.Member}\n" +
+                    $"**Дата:** {DateTime.Now}\n" +
+                    $"**Пользователь:** {user}\n" +
+                    $"**Причина:** {reason}");
             }
 
             [Command("unblock")]
             [Description("Разрешает доступ к команде `!support`")]
             [RequireCustomRole(RoleType.Moderator)]
-            public async Task Unblock(CommandContext ctx)
+            public async Task Unblock(CommandContext ctx, [Description("Пользователь")] DiscordUser user, [Description("Причина"), RemainingText] string reason = "снятие")
             {
-                await ctx.Message.DeleteAsync();
+                await ctx.TriggerTypingAsync();
 
-                //TODO: !ticket unblock
-                throw new NotImplementedException();
+                if (!SupportBlacklistEntry.IsBlacklisted(user.Id))
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь не заблокирован");
+                    return;
+                }
+
+                SupportBlacklistEntry.Remove(user.Id);
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Пользователь успешно убран из ЧС поддержки.");
+
+                await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                    "**Удаление пользователя из ЧС поддержки**\n\n" +
+                    $"**Модератор:** {ctx.Member}\n" +
+                    $"**Дата:** {DateTime.Now}\n" +
+                    $"**Пользователь:** {user}\n" +
+                    $"**Причина:** {reason}");
             }
 
             [Command("blocked")]
             [Description("Список заблокированных в `!support`")]
-            public async Task Blocked(CommandContext ctx)
+            public async Task Blocked(CommandContext ctx, [Description("Пользователь")]DiscordUser user = null)
             {
-                await ctx.Message.DeleteAsync();
+                await ctx.TriggerTypingAsync();
+                var blacklistedUsers = user != null ? SupportBlacklistEntry.GetBlacklisted(user.Id) : SupportBlacklistEntry.GetBlacklisted();
 
-                //TODO: !ticket blocked
-                throw new NotImplementedException();
+                if(blacklistedUsers.Count == 0)
+                {
+                    await ctx.RespondAsync("Пользователи не найдены");
+                    return;
+                }
+
+                var formattedList = new List<string>();
+                foreach(var entry in blacklistedUsers)
+                {
+                    try
+                    {
+                        var blockedUser = await ctx.Client.GetUserAsync(entry.UserId);
+                        var moderator = await ctx.Guild.GetMemberAsync(entry.ModeratorId);
+
+                        formattedList.Add($"**Пользователь:** {blockedUser.Username}#{blockedUser.Discriminator} ({entry.UserId})" +
+                            $"\n**Дата блокировки:** {entry.BanDate.ToShortDateString()}" +
+                            $"\n**Модератор:** {moderator.Username}#{moderator.Discriminator} ({entry.ModeratorId})" +
+                            $"\n**Причина:** {entry.Reason}");
+                    }
+                    catch
+                    {
+                        formattedList.Add($"**Пользователь:** {entry.UserId}" +
+                            $"\n**Дата блокировки:** {entry.BanDate.ToShortDateString()}" +
+                            $"\n**Модератор:** {entry.ModeratorId}" +
+                            $"\n**Причина:** {entry.Reason}");
+                    }
+                }
+
+                var interactivity = ctx.Client.GetInteractivity();
+
+                var inviters_pagination = Utility.GeneratePagesInEmbeds(formattedList, "Список ЧС поддержки.");
+
+                if (inviters_pagination.Count() > 1)
+                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                else
+                    await ctx.RespondAsync(embed: inviters_pagination.First().Embed);
             }
         }
     }
@@ -396,7 +487,6 @@ namespace Bot_NetCore.Commands
         Developer,
         Donate,
         FleetCaptain,
-        Events,
-        Tech
+        Events
     }
 }
