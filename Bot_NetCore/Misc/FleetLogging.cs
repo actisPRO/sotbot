@@ -66,17 +66,26 @@ namespace Bot_NetCore.Misc
 
                 await channel.ModifyPositionAsync(lastPosition + 1);
 
-                //Delete old permissions
-                channel.PermissionOverwrites.ToList().ForEach(async x => await x.DeleteAsync());
+                new Task(async () =>
+                   {
+                                              channel.PermissionOverwrites.ToList().ForEach(async x =>
+                       {
+                           await x.DeleteAsync();
+                           await Task.Delay(400);
+                       });
 
-                //Sync with category permissions
-                foreach (var permission in guild.GetChannel(Bot.BotSettings.FleetLogCategory).PermissionOverwrites)
-                {
-                    if (permission.Type == OverwriteType.Role)
-                        await channel.AddOverwriteAsync(await permission.GetRoleAsync(), permission.Allowed, permission.Denied);
-                    else
-                        await channel.AddOverwriteAsync(await permission.GetMemberAsync(), permission.Allowed, permission.Denied);
-                }
+                       //Sync with category permissions
+                       foreach (var permission in guild.GetChannel(Bot.BotSettings.FleetLogCategory).PermissionOverwrites)
+                       {
+                           Console.WriteLine($"Loading perms: {channel}");
+                           if (permission.Type == OverwriteType.Role)
+                               await channel.AddOverwriteAsync(await permission.GetRoleAsync(), permission.Allowed, permission.Denied);
+                           else
+                               await channel.AddOverwriteAsync(await permission.GetMemberAsync(), permission.Allowed, permission.Denied);
+
+                           await Task.Delay(400);
+                       }
+                   }).Start();
             }
 
             //Delete old fleet text channels

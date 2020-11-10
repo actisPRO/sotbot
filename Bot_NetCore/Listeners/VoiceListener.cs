@@ -256,7 +256,11 @@ namespace Bot_NetCore.Listeners
                         await FleetLogging.LogFleetDeletionAsync(e.Client, e.Guild, leftChannel.Parent);
 
                         foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
-                            await emptyChannel.DeleteAsync();
+                            try
+                            {
+                                await emptyChannel.DeleteAsync();
+                            }
+                            catch (NotFoundException) { }
 
                         await leftChannel.Parent.DeleteAsync();
                     }

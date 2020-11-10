@@ -175,7 +175,7 @@ namespace Bot_NetCore
         {
             try
             {
-                if (param == "Token") throw new Exception("Невозможно изменить Token бота");
+                if (param == "Token") throw new Exception("Невозможно изменить данный параметр.");
                 var doc = XDocument.Load("settings.xml", LoadOptions.PreserveWhitespace);
                 var elem = doc.Element("Settings").Element(param);
 
