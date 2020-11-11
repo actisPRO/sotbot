@@ -213,7 +213,7 @@ namespace Bot_NetCore.Listeners
                                 x.Id == Bot.BotSettings.EmissaryReaperBonesRole ||
                                 x.Id == Bot.BotSettings.HuntersRole ||
                                 x.Id == Bot.BotSettings.ArenaRole).ToList()
-                         .ForEach(async x => await member.RevokeRoleAsync(x));
+                         .ForEach(async x => await member.RevokeRoleAsync(x) );
 
                 //Выдаем роль в зависимости от реакции
                 switch (e.Emoji.GetDiscordName())
@@ -224,19 +224,19 @@ namespace Bot_NetCore.Listeners
                     case ":pig:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole));
                         break;
-                    case ":skull:":
+                    case ":skeleton:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryOrderOfSoulsRole));
                         break;
                     case ":gem:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryAthenaRole));
                         break;
-                    case ":bone:":
+                    case ":skull_and_crossbones:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryReaperBonesRole));
                         break;
                     case ":fish:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.HuntersRole));
                         break;
-                    case ":axe:":
+                    case ":crossed_swords:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.ArenaRole));
                         break;
                     default:

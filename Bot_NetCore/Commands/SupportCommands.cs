@@ -379,7 +379,6 @@ namespace Bot_NetCore.Commands
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда используется только в каналах поддержки.");
                     return;
                 }
-                await ctx.Message.DeleteAsync();
 
                 await ctx.Channel.DeleteAsync();
             }

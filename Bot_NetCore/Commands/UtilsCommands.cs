@@ -124,7 +124,7 @@ namespace Bot_NetCore.Commands
             await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
             //Обновляем настроки бота
-            if (Bot.BotSettings.EmissaryMessageId != message.Id)
+            if (Bot.BotSettings.CodexMessageId != message.Id)
                 Bot.EditSettings("CodexMessageId", message.Id.ToString());
 
             //Убираем все реакции с сообщения
@@ -233,15 +233,15 @@ namespace Bot_NetCore.Commands
             await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
             await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skeleton:"));
             await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
             await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":bone:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_and_crossbones:"));
             await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":fish:"));
             await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":axe:"));
+            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":crossed_swords:"));
             await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
 
