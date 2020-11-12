@@ -44,7 +44,7 @@ namespace Bot_NetCore.Commands
             var userId =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.Member.Id, TimeSpan.FromMinutes(1));
 
-            if (userId.Result == null || userId.Result.Content.Contains("отмена"))
+            if (userId.Result == null || userId.Result.Content.ToLower().Contains("отмена"))
             {
                 await ctx.Message.DeleteAsync();
                 await status.DeleteAsync();
@@ -87,7 +87,7 @@ namespace Bot_NetCore.Commands
             var xbox =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.Member.Id, TimeSpan.FromMinutes(1));
 
-            if (xbox.Result == null || xbox.Result.Content.Contains("отмена"))
+            if (xbox.Result == null || xbox.Result.Content.ToLower().Contains("отмена"))
             {
                 await ctx.Message.DeleteAsync();
                 await status.DeleteAsync();
@@ -96,7 +96,7 @@ namespace Bot_NetCore.Commands
             }
 
             var xboxSql = "";
-            if (xbox.Result.Content.Contains("нет"))
+            if (xbox.Result.Content.ToLower().Contains("нет"))
             {
                 embed.AddField("Xbox", "Неизвестен", false);
             }
@@ -116,7 +116,7 @@ namespace Bot_NetCore.Commands
             var reason =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.Member.Id, TimeSpan.FromMinutes(1));
 
-            if (reason.Result == null || reason.Result.Content.Contains("отмена"))
+            if (reason.Result == null || reason.Result.Content.ToLower().Contains("отмена"))
             {
                 await ctx.Message.DeleteAsync();
                 await status.DeleteAsync();
@@ -138,7 +138,7 @@ namespace Bot_NetCore.Commands
             var additional =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.Member.Id, TimeSpan.FromMinutes(1));
 
-            if (additional.Result == null || additional.Result.Content.Contains("отмена"))
+            if (additional.Result == null || additional.Result.Content.ToLower().Contains("отмена"))
             {
                 await ctx.Message.DeleteAsync();
                 await status.DeleteAsync();
