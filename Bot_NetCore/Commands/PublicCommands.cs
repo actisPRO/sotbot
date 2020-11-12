@@ -368,7 +368,7 @@ namespace Bot_NetCore.Commands
                 try
                 {
                     //Отправка заготовленного сообщения в текстовый канал
-                    var message = await ctx.Guild.GetChannel(722157860217421894).GetMessageAsync(766359341632585808);
+                    var message = await ctx.Guild.GetChannel(Bot.BotSettings.FleetCaptainsChannel).GetMessageAsync(Bot.BotSettings.FleetShortCodexMessage);
                     message = await textChannel.SendMessageAsync(message.Content);
                     await message.ModifyEmbedSuppressionAsync(true);
                 }

@@ -557,6 +557,16 @@ namespace Bot_NetCore
         public ulong FleetCaptainRole;
 
         /// <summary>
+        ///     ID канала капитанов.
+        /// </summary>
+        public ulong FleetCaptainsChannel;
+
+        /// <summary>
+        ///     ID сообщения с короткими правилами рейда.
+        /// </summary>
+        public ulong FleetShortCodexMessage;
+
+        /// <summary>
         ///     Id роли бана принятия правил.
         /// </summary>
         public ulong PurgeCodexRole;
