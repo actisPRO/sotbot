@@ -163,7 +163,7 @@ namespace Bot_NetCore.Listeners
                     return;
                 }
 
-                if (webUser.Xbox == "")
+                if (webUser.LastXbox == "")
                 {
                     await member.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны привязать Xbox к своему аккаунту, затем перейдите по ссылке " +
                                                 $"{Bot.BotSettings.WebURL}xbox - это обновит базу данных.");

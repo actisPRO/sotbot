@@ -956,7 +956,7 @@ namespace Bot_NetCore.Commands
                     {
                         try
                         {
-                            var city = reader.City(webUser.Ip);
+                            var city = reader.City(webUser.LastIp);
                             embed.AddField("Страна", $":flag_{city.Country.IsoCode.ToLower()}:", true);
                         }
                         catch (AddressNotFoundException)
@@ -965,7 +965,7 @@ namespace Bot_NetCore.Commands
                         }
                     }
 
-                    embed.AddField("Xbox", webUser.Xbox, true);
+                    embed.AddField("Xbox", webUser.LastXbox, true);
                 }
 
                 //Emoji используется при выводе списка предупреждений.
