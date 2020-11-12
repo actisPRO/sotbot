@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
@@ -49,6 +50,35 @@ namespace Bot_NetCore.Entities
             }
         }
 
+        public static List<BlacklistEntry> GetAll()
+        {
+            var result = new List<BlacklistEntry>();
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM blacklist;";
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        result.Add(new BlacklistEntry(reader.GetString("id"),
+                            reader.GetUInt64("discord_id"),
+                            reader.GetString("discord_username"),
+                            reader.GetString("xbox"),
+                            reader.GetDateTime("ban_date"),
+                            reader.GetUInt64("moderator_id"),
+                            reader.GetString("reason"),
+                            reader.GetString("additional")));
+                    }
+                }
+            }
+
+            return result;
+        }
+        
         public static void Remove(string id)
         {
             using (var connection = new MySqlConnection(Bot.ConnectionString))
