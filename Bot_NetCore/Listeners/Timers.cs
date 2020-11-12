@@ -123,11 +123,11 @@ namespace Bot_NetCore.Listeners
 
                     await channel.DeleteAsync();
 
-                    var doc = XDocument.Load("actions.xml");
+                    var doc = XDocument.Load("data/actions.xml");
                     foreach (var action in doc.Element("actions").Elements("action"))
                         if (Convert.ToUInt64(action.Value) == ownerId)
                             action.Remove();
-                    doc.Save("actions.xml");
+                    doc.Save("data/actions.xml");
 
                     await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                         "**Удаление корабля**\n\n" +

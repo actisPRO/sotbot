@@ -89,7 +89,7 @@ namespace Bot_NetCore
             var cfg = new DiscordConfiguration
             {
                 Token = BotSettings.Token,
-                LogLevel = LogLevel.Info,
+                LogLevel = LogLevel.Debug,
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
                 UseInternalLogHandler = true

@@ -343,11 +343,11 @@ namespace Bot_NetCore.Listeners
                         ShipList.Ships[name].Delete();
                         ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-                        var doc = XDocument.Load("actions.xml");
+                        var doc = XDocument.Load("data/actions.xml");
                         foreach (var action in doc.Element("actions").Elements("action"))
                             if (Convert.ToUInt64(action.Value) == member.Id)
                                 action.Remove();
-                        doc.Save("actions.xml");
+                        doc.Save("data/actions.xml");
 
                         await member.SendMessageAsync(
                             $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был отклонен администратором **{discordUser.Username}#{discordUser.Discriminator}**");

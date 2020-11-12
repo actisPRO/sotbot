@@ -26,7 +26,7 @@ namespace Bot_NetCore.Commands
         public async Task New(CommandContext ctx, [Description("Уникальное имя корабля")] [RemainingText]
             string name)
         {
-            var doc = XDocument.Load("actions.xml");
+            var doc = XDocument.Load("data/actions.xml");
             foreach (var action in doc.Element("actions").Elements("action"))
                 if (Convert.ToUInt64(action.Value) == ctx.Member.Id)
                 {
@@ -51,7 +51,7 @@ namespace Bot_NetCore.Commands
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
             doc.Element("actions").Add(new XElement("action", ctx.Member.Id, new XAttribute("type", "ship")));
-            doc.Save("actions.xml");
+            doc.Save("data/actions.xml");
 
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно отправлен запрос на создание корабля **{name}**!");
@@ -394,11 +394,11 @@ namespace Bot_NetCore.Commands
 
             await channel.DeleteAsync();
 
-            var doc = XDocument.Load("actions.xml");
+            var doc = XDocument.Load("data/actions.xml");
             foreach (var action in doc.Element("actions").Elements("action"))
                 if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
                     action.Remove();
-            doc.Save("actions.xml");
+            doc.Save("data/actions.xml");
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален корабль!");
 
@@ -415,7 +415,7 @@ namespace Bot_NetCore.Commands
         public async Task APurgeRequest(CommandContext ctx, int days = 3, bool force = false,
             [RemainingText] string forceReason = "Не указана")
         {
-            var doc = XDocument.Load("active.xml");
+            var doc = XDocument.Load("data/active.xml");
             var root = doc.Root;
 
             foreach (var ship in ShipList.Ships.Values)
@@ -476,7 +476,7 @@ namespace Bot_NetCore.Commands
                             root.Add(new XElement("Owner", new XAttribute("status", "ToDelete"), member.Id));
                         }
 
-            doc.Save("active.xml");
+            doc.Save("data/active.xml");
 
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Уведомления успешно разосланы. Удаление можно будет начать " +
@@ -487,7 +487,7 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task APurgeStart(CommandContext ctx)
         {
-            var doc = XDocument.Load("active.xml");
+            var doc = XDocument.Load("data/active.xml");
             var root = doc.Root;
             var elsToDelete = new List<XElement>();
             foreach (var ownerEl in root.Elements())
@@ -510,11 +510,11 @@ namespace Bot_NetCore.Commands
                     }
 
                     var owner = Convert.ToUInt64(ownerEl.Value);
-                    var adoc = XDocument.Load("actions.xml");
+                    var adoc = XDocument.Load("data/actions.xml");
                     foreach (var action in adoc.Element("actions").Elements("action"))
                         if (Convert.ToUInt64(action.Value) == owner)
                             action.Remove();
-                    adoc.Save("actions.xml");
+                    adoc.Save("data/actions.xml");
 
                     ship.Delete();
                 }
@@ -524,7 +524,7 @@ namespace Bot_NetCore.Commands
 
             for (var i = 0; i < elsToDelete.Count; ++i) elsToDelete[i].Remove();
 
-            doc.Save("active.xml");
+            doc.Save("data/active.xml");
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Неактивные корабли успешно удалены!");
         }
@@ -533,7 +533,7 @@ namespace Bot_NetCore.Commands
         [Description("Подтверждает активность корабля при чистке")]
         public async Task Active(CommandContext ctx)
         {
-            var doc = XDocument.Load("active.xml");
+            var doc = XDocument.Load("data/active.xml");
             var root = doc.Root;
             foreach (var ownerEl in root.Elements())
                 if (ownerEl.Value == ctx.Member.Id.ToString())
@@ -552,7 +552,7 @@ namespace Bot_NetCore.Commands
                     }
                 }
 
-            doc.Save("active.xml");
+            doc.Save("data/active.xml");
         }
 
         [Command("shipinfo")]
@@ -653,11 +653,11 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось найти корабли во владении!");
 
                 //Не найдены приватные корабли, пробуем почистить список в actions.xml
-                var doc = XDocument.Load("actions.xml");
+                var doc = XDocument.Load("data/actions.xml");
                 foreach (var action in doc.Element("actions").Elements("action"))
                     if (Convert.ToUInt64(action.Value) == member.Id && action.Attribute("type").Value == "ship")
                         action.Remove();
-                doc.Save("actions.xml");
+                doc.Save("data/actions.xml");
 
                 return;
             }
