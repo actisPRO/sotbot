@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
+using Bot_NetCore.Exceptions;
 using Bot_NetCore.Misc;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -176,7 +179,7 @@ namespace Bot_NetCore.Commands
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Дата:** {DateTime.Now}\n" +
                 $"**ID:** {id}\n" +
-                $"**Пользователь:** {userIdSql}\n" +
+                $"**Пользователь:** {usernameSql} ({userIdSql})\n" +
                 $"**Xbox:** {xboxSql}\n" +
                 $"**Причина:** {reasonSql}\n" +
                 $"**Дополнительно:** {additionalSql}\n");
@@ -196,6 +199,98 @@ namespace Bot_NetCore.Commands
             
             BlacklistEntry.Remove(id);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалена запись!");
+        }
+
+        [Command("check")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Check(CommandContext ctx)
+        {
+            await ctx.RespondAsync(
+                $"{Bot.BotSettings.OkEmoji} Запущена проверка всех зарегистрированных аккаунтов. Она может занять некоторое время.");
+            await ctx.TriggerTypingAsync();
+
+            var blacklist = BlacklistEntry.GetAll();
+
+            var markedForBan = new List<WebUser>();
+            var markedIds = new List<ulong>();
+            var message = "**Следующие учётные записи были добавлены в чёрный список:**\n";
+            foreach (var entry in blacklist)
+            {
+                // at first, check users with the same xbox
+                if (entry.Xbox != "")
+                {
+                    var bannedXbox = WebUser.GetUsersByXbox(entry.Xbox);
+                    foreach (var user in bannedXbox)
+                    {
+                        if (!markedIds.Contains(user.UserId))
+                        {
+                            markedIds.Add(user.UserId);   
+                            markedForBan.Add(user);
+                            message +=
+                                $"• {user.Username} ({user.UserId}) {user.LastXbox} - совпадение по Xbox | Бан {entry.Id}\n";
+                        }
+                    }
+                }
+                
+                var currentUser = WebUser.GetByDiscordId(entry.DiscordId);
+                if (currentUser == null) continue;
+
+                var ips = currentUser.Ips;
+                foreach (var ip in ips)
+                {
+                    var sameIp = WebUser.GetUsersByIp(ip);
+                    foreach (var user in sameIp)
+                    {
+                        if (!(user.UserId == currentUser.UserId && user.LastXbox == currentUser.LastXbox) && !markedIds.Contains(user.UserId))
+                        {
+                            // another account -> ban
+                            markedIds.Add(user.UserId);
+                            markedForBan.Add(user);
+                            message +=
+                                $"• {user.Username} ({user.UserId}) {user.LastXbox} - совпадение по IP с {currentUser.Username} ({currentUser.UserId}) | Бан {entry.Id}\n";
+                        }
+                    }
+                }
+
+                var xboxes = currentUser.Xboxes;
+                foreach (var xbox in xboxes)
+                {
+                    var sameXbox = WebUser.GetUsersByXbox(xbox);
+                    foreach (var user in sameXbox)
+                    {
+                        if (!(user.UserId == currentUser.UserId && user.LastXbox == currentUser.LastXbox) && !markedIds.Contains(user.UserId))
+                        {
+                            // another account -> ban
+                            markedIds.Add(user.UserId);
+                            markedForBan.Add(user);
+                            message +=
+                                $"• {user.Username} ({user.UserId}) {user.LastXbox} - совпадение по Xbox с {currentUser.Username} ({currentUser.UserId})| Бан {entry.Id}\n";
+                        }
+                    }
+                }
+            }
+
+            foreach (var user in markedForBan)
+            {
+                var id = RandomString.NextString(6);
+                var ban = BlacklistEntry.Create(id, user.UserId, user.Username, user.LastXbox, DateTime.Now,
+                    ctx.Client.CurrentUser.Id,
+                    "Автоматическая блокировка системой защиты", "");
+
+                try
+                {
+                    var member = await ctx.Guild.GetMemberAsync(user.UserId);
+                    var role = ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole);
+                    if (member.Roles.Contains(role))
+                        await member.RevokeRoleAsync(role);
+                }
+                catch (NotFoundException)
+                {
+                    // not a guild member
+                }
+            }
+
+            await ctx.RespondAsync(message);
         }
     }
 }
