@@ -142,6 +142,56 @@ namespace Bot_NetCore.Entities
             }
         }
 
+        public static List<WebUser> GetUsersByIp(string ip)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT userid FROM ips WHERE ip = @ip";
+                    cmd.Parameters.AddWithValue("@ip", ip);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    var result = new List<WebUser>();
+                    while (reader.Read())
+                    {
+                        var userid = reader.GetUInt64("userid");
+                        var user = WebUser.GetByDiscordId(userid);
+                        result.Add(user);
+                    }
+
+                    return result;
+                }
+            }
+        }
+        
+        public static List<WebUser> GetUsersByXbox(string xbox)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT userid FROM xboxes WHERE xbox = @xbox";
+                    cmd.Parameters.AddWithValue("@xbox", xbox);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    var result = new List<WebUser>();
+                    while (reader.Read())
+                    {
+                        var userid = reader.GetUInt64("userid");
+                        var user = WebUser.GetByDiscordId(userid);
+                        result.Add(user);
+                    }
+
+                    return result;
+                }
+            }
+        }
+
         public static List<string> GetXboxesByUid(ulong userid)
         {
             using (var connection = new MySqlConnection(Bot.ConnectionString))
