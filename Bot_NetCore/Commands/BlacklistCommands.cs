@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Exceptions;
 using Bot_NetCore.Misc;
@@ -202,7 +203,7 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("check")]
-        [RequirePermissions(Permissions.Administrator)]
+        [RequireCustomRole(RoleType.FleetCaptain)]
         public async Task Check(CommandContext ctx)
         {
             await ctx.RespondAsync(
