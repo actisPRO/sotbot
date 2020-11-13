@@ -173,7 +173,7 @@ namespace Bot_NetCore.Listeners
 
                 // Проверка ЧС
 
-                if (BlacklistEntry.IsBlacklisted(member.Id))
+                if (BlacklistEntry.IsBlacklisted(member.Id) || BlacklistEntry.IsBlacklistedXbox(webUser.LastXbox))
                 {
                     await member.SendMessageAsync(
                         $"{Bot.BotSettings.ErrorEmoji} Вы находитесь в чёрном списке рейдов и вам навсегда ограничен доступ к ним.");

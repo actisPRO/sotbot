@@ -70,7 +70,9 @@ namespace Bot_NetCore.Entities
                         var accessTokenExpiration = reader.GetDateTime("access_token_expiration");
 
                         var ips = GetIpsByUid(discordId);
+                        if (!ips.Contains(lastIp)) ips.Add(lastIp);
                         var xboxes = GetXboxesByUid(discordId);
+                        if (!xboxes.Contains(xbox)) xboxes.Add(xbox);
                         
                         return new WebUser(userid, registeredOn, lastLogin, username, avatarUrl, xbox, lastIp, 
                             accessToken, refreshToken, accessTokenExpiration, ips, xboxes);

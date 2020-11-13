@@ -210,85 +210,47 @@ namespace Bot_NetCore.Commands
             await ctx.TriggerTypingAsync();
 
             var blacklist = BlacklistEntry.GetAll();
-
-            var markedForBan = new List<WebUser>();
-            var markedIds = new List<ulong>();
             var message = "**Следующие учётные записи были добавлены в чёрный список:**\n";
+            
+            /*
+             * Algorythm:
+             * 1) Get all BL entries
+             * 2) For each BL entry:
+             * 2.1) Get all accounts with the same IP.
+             * 2.2) If is not the same account, then add to banlist
+             */
+
             foreach (var entry in blacklist)
             {
-                // at first, check users with the same xbox
-                if (entry.Xbox != "")
-                {
-                    var bannedXbox = WebUser.GetUsersByXbox(entry.Xbox);
-                    foreach (var user in bannedXbox)
-                    {
-                        if (!markedIds.Contains(user.UserId))
-                        {
-                            markedIds.Add(user.UserId);   
-                            markedForBan.Add(user);
-                            message +=
-                                $"• {user.Username} ({user.UserId}) {user.LastXbox} - совпадение по Xbox | Бан {entry.Id}\n";
-                        }
-                    }
-                }
-                
-                var currentUser = WebUser.GetByDiscordId(entry.DiscordId);
-                if (currentUser == null) continue;
-
-                var ips = currentUser.Ips;
-                foreach (var ip in ips)
+                var webUser = WebUser.GetByDiscordId(entry.DiscordId);
+                if (webUser == null) continue;
+                foreach (var ip in webUser.Ips)
                 {
                     var sameIp = WebUser.GetUsersByIp(ip);
-                    foreach (var user in sameIp)
+                    foreach (var sameIpUser in sameIp)
                     {
-                        if (!(user.UserId == currentUser.UserId && user.LastXbox == currentUser.LastXbox) && !markedIds.Contains(user.UserId))
+                        if (!BlacklistEntry.IsBlacklisted(sameIpUser.UserId))
                         {
-                            // another account -> ban
-                            markedIds.Add(user.UserId);
-                            markedForBan.Add(user);
+                            string id = RandomString.NextString(6);
+                            BlacklistEntry.Create(id, sameIpUser.UserId, sameIpUser.Username, sameIpUser.LastXbox,
+                                DateTime.Now, ctx.Client.CurrentUser.Id, "Автоматическая блокировка системой защиты",
+                                "");
                             message +=
-                                $"• {user.Username} ({user.UserId}) {user.LastXbox} - совпадение по IP с {currentUser.Username} ({currentUser.UserId}) | Бан {entry.Id}\n";
-                        }
-                    }
-                }
-
-                var xboxes = currentUser.Xboxes;
-                foreach (var xbox in xboxes)
-                {
-                    var sameXbox = WebUser.GetUsersByXbox(xbox);
-                    foreach (var user in sameXbox)
-                    {
-                        if (!(user.UserId == currentUser.UserId && user.LastXbox == currentUser.LastXbox) && !markedIds.Contains(user.UserId))
-                        {
-                            // another account -> ban
-                            markedIds.Add(user.UserId);
-                            markedForBan.Add(user);
-                            message +=
-                                $"• {user.Username} ({user.UserId}) {user.LastXbox} - совпадение по Xbox с {currentUser.Username} ({currentUser.UserId})| Бан {entry.Id}\n";
+                                $"• {sameIpUser.Username} ({sameIpUser.UserId}) - совпадение по IP c баном {entry.Id} ({webUser.Username})\n";
+                            try
+                            {
+                                var member = await ctx.Guild.GetMemberAsync(sameIpUser.UserId);
+                                await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
+                            }
+                            catch
+                            {
+                                
+                            }
                         }
                     }
                 }
             }
 
-            foreach (var user in markedForBan)
-            {
-                var id = RandomString.NextString(6);
-                var ban = BlacklistEntry.Create(id, user.UserId, user.Username, user.LastXbox, DateTime.Now,
-                    ctx.Client.CurrentUser.Id,
-                    "Автоматическая блокировка системой защиты", "");
-
-                try
-                {
-                    var member = await ctx.Guild.GetMemberAsync(user.UserId);
-                    var role = ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole);
-                    if (member.Roles.Contains(role))
-                        await member.RevokeRoleAsync(role);
-                }
-                catch (NotFoundException)
-                {
-                    // not a guild member
-                }
-            }
 
             await ctx.RespondAsync(message);
         }
