@@ -175,6 +175,16 @@ namespace Bot_NetCore.Commands
             var entry = 
                 BlacklistEntry.Create(id, userIdSql, usernameSql, xboxSql, DateTime.Now, ctx.Member.Id, reasonSql, additionalSql);
 
+            try
+            {
+                var member = await ctx.Guild.GetMemberAsync(userIdSql);
+                await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
+            }
+            catch
+            {
+                
+            }
+
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Добавление записи в ЧС**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
