@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Bot_NetCore.Misc;
 using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
@@ -66,12 +67,12 @@ namespace Bot_NetCore.Entities
                     {
                         result.Add(new BlacklistEntry(reader.GetString("id"),
                             reader.GetUInt64("discord_id"),
-                            reader.GetString("discord_username"),
-                            reader.GetString("xbox"),
+                            reader.GetStringSafe("discord_username"),
+                            reader.GetStringSafe("xbox"),
                             reader.GetDateTime("ban_date"),
                             reader.GetUInt64("moderator_id"),
-                            reader.GetString("reason"),
-                            reader.GetString("additional")));
+                            reader.GetStringSafe("reason"),
+                            reader.GetStringSafe("additional")));
                     }
                 }
             }

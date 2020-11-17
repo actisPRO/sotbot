@@ -959,13 +959,12 @@ namespace Bot_NetCore.Commands
                             var city = reader.City(webUser.LastIp);
                             embed.AddField("Страна", $":flag_{city.Country.IsoCode.ToLower()}:", true);
                         }
-                        catch (AddressNotFoundException)
-                        {
-                            
-                        }
+                        catch (AddressNotFoundException) { }
+                        catch (NullReferenceException) { }
                     }
 
-                    embed.AddField("Xbox", webUser.LastXbox, true);
+                    if(!string.IsNullOrEmpty(webUser.LastXbox))
+                        embed.AddField("Xbox", webUser.LastXbox, true);
                 }
 
                 //Emoji используется при выводе списка предупреждений.
