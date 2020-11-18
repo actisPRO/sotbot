@@ -128,36 +128,39 @@ namespace Bot_NetCore.Listeners
             //Проверка на mute
             var blocksMessage = "**У вас есть неистекшие блокировки на этом сервере!**\n";
             var reports = ReportSQL.GetForUser(e.Member.Id);
-            foreach (var report in ReportSQL.GetForUser(e.Member.Id))
+            if (reports.Any())
             {
-                if (report.ReportEnd < DateTime.Now)
+                foreach (var report in reports)
                 {
-                    string blockType = report.ReportType switch
+                    if (report.ReportEnd < DateTime.Now)
                     {
-                        ReportType.Mute => "Мут",
-                        ReportType.CodexPurge => "Блокировка принятия правил",
-                        ReportType.FleetPurge => "Блокировка рейдов",
-                        ReportType.VoiceMute => "Мут в голосовых каналах",
-                        _ => ""
-                    };
-                    blocksMessage += $"• **{blockType}:** истекает через {Utility.FormatTimespan(report.ReportEnd - DateTime.Now)}\n";
+                        string blockType = report.ReportType switch
+                        {
+                            ReportType.Mute => "Мут",
+                            ReportType.CodexPurge => "Блокировка принятия правил",
+                            ReportType.FleetPurge => "Блокировка рейдов",
+                            ReportType.VoiceMute => "Мут в голосовых каналах",
+                            _ => ""
+                        };
+                        blocksMessage += $"• **{blockType}:** истекает через {Utility.FormatTimespan(report.ReportEnd - DateTime.Now)}\n";
                     
-                    if (report.ReportType == ReportType.Mute) 
-                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.MuteRole));
-                    else if (report.ReportType == ReportType.VoiceMute)
-                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
-                    else if (report.ReportType == ReportType.CodexPurge)
-                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
+                        if (report.ReportType == ReportType.Mute) 
+                            await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.MuteRole));
+                        else if (report.ReportType == ReportType.VoiceMute)
+                            await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
+                        else if (report.ReportType == ReportType.CodexPurge)
+                            await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
+                    }
                 }
-            }
 
-            try
-            {
-                await e.Member.SendMessageAsync(blocksMessage);
-            }
-            catch (UnauthorizedException)
-            {
+                try
+                {
+                    await e.Member.SendMessageAsync(blocksMessage);
+                }
+                catch (UnauthorizedException)
+                {
                 
+                }
             }
 
             //Выдача доступа к приватным кораблям
