@@ -126,10 +126,10 @@ namespace Bot_NetCore.Listeners
             }
 
             //Проверка на mute
-            var blocksMessage = "**У вас есть неистекшие блокировки на этом сервере!**\n";
             var reports = ReportSQL.GetForUser(e.Member.Id);
             if (reports.Any())
             {
+                var blocksMessage = "**У вас есть неистекшие блокировки на этом сервере!**\n";
                 foreach (var report in reports)
                 {
                     if (report.ReportEnd < DateTime.Now)
