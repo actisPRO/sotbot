@@ -126,31 +126,28 @@ namespace Bot_NetCore.Listeners
             }
 
             //Проверка на mute
-            var reports = ReportSQL.GetForUser(e.Member.Id);
+            var reports = ReportSQL.GetForUser(e.Member.Id).Where(x => x.ReportEnd > DateTime.Now);
             if (reports.Any())
             {
                 var blocksMessage = "**У вас есть неистекшие блокировки на этом сервере!**\n";
                 foreach (var report in reports)
                 {
-                    if (report.ReportEnd < DateTime.Now)
+                    string blockType = report.ReportType switch
                     {
-                        string blockType = report.ReportType switch
-                        {
-                            ReportType.Mute => "Мут",
-                            ReportType.CodexPurge => "Блокировка принятия правил",
-                            ReportType.FleetPurge => "Блокировка рейдов",
-                            ReportType.VoiceMute => "Мут в голосовых каналах",
-                            _ => ""
-                        };
-                        blocksMessage += $"• **{blockType}:** истекает через {Utility.FormatTimespan(report.ReportEnd - DateTime.Now)}\n";
-                    
-                        if (report.ReportType == ReportType.Mute) 
-                            await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.MuteRole));
-                        else if (report.ReportType == ReportType.VoiceMute)
-                            await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
-                        else if (report.ReportType == ReportType.CodexPurge)
-                            await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
-                    }
+                        ReportType.Mute => "Мут",
+                        ReportType.CodexPurge => "Блокировка принятия правил",
+                        ReportType.FleetPurge => "Блокировка рейдов",
+                        ReportType.VoiceMute => "Мут в голосовых каналах",
+                        _ => ""
+                    };
+                    blocksMessage += $"• **{blockType}:** истекает через {Utility.FormatTimespan(report.ReportEnd - DateTime.Now)}\n";
+
+                    if (report.ReportType == ReportType.Mute)
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.MuteRole));
+                    else if (report.ReportType == ReportType.VoiceMute)
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.VoiceMuteRole));
+                    else if (report.ReportType == ReportType.CodexPurge)
+                        await e.Member.GrantRoleAsync(e.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
                 }
 
                 try
