@@ -57,6 +57,22 @@ namespace Bot_NetCore.Entities
             } 
         }
 
+        public static void Delete(ulong id)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "DELETE FROM secret_santa WHERE id = @id;";
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public ulong Id => _id;
 
         public string Address
