@@ -53,7 +53,7 @@ namespace Bot_NetCore.Commands
             var address =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.User.Id, TimeSpan.FromMinutes(3));
 
-            var ss = SecretSantaParticipant.Create(ctx.User.Id, address.Result.Content);
+            SecretSantaParticipant.Create(ctx.User.Id, address.Result.Content);
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Мы добавили тебя в базу данных! Ты получишь сообщение с адресом получателя" +
                 $" твоего подарка через некоторое время. Используй `!ss edit новый адрес` для изменения адреса или `!ss cancel` для отмены участия.");
@@ -81,6 +81,29 @@ namespace Bot_NetCore.Commands
 
             ss.Address = address;
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Адрес успешно изменён!");
+        }
+
+        [Command("cancel")]
+        [RequireDirectMessage]
+        [Description("Удаляет вас из списка участников")]
+        public async Task Delete(CommandContext ctx)
+        {
+            if (!Bot.BotSettings.SecretSantaEnabled)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команды Секретного Санты отключены!");
+                return;
+            }
+            
+            var ss = SecretSantaParticipant.Get(ctx.User.Id);
+            if (ss == null)
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Ты не являешься участником Секретного Санты!");
+                return;
+            }
+            
+            SecretSantaParticipant.Delete(ctx.User.Id);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Мы удалили тебя из списка участников.");
         }
     }
 }
