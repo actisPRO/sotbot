@@ -20,7 +20,7 @@ namespace Bot_NetCore.Listeners
         {
             if (e.Guild == null && 
                 !e.Author.IsCurrent && 
-                !e.Message.Content.StartsWith("!") &&
+                !e.Message.Content.StartsWith(Bot.BotSettings.Prefix) &&
                 !DmHandled.Contains(e.Author))
                 await e.Channel.SendMessageAsync("Если у вас есть вопросы по поводу сервера, вы можете создать тикет командой **`!support`**\n" +
                     "\nВы можете найти ответ на свой вопрос в данных каналах:" +

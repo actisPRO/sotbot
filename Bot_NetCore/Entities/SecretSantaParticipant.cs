@@ -15,9 +15,9 @@ namespace Bot_NetCore.Entities
             _sendingTo = sendingTo;
         }
 
-        public SecretSantaParticipant Create(ulong id, string address, ulong sendingTo = 0)
+        public static SecretSantaParticipant Create(ulong id, string address, ulong sendingTo = 0)
         {
-            using (var connection = new MySqlConnection())
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
                 using (var cmd = new MySqlCommand())
                 {
@@ -35,9 +35,9 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        public SecretSantaParticipant Get(ulong id)
+        public static SecretSantaParticipant Get(ulong id)
         {
-            using (var connection = new MySqlConnection())
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
                 using (var cmd = new MySqlCommand())
                 {
@@ -64,7 +64,7 @@ namespace Bot_NetCore.Entities
             get => _address;
             set
             {
-                using (var connection = new MySqlConnection())
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
                     using (var cmd = new MySqlCommand())
                     {
@@ -86,7 +86,7 @@ namespace Bot_NetCore.Entities
             get => _sendingTo;
             set
             {
-                using (var connection = new MySqlConnection())
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
                     using (var cmd = new MySqlCommand())
                     {

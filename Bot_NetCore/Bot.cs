@@ -740,6 +740,21 @@ namespace Bot_NetCore
         ///     URL изображения для поиска игроков.
         /// </summary>
         public string ThumbnailRaid;
+
+        /// <summary>
+        ///     Включен-ли Секретный Санта?
+        /// </summary>
+        public bool SecretSantaEnabled;
+
+        /// <summary>
+        ///     Дата, до которой доступна регистрация на Секретного Санту
+        /// </summary>
+        public DateTime SecretSantaLastJoinDate;
+
+        /// <summary>
+        ///     Дата, до который участник должен присоединиться к серверу, чтобы участвовать в Секретном Санте.
+        /// </summary>
+        public DateTime LastPossibleJoinDate;
     }
 
     public enum CommandType
