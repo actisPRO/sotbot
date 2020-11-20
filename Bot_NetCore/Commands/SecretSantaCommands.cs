@@ -58,6 +58,8 @@ namespace Bot_NetCore.Commands
                 $"{Bot.BotSettings.OkEmoji} Мы добавили тебя в базу данных! Ты получишь сообщение с адресом получателя" +
                 $" твоего подарка через некоторое время. Используй `!ss edit новый адрес` для изменения адреса или `!ss cancel` для отмены участия.");
             DmMessageListener.DmHandled.Remove(ctx.User);
+
+            await member.GrantRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.SecretSantaRole));
         }
 
         [Command("edit")]
@@ -104,6 +106,9 @@ namespace Bot_NetCore.Commands
             
             SecretSantaParticipant.Delete(ctx.User.Id);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Мы удалили тебя из списка участников.");
+            
+            var member = await ctx.Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(ctx.User.Id);
+            await member.RevokeRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.SecretSantaRole));
         }
     }
 }

@@ -755,6 +755,11 @@ namespace Bot_NetCore
         ///     Дата, до который участник должен присоединиться к серверу, чтобы участвовать в Секретном Санте.
         /// </summary>
         public DateTime LastPossibleJoinDate;
+
+        /// <summary>
+        ///     Роль участника Секретного Санты
+        /// </summary>
+        public ulong SecretSantaRole;
     }
 
     public enum CommandType
