@@ -2,8 +2,10 @@
 using System.Threading.Tasks;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Listeners;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 
 namespace Bot_NetCore.Commands
@@ -15,12 +17,18 @@ namespace Bot_NetCore.Commands
         [Command("join")]
         [RequireDirectMessage]
         [Description("Добавляет вас в список участников Секретного Санты")]
-        public async Task Join(CommandContext ctx)
+        public async Task Join(CommandContext ctx, [RemainingText] string args = "NONE_")
         {
             if (!Bot.BotSettings.SecretSantaEnabled)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команды Секретного Санты отключены!");
                 return;
+            }
+
+            if (args != "NONE_")
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Адрес нужно указать __отдельным сообщением__.");
             }
             
             if (DateTime.Now > Bot.BotSettings.SecretSantaLastJoinDate)
@@ -47,8 +55,8 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            await ctx.RespondAsync("**Пожалуйста, укажи свой адрес для отправки подарка:**\n" +
-                                   "Лучше всего, если он будет в формате *индекс, страна, регион, город, улица, дом, квартира*");
+            await ctx.RespondAsync("**Пожалуйста, укажи свой __почтовый__ адрес для отправки подарка:**\n" +
+                                   "Лучше всего, если он будет в формате *Имя Фамилия, индекс, страна, регион, город, улица, дом, квартира*");
             var interactivity = ctx.Client.GetInteractivity();
             DmMessageListener.DmHandled.Add(ctx.User);
             
@@ -112,5 +120,26 @@ namespace Bot_NetCore.Commands
             var member = await ctx.Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(ctx.User.Id);
             await member.RevokeRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.SecretSantaRole));
         }
+
+        [Command("fdelete")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task FDelete(CommandContext ctx, DiscordMember member, [RemainingText] string reason)
+        {
+            var ss = SecretSantaParticipant.Get(ctx.User.Id);
+            if (ss == null)
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Пользователь не является участником Секретного Санты!");
+                return;
+            }
+            
+            SecretSantaParticipant.Delete(member.Id);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Участник удален!");
+            
+            await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.SecretSantaRole));
+
+            await member.SendMessageAsync("Администратор удалил тебя из списка участников Секретного Санты. **Причина:** " + reason);
+        }
+        
     }
 }
