@@ -47,9 +47,11 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            await ctx.RespondAsync("**Пожалуйста, укажи свой адрес для отправки подарка:**");
+            await ctx.RespondAsync("**Пожалуйста, укажи свой адрес для отправки подарка:**\n" +
+                                   "Лучше всего, если он будет в формате *индекс, страна, регион, город, улица, дом, квартира*");
             var interactivity = ctx.Client.GetInteractivity();
             DmMessageListener.DmHandled.Add(ctx.User);
+            
             var address =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.User.Id, TimeSpan.FromMinutes(3));
 
