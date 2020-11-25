@@ -243,14 +243,8 @@ namespace Bot_NetCore.Commands
         [Priority(1)]
         public async Task FleetPurge(CommandContext ctx, DiscordMember member, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
-            var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member); //Только капитаны рейда, модераторы не учитываются
-
-            //Проверка на модератора или капитана рейда
-            if (!Bot.IsModerator(ctx.Member) && !isFleetCaptain)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
+            var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) &&
+                !Bot.IsModerator(ctx.Member) && !ctx.Member.Roles.Any(x => x.Id == Bot.BotSettings.HelperRole); //Только капитаны рейда, модераторы и хелперы не учитываются
 
             //Проверка на кик модератора капитаном рейда
             if (Bot.IsModerator(member) && isFleetCaptain)
@@ -328,14 +322,15 @@ namespace Bot_NetCore.Commands
         [Priority(0)]
         public async Task FleetPurge(CommandContext ctx, DiscordUser member, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-            
+            var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) &&
+                !Bot.IsModerator(ctx.Member) && !ctx.Member.Roles.Any(x => x.Id == Bot.BotSettings.HelperRole); //Только капитаны рейда, модераторы и хелперы не учитываются
+
             var durationTimeSpan = Utility.TimeSpanParse(duration);
             var id = RandomString.NextString(6);
+
+            if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(3, 0, 0, 0);
+
             var reportEnd = DateTime.Now + durationTimeSpan;
 
             ReportSQL fleetPurge = null;
@@ -361,7 +356,7 @@ namespace Bot_NetCore.Commands
                     return;
                 }
             }
-            
+
             //Отправка в журнал
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Блокировка принятия правил рейда**\n\n" +
@@ -786,7 +781,7 @@ namespace Bot_NetCore.Commands
             }
             catch
             {
-                
+
             }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
@@ -890,19 +885,13 @@ namespace Bot_NetCore.Commands
 
     [Group("whois")]
     [Description("Информация о пользователе.")]
-    [RequirePermissions(Permissions.KickMembers)]
+    [RequireCustomRole(RoleType.Helper)]
     [RequireGuild]
     public class WhoisCommand : BaseCommandModule
     {
         [GroupCommand]
         public async Task WhoIs(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
         {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
             await ctx.TriggerTypingAsync();
 
             try
@@ -1109,12 +1098,6 @@ namespace Bot_NetCore.Commands
         [Description("Выводит список предупреждений.")]
         public async Task WList(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
         {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
             var warnings = WarnSQL.GetForUser(user.Id);
             int count = warnings.Count;
 

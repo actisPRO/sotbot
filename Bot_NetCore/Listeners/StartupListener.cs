@@ -35,11 +35,8 @@ namespace Bot_NetCore.Listeners
 
             foreach (var user in e.Guild.VoiceStates.Keys)
             {
-                try
-                {
-                    VoiceListener.VoiceTimeCounters[user] = DateTime.Now;
-                }
-                catch { }
+                if(!VoiceListener.VoiceTimeCounters.ContainsKey(user))
+                    VoiceListener.VoiceTimeCounters.Add(user, DateTime.Now);
             }
 
         }

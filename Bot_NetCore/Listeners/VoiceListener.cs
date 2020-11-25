@@ -208,24 +208,30 @@ namespace Bot_NetCore.Listeners
                 }
                 else if(e.After.Channel.Id == e.Guild.AfkChannel.Id)
                 {
-                    var time = DateTime.Now - VoiceTimeCounters[e.User.Id];
-                    VoiceTimeSQL.AddForUser(e.User.Id, time);
-                    VoiceTimeCounters.Remove(e.User.Id);
+                    if (VoiceTimeCounters.ContainsKey(e.User.Id))
+                    {
+                        var time = DateTime.Now - VoiceTimeCounters[e.User.Id];
+                        VoiceTimeSQL.AddForUser(e.User.Id, time);
+                        VoiceTimeCounters.Remove(e.User.Id);
+                    }
                 }
             }
             //User left from voice
             else if (e.Before != null && e.Before.Channel != null && 
                 e.Before.Channel.Id != e.Guild.AfkChannel.Id)
             {
-                var time = DateTime.Now - VoiceTimeCounters[e.User.Id];
-                VoiceTimeSQL.AddForUser(e.User.Id, time);
-                VoiceTimeCounters.Remove(e.User.Id);
+                if (VoiceTimeCounters.ContainsKey(e.User.Id))
+                {
+                    var time = DateTime.Now - VoiceTimeCounters[e.User.Id];
+                    VoiceTimeSQL.AddForUser(e.User.Id, time);
+                    VoiceTimeCounters.Remove(e.User.Id);
+                }
             }
             //User joined to server voice
             else if (e.After != null && e.After.Channel != null &&
                 e.After.Channel.Id != e.Guild.AfkChannel.Id)
             {
-                VoiceTimeCounters[e.User.Id] = DateTime.Now;
+                    VoiceTimeCounters[e.User.Id] = DateTime.Now;
             }
         }
 
