@@ -223,7 +223,7 @@ namespace Bot_NetCore.Commands
 
             //Отправка в журнал
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                "**Блокировка принятия правил**\n\n" +
+                "**Блокировка доступа к рейдам**\n\n" +
                  $"**Модератор:** {ctx.Member}\n" +
                  $"**Пользователь:** {member}\n" +
                  $"**Дата:** {DateTime.Now:HH:mm:ss dd.MM.yyyy}\n" +
@@ -232,13 +232,14 @@ namespace Bot_NetCore.Commands
                  $"**ID:** {id}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила {member.Mention}. " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно заблокирован доступ к рейдам {member.Mention}. " +
                                    $"Снятие через {Utility.FormatTimespan(purge.ReportDuration)}!");
         }
 
         [Command("fleetpurge")]
         [Aliases("fp")]
-        [Description("Блокирует доступ к каналам рейда. (Для @Капитан Рейда)")]
+        [Description("Блокирует доступ к каналам рейда.")]
+        [RequireCustomRole(RoleType.FleetCaptain)]
         [Priority(1)]
         public async Task FleetPurge(CommandContext ctx, DiscordMember member, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {
@@ -297,7 +298,7 @@ namespace Bot_NetCore.Commands
             try
             {
                 await member.SendMessageAsync(
-                    $"**Возможность принять правила заблокирована**\n" +
+                    $"**Доступ к рейдам заблокирован**\n" +
                     $"**Снятие через:** {Utility.FormatTimespan(fleetPurge.ReportDuration)}\n" +
                     $"**Модератор:** {ctx.Member.Username}#{ctx.Member.Discriminator}\n" +
                     $"**Причина:** {fleetPurge.Reason}");
@@ -309,7 +310,7 @@ namespace Bot_NetCore.Commands
 
             //Отправка в журнал
             await ctx.Channel.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                "**Блокировка принятия правил рейда**\n\n" +
+                "**Блокировка доступа к рейдам**\n\n" +
                  $"**Модератор:** {ctx.Member}\n" +
                  $"**Пользователь:** {member}\n" +
                  $"**Дата:** {DateTime.Now:HH:mm:ss dd.MM.yyyy}\n" +
@@ -318,11 +319,12 @@ namespace Bot_NetCore.Commands
                 $"**ID:** {id}");
 
             //Ответное сообщение в чат
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно отобрано право принять правила рейда {member.Mention}. " +
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно заблокирован доступ к рейдам {member.Mention}. " +
                                    $"Снятие через: {Utility.FormatTimespan(fleetPurge.ReportDuration)}!");
         }
 
         [Command("fleetpurge")]
+        [RequireCustomRole(RoleType.FleetCaptain)]
         [Priority(0)]
         public async Task FleetPurge(CommandContext ctx, DiscordUser member, string duration = "1d", [RemainingText] string reason = "Не указана") //Блокирует возможность принять правила на время
         {

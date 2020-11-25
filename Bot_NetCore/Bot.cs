@@ -760,6 +760,16 @@ namespace Bot_NetCore
         ///     Роль участника Секретного Санты
         /// </summary>
         public ulong SecretSantaRole;
+
+        /// <summary>
+        ///     Количество дней которое пользователеь должен провести на сервере до того как принять правила.
+        /// </summary>
+        public int FleetDateOffset;
+
+        /// <summary>
+        ///     Количество часов которое пользователеь должен провести в голосовых каналах до того как принять правила.
+        /// </summary>
+        public int FleetVoiceTimeOffset;
     }
 
     public enum CommandType

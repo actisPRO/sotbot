@@ -151,7 +151,31 @@ namespace Bot_NetCore.Listeners
                 } //Удаляем блокировку если истекла
 
                 var member = await e.Guild.GetMemberAsync(discordUser.Id);
-                
+
+                //Проверка времени входа на сервер.
+                if (member.JoinedAt > DateTime.Now.AddDays(-Bot.BotSettings.FleetDateOffset))
+                {
+                    await member.SendMessageAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны находиться на сервере " +
+                        $"**{Utility.FormatTimespan(TimeSpan.FromDays(Bot.BotSettings.FleetDateOffset))}**.");
+
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), member);
+                    return;
+                }
+
+                var voiceTime = VoiceListener.GetUpdatedVoiceTime(e.User.Id);
+                //Проверка на время проведенное в голосовых каналах
+                if (voiceTime < TimeSpan.FromHours(Bot.BotSettings.FleetVoiceTimeOffset))
+                {
+                    await member.SendMessageAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны провести " +
+                        $"**{Utility.FormatTimespan(TimeSpan.FromHours(Bot.BotSettings.FleetVoiceTimeOffset))}** в голосовых каналах. " +
+                        $"Ваше время: **{Utility.FormatTimespan(voiceTime)}**");
+
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), member);
+                    return;
+                }
+
                 //Проверка на регистрацию и привязку Xbox
 
                 var webUser = WebUser.GetByDiscordId(member.Id);

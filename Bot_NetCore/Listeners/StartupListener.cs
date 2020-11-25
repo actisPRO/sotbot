@@ -30,8 +30,18 @@ namespace Bot_NetCore.Listeners
             try
             {
                 VoiceListener.ReadFindChannelMesages();
-            } 
+            }
             catch { }
+
+            foreach (var user in e.Guild.VoiceStates.Keys)
+            {
+                try
+                {
+                    VoiceListener.VoiceTimeCounters[user] = DateTime.Now;
+                }
+                catch { }
+            }
+
         }
     }
 }

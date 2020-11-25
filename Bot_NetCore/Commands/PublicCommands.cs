@@ -250,7 +250,7 @@ namespace Bot_NetCore.Commands
         public async Task CreateFleet(CommandContext ctx,
             [Description("Количество кораблей [1 - 5]")] int nShips,
             [Description("Слоты на корабле [2 - 25]")] int slots,
-            [RemainingText, Description("Название рейда")] string notes)
+            [RemainingText, Description("Название рейда")] string notes = "добра и позитива")
         {
             notes = notes.Substring(0, Math.Min(notes.Length, 25));
 

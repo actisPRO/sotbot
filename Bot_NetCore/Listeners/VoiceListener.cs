@@ -25,6 +25,11 @@ namespace Bot_NetCore.Listeners
         /// </summary>
         public static Dictionary<ulong, ulong> FindChannelInvites = new Dictionary<ulong, ulong>();
 
+        /// <summary>
+        ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время входа в канал.
+        /// </summary>
+        public static Dictionary<ulong, DateTime> VoiceTimeCounters = new Dictionary<ulong, DateTime>();
+
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task CreateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
         {
@@ -186,6 +191,44 @@ namespace Bot_NetCore.Listeners
         {
             await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
         }
+
+        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        public static async Task UpdateVoiceTimeOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        {
+            //TODO: Раз в 10 минут проверять список и обновлять время
+
+            // User changed voice channel
+            if (e.Before != null && e.Before.Channel != null &&
+                e.After != null && e.After.Channel != null &&
+                e.Before.Channel.Id != e.After.Channel.Id)
+            {
+                if(e.Before.Channel.Id == e.Guild.AfkChannel.Id)
+                {
+                    VoiceTimeCounters[e.User.Id] = DateTime.Now;
+                }
+                else if(e.After.Channel.Id == e.Guild.AfkChannel.Id)
+                {
+                    var time = DateTime.Now - VoiceTimeCounters[e.User.Id];
+                    VoiceTimeSQL.AddForUser(e.User.Id, time);
+                    VoiceTimeCounters.Remove(e.User.Id);
+                }
+            }
+            //User left from voice
+            else if (e.Before != null && e.Before.Channel != null && 
+                e.Before.Channel.Id != e.Guild.AfkChannel.Id)
+            {
+                var time = DateTime.Now - VoiceTimeCounters[e.User.Id];
+                VoiceTimeSQL.AddForUser(e.User.Id, time);
+                VoiceTimeCounters.Remove(e.User.Id);
+            }
+            //User joined to server voice
+            else if (e.After != null && e.After.Channel != null &&
+                e.After.Channel.Id != e.Guild.AfkChannel.Id)
+            {
+                VoiceTimeCounters[e.User.Id] = DateTime.Now;
+            }
+        }
+
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task FleetLogOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
@@ -393,6 +436,19 @@ namespace Bot_NetCore.Listeners
             using (var sw = new StreamWriter(fs))
                 foreach(var elem in FindChannelInvites)
                     await sw.WriteLineAsync($"{elem.Key},{elem.Value}");
+        }
+
+        public static TimeSpan GetUpdatedVoiceTime(ulong userId)
+        {
+            //Force update voiceTime
+            if (VoiceTimeCounters.ContainsKey(userId))
+            {
+                var time = DateTime.Now - VoiceTimeCounters[userId];
+                VoiceTimeSQL.AddForUser(userId, time);
+                VoiceTimeCounters[userId] = DateTime.Now;
+            }
+
+            return VoiceTimeSQL.GetForUser(userId);
         }
     }
 }

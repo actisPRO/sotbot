@@ -7,7 +7,7 @@ using DSharpPlus.Interactivity;
 
 namespace Bot_NetCore.Misc
 {
-    class Utility
+    public static class Utility
     {
         public static IEnumerable<Page> GeneratePagesInEmbeds(List<string> input, string title = "")
         {
@@ -109,7 +109,7 @@ namespace Bot_NetCore.Misc
             string hs = time.Hours != 0 ? ToCorrectCase(time, TimeUnit.Hours) + " " : "";
             string ms = time.Minutes != 0 ? ToCorrectCase(time, TimeUnit.Minutes) + " " : "";
             string ss = time.Seconds != 0 ? ToCorrectCase(time, TimeUnit.Seconds) : "";
-            return (ds + hs + ms + ss).TrimEnd(' ');
+            return time == TimeSpan.Zero ? "0 секунд" : (ds + hs + ms + ss).TrimEnd(' ');
             //return string.Format("{0:%d}д {0:%h}ч {0:%m}м {0:%s}с", time);
         }
 
