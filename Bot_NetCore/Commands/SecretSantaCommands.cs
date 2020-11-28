@@ -31,7 +31,7 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync(
                     $"{Bot.BotSettings.ErrorEmoji} Адрес нужно указать __отдельным сообщением__.");
             }
-            
+
             if (DateTime.Now > Bot.BotSettings.SecretSantaLastJoinDate)
             {
                 await ctx.RespondAsync(
@@ -60,7 +60,7 @@ namespace Bot_NetCore.Commands
                                    "Лучше всего, если он будет в формате *Имя Фамилия, индекс, страна, регион, город, улица, дом, квартира*");
             var interactivity = ctx.Client.GetInteractivity();
             DmMessageListener.DmHandled.Add(ctx.User);
-            
+
             var address =
                 await interactivity.WaitForMessageAsync(m => m.Author.Id == ctx.User.Id, TimeSpan.FromMinutes(3));
 
@@ -70,7 +70,8 @@ namespace Bot_NetCore.Commands
                 $" твоего подарка через некоторое время. Используй `!ss edit новый адрес` для изменения адреса или `!ss cancel` для отмены участия.");
             DmMessageListener.DmHandled.Remove(ctx.User);
 
-            await member.GrantRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.SecretSantaRole));
+            await member.GrantRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild]
+                .GetRole(Bot.BotSettings.SecretSantaRole));
         }
 
         [Command("edit")]
@@ -106,7 +107,7 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команды Секретного Санты отключены!");
                 return;
             }
-            
+
             var ss = SecretSantaParticipant.Get(ctx.User.Id);
             if (ss == null)
             {
@@ -114,12 +115,13 @@ namespace Bot_NetCore.Commands
                     $"{Bot.BotSettings.ErrorEmoji} Ты не являешься участником Секретного Санты!");
                 return;
             }
-            
+
             SecretSantaParticipant.Delete(ctx.User.Id);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Мы удалили тебя из списка участников.");
-            
+
             var member = await ctx.Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(ctx.User.Id);
-            await member.RevokeRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.SecretSantaRole));
+            await member.RevokeRoleAsync(ctx.Client.Guilds[Bot.BotSettings.Guild]
+                .GetRole(Bot.BotSettings.SecretSantaRole));
         }
 
         [Command("fdelete")]
@@ -133,13 +135,14 @@ namespace Bot_NetCore.Commands
                     $"{Bot.BotSettings.ErrorEmoji} Пользователь не является участником Секретного Санты!");
                 return;
             }
-            
+
             SecretSantaParticipant.Delete(member.Id);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Участник удален!");
-            
+
             await member.RevokeRoleAsync(ctx.Guild.GetRole(Bot.BotSettings.SecretSantaRole));
 
-            await member.SendMessageAsync("Администратор удалил тебя из списка участников Секретного Санты. **Причина:** " + reason);
+            await member.SendMessageAsync(
+                "Администратор удалил тебя из списка участников Секретного Санты. **Причина:** " + reason);
         }
 
         [Command("sort")]
@@ -183,6 +186,35 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Список очищен, удалено {count} участников!");
+        }
+
+        [Command("send")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Send(CommandContext ctx)
+        {
+            var participants = SecretSantaParticipant.GetAll();
+            foreach (var participant in participants)
+            {
+                try
+                {
+                    var member = await ctx.Guild.GetMemberAsync(participant.Id);
+                    var sendingTo = SecretSantaParticipant.Get(participant.SendingTo);
+                    await member.SendMessageAsync("**🎅 Секретный Санта 🎅**\n" +
+                                                  $"Отправь подарок на следующий адрес:\n{sendingTo.Address}\n" +
+                                                  $"*Если получатель указал вместо адреса 'цифровой подарок' или ты сам хочешь отправить " +
+                                                  $"цифровой подарок - напиши в ЛС пользователю `Санта#2145` (на сервере закреплён под модераторами)," +
+                                                  $" он объяснит, что делать дальше.\n\n" +
+                                                  $"**Пожалуйста, не забудь отправить свой подарок и сохранить трек-номер (на случай, если почта" +
+                                                  $"его потеряет)!**\n" +
+                                                  $"Если ты не получишь подарок до Нового Года - свяжись с `Санта#2145`.");
+                }
+                catch
+                {
+
+                }
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Рассылка завершена!");
         }
     }
 }
