@@ -7,6 +7,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
+using K4os.Compression.LZ4.Internal;
 
 namespace Bot_NetCore.Commands
 {
@@ -160,6 +161,28 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Список сгененирован!");
+        }
+
+        [Command("clean")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Clean(CommandContext ctx)
+        {
+            var participants = SecretSantaParticipant.GetAll();
+            int count = 0;
+            for (int i = 0; i < participants.Count; ++i)
+            {
+                try
+                {
+                    var member = ctx.Guild.GetMemberAsync(participants[i].Id);
+                }
+                catch
+                {
+                    ++count;
+                    participants.RemoveAt(i);
+                }
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Список очищен, удалено {count} участников!");
         }
     }
 }
