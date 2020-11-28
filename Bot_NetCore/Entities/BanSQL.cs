@@ -206,7 +206,11 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    var statement = $"SELECT * FROM bans WHERE unban <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}';";
+                    var statement = $"SELECT bans.* " +
+                        $"FROM bans " +
+                        $"INNER JOIN(SELECT user, MAX(unban) as lastUnban FROM bans GROUP BY user, unban)groupedB " +
+                        $"ON bans.user = groupedB.user AND bans.unban = groupedB.lastUnban " +
+                        $"WHERE unban <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}';";
                     cmd.CommandText = statement;
                     cmd.Connection = connection;
                     cmd.Connection.Open();

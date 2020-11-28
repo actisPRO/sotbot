@@ -233,6 +233,8 @@ namespace Bot_NetCore.Listeners
             {
                     VoiceTimeCounters[e.User.Id] = DateTime.Now;
             }
+
+            await Task.CompletedTask;
         }
 
 
@@ -333,14 +335,14 @@ namespace Bot_NetCore.Listeners
                 {
                     if (FindChannelInvites.ContainsKey(channel.Id))
                     {
-
-                        var channelMessages = await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessagesAsync(50);
-                        var embedMessage = channelMessages.FirstOrDefault(x => x.Id == FindChannelInvites[channel.Id]);
+                        e.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Получение сообщения в поиске игроков!", DateTime.Now);
+                        var embedMessage = await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(FindChannelInvites[channel.Id]);
 
                         if (channel.Users.Count() == 0)
                         {
                             try
                             {
+                                e.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Удаление ембеда в поиске игроков!", DateTime.Now);
                                 await embedMessage.DeleteAsync();
                                 FindChannelInvites.Remove(channel.Id);
                                 await SaveFindChannelMessagesAsync();
@@ -405,6 +407,7 @@ namespace Bot_NetCore.Listeners
                             embed.WithTimestamp(DateTime.Now);
                             embed.WithFooter(usersNeeded != 0 ? $"В поиске команды. +{usersNeeded}" : $"Канал заполнен {DiscordEmoji.FromName(e.Client, ":no_entry:")}");
 
+                            e.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Обновление ембеда в поиске игроков!", DateTime.Now);
                             await embedMessage.ModifyAsync(embed: embed.Build());
                         }
                     }

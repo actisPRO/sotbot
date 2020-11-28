@@ -37,7 +37,7 @@ namespace Bot_NetCore.Commands
             }
             catch (NotFoundException) { }
 
-            try 
+            try
             {
                 //Проверка если пользователь в канале
                 if (ctx.Member.VoiceState == null ||
@@ -46,7 +46,7 @@ namespace Bot_NetCore.Commands
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
                     return;
                 }
-            } 
+            }
             catch (NullReferenceException)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
@@ -60,13 +60,6 @@ namespace Bot_NetCore.Commands
             if (channel.Users.Count() >= channel.UserLimit)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш канал уже заполнен!");
-                return;
-            }
-
-            //Проверка если сообщение было уже отправлено
-            if (VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы уже отправили приглашение!");
                 return;
             }
 
@@ -125,13 +118,68 @@ namespace Bot_NetCore.Commands
             embed.WithTimestamp(DateTime.Now);
             embed.WithFooter($"В поиске команды. +{usersNeeded}");
 
-            var msg = await ctx.RespondAsync(embed: embed.Build());
+            //Проверка если сообщение было уже отправлено
+            if (!VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
+            {
 
-            //Добавялем в словарь связку канал - сообщение и сохраняем в файл
-            VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
+                var msg = await ctx.RespondAsync(embed: embed.Build());
 
-            await VoiceListener.SaveFindChannelMessagesAsync();
+                //Добавялем в словарь связку канал - сообщение и сохраняем в файл
+                VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
+
+                await VoiceListener.SaveFindChannelMessagesAsync();
+            }
+            else
+            {
+                var embedMessage = await ctx.Channel.GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
+                await embedMessage.ModifyAsync(embed: embed.Build());
+                await ctx.TriggerTypingAsync();
+            }
         }
+
+        [Command("idelete")]
+        [Aliases("idel")]
+        [Description("Удаляет созданное приглашение в поиске")]
+        [Cooldown(1, 30, CooldownBucketType.User)]
+        public async Task InviteDelete(CommandContext ctx)
+        {
+            //Удаляем сообщение с командой
+            try
+            {
+                await ctx.Message.DeleteAsync();
+            }
+            catch (NotFoundException) { }
+
+            try
+            {
+                //Проверка если пользователь в канале
+                if (ctx.Member.VoiceState == null ||
+                    ctx.Member.VoiceState.Channel.Id == Bot.BotSettings.WaitingRoom)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
+                    return;
+                }
+            }
+            catch (NullReferenceException)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы должны быть в голосовом канале!");
+                return;
+            }
+
+            var channel = ctx.Member.VoiceState?.Channel;
+
+            var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
+
+            try
+            {
+                ctx.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Удаление ембеда в поиске игроков!", DateTime.Now);
+                await embedMessage.DeleteAsync();
+                VoiceListener.FindChannelInvites.Remove(channel.Id);
+                await VoiceListener.SaveFindChannelMessagesAsync();
+            }
+            catch (NotFoundException) { }
+        }
+
 
         [Command("votekick")]
         [Aliases("vk")]
@@ -226,10 +274,11 @@ namespace Bot_NetCore.Commands
             }
             else if (votesCount >= votesNeeded)
             {
-                resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал.");
+                resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал и ему был заблокирован доступ к каналу.");
                 resultEmbed.WithFooter($"Голосов за кик: {votesCount}");
                 resultEmbed.WithColor(new DiscordColor("00FF00"));
 
+                await channel.AddOverwriteAsync(member, deny: Permissions.AccessChannels);
                 await member.PlaceInAsync(ctx.Guild.AfkChannel);
             }
             else

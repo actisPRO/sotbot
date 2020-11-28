@@ -192,7 +192,8 @@ namespace Bot_NetCore.Listeners
                     {
                         try
                         {
-                            await e.Message.DeleteAsync();
+                            if(!e.Message.Pinned)
+                                await e.Message.DeleteAsync();
                         }
                         catch { }
 

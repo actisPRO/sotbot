@@ -204,7 +204,7 @@ namespace Bot_NetCore.Commands
                                 {
                                     Title = "Sea of Thieves RU | Тикет",
                                     Description = "Ожидайте ответ на ваш запрос.\n‎",
-                                    Color = new DiscordColor("#e74c3c")
+                                    Color = new DiscordColor("#16a085")
                                 }
                                 .WithAuthor(ctx.User.ToString(), iconUrl: ctx.User.AvatarUrl)
                                 .WithFooter("‎\nВ ожидании ответа.");

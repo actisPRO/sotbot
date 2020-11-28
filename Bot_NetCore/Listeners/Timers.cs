@@ -50,6 +50,11 @@ namespace Bot_NetCore.Listeners
             clearSubscriptions.AutoReset = true;
             clearSubscriptions.Enabled = true;
 
+            var updateVoiceTimes = new Timer(60000 * 5);
+            updateVoiceTimes.Elapsed += UpdateVoiceTimesOnElapsedAsync;
+            updateVoiceTimes.AutoReset = true;
+            updateVoiceTimes.Enabled = true;
+
             await Task.CompletedTask;
         }
 
@@ -141,81 +146,85 @@ namespace Bot_NetCore.Listeners
 
         private static async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
-            var channelMessages = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel)
-                        .GetMessagesAsync();
-            for (int i = 0; i < Vote.Votes.Count; ++i)
+            try
             {
-                var vote = Vote.Votes.Values.ToArray()[i];
-                try
+                var channelMessages = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel)
+                            .GetMessagesAsync();
+                for (int i = 0; i < Vote.Votes.Count; ++i)
                 {
-                    var message = channelMessages.FirstOrDefault(x => x.Id == vote.Message);
-                    if (message != null)
+                    var vote = Vote.Votes.Values.ToArray()[i];
+                    try
                     {
-                        if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
+                        var message = channelMessages.FirstOrDefault(x => x.Id == vote.Message);
+                        if (message != null)
                         {
-                            if (message.Reactions.Count == 0) continue;
-
-                            var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
-                            var embed = Utility.GenerateVoteEmbed(
-                                author,
-                                vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
-                                vote.Topic, vote.End,
-                                vote.Voters.Count,
-                                vote.Yes,
-                                vote.No,
-                                vote.Id);
-
-                            await message.ModifyAsync(embed: embed);
-                            await message.DeleteAllReactionsAsync();
-                        }
-                        else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
-                        {
-                            var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
-                            var embed = Utility.GenerateVoteEmbed(
-                                author,
-                                vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
-                                vote.Topic, vote.End,
-                                vote.Voters.Count,
-                                vote.Yes,
-                                vote.No,
-                                vote.Id);
-
-                            var doc = new XDocument();
-                            var root = new XElement("Voters");
-                            foreach (var voter in vote.Voters)
-                                root.Add(new XElement("Voter", voter));
-                            doc.Add(root);
-                            doc.Save($"generated/voters-{vote.Id}.xml");
-
-                            var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
-                            await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
-
-                            await message.DeleteAsync();
-                        }
-                        else if (DateTime.Now < vote.End) // починка голосования
-                        {
-                            if (message.Reactions.Count < 2)
+                            if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
                             {
+                                if (message.Reactions.Count == 0) continue;
+
+                                var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
+                                var embed = Utility.GenerateVoteEmbed(
+                                    author,
+                                    vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                                    vote.Topic, vote.End,
+                                    vote.Voters.Count,
+                                    vote.Yes,
+                                    vote.No,
+                                    vote.Id);
+
+                                await message.ModifyAsync(embed: embed);
                                 await message.DeleteAllReactionsAsync();
-                                await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
-                                await Task.Delay(400);
-                                await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
+                            }
+                            else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
+                            {
+                                var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
+                                var embed = Utility.GenerateVoteEmbed(
+                                    author,
+                                    vote.Yes > vote.No ? DiscordColor.Green : DiscordColor.Red,
+                                    vote.Topic, vote.End,
+                                    vote.Voters.Count,
+                                    vote.Yes,
+                                    vote.No,
+                                    vote.Id);
+
+                                var doc = new XDocument();
+                                var root = new XElement("Voters");
+                                foreach (var voter in vote.Voters)
+                                    root.Add(new XElement("Voter", voter));
+                                doc.Add(root);
+                                doc.Save($"generated/voters-{vote.Id}.xml");
+
+                                var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
+                                await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
+
+                                await message.DeleteAsync();
+                            }
+                            else if (DateTime.Now < vote.End) // починка голосования
+                            {
+                                if (message.Reactions.Count < 2)
+                                {
+                                    await message.DeleteAllReactionsAsync();
+                                    await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+                                    await Task.Delay(400);
+                                    await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
+                                }
                             }
                         }
                     }
-                }
-                catch (ArgumentNullException)
-                {
-                    //Do nothing, message not found
-                }
-                catch (Exception ex)
-                {
-                    Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
-                        $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
-                        DateTime.Now);
+                    catch (ArgumentNullException)
+                    {
+                        //Do nothing, message not found
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
+                    $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
+                    DateTime.Now);
+            }
         }
+
 
         /// <summary>
         ///     Очистка сообщений из каналов
@@ -342,6 +351,52 @@ namespace Bot_NetCore.Listeners
                         //Пользователь не найден
                     }
                 }
+            }
+        }
+
+
+        /// <summary>
+        ///     Обновление времени в голосовых каналах
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void UpdateVoiceTimesOnElapsedAsync(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                foreach (var entry in VoiceListener.VoiceTimeCounters)
+                {
+                    try
+                    {
+                        var time = DateTime.Now - entry.Value;
+                        VoiceTimeSQL.AddForUser(entry.Key, time);
+                    }
+                    catch (Exception ex)
+                    {
+                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot", $"Ошибка при обновлении времени активности пользователя ({entry.Key}). \n" +
+                            $"{ex.GetType()}" +
+                            $"{ex.Message}\n" +
+                            $"{ex.StackTrace}",
+                            DateTime.Now);
+                    }
+                }
+
+                //Clear old values
+                VoiceListener.VoiceTimeCounters.Clear();
+                var guild = Client.Guilds[Bot.BotSettings.Guild];
+                foreach (var entry in guild.VoiceStates.Where(x => x.Value.Channel != null && x.Value.Channel.Id != guild.AfkChannel.Id).ToList())
+                {
+                    if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
+                        VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
+                }
+            } 
+            catch(Exception ex)
+            {
+                Client.DebugLogger.LogMessage(LogLevel.Error, "Bot", $"Ошибка при обновлении времени активности пользователей. \n" +
+                    $"{ex.GetType()}" +
+                    $"{ex.Message}\n" +
+                    $"{ex.StackTrace}",
+                    DateTime.Now);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Misc;
 using DSharpPlus;
@@ -33,10 +34,10 @@ namespace Bot_NetCore.Listeners
             }
             catch { }
 
-            foreach (var user in e.Guild.VoiceStates.Keys)
+            foreach (var entry in e.Guild.VoiceStates.Where(x => x.Value.Channel != null && x.Value.Channel.Id != e.Guild.AfkChannel.Id).ToList())
             {
-                if(!VoiceListener.VoiceTimeCounters.ContainsKey(user))
-                    VoiceListener.VoiceTimeCounters.Add(user, DateTime.Now);
+                if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
+                    VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
             }
 
         }

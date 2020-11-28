@@ -14,7 +14,6 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using MaxMind.GeoIP2;
 using MaxMind.GeoIP2.Exceptions;
-using static Bot_NetCore.Misc.Utility;
 
 namespace Bot_NetCore.Commands
 {
@@ -121,7 +120,7 @@ namespace Bot_NetCore.Commands
             }
 
             var id = RandomString.NextString(6);
-            var reportEnd = DateTime.Now + TimeSpanParse(duration);
+            var reportEnd = DateTime.Now + Utility.TimeSpanParse(duration);
             ReportSQL purge = null;
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
@@ -194,7 +193,7 @@ namespace Bot_NetCore.Commands
             }
 
             var id = RandomString.NextString(6);
-            var reportEnd = DateTime.Now + TimeSpanParse(duration);
+            var reportEnd = DateTime.Now + Utility.TimeSpanParse(duration);
             ReportSQL purge = null;
 
             //Возможна только одна блокировка, если уже существует то перезаписываем
@@ -975,14 +974,14 @@ namespace Bot_NetCore.Commands
                 {
                     if (purge.ReportType == ReportType.Mute)
                         if (purge.ReportEnd > DateTime.Now)
-                            mute = FormatTimespan(DateTime.Now - purge.ReportEnd);
+                            mute = Utility.FormatTimespan(DateTime.Now - purge.ReportEnd);
 
                     if (purge.ReportType == ReportType.CodexPurge)
                     {
                         if (purge.ReportEnd > DateTime.Now)
                         {
                             hasPurge = true;
-                            codex = FormatTimespan(DateTime.Now - purge.ReportEnd);
+                            codex = Utility.FormatTimespan(DateTime.Now - purge.ReportEnd);
                         }
                         else if (!hasPurge && purge.ReportEnd <= DateTime.Now)
                             codex = "Не принял*";
@@ -993,7 +992,7 @@ namespace Bot_NetCore.Commands
                         if (purge.ReportEnd > DateTime.Now)
                         {
                             hasFleetPurge = true;
-                            fleetCodex = FormatTimespan(DateTime.Now - purge.ReportEnd);
+                            fleetCodex = Utility.FormatTimespan(DateTime.Now - purge.ReportEnd);
                         }
                         else if (!hasFleetPurge && purge.ReportEnd <= DateTime.Now)
                             fleetCodex = "Не принял*";
@@ -1029,7 +1028,7 @@ namespace Bot_NetCore.Commands
                     var length = subscriber.SubscriptionEnd - DateTime.Now;
 
                     subscription =
-                        $"{subscriber.SubscriptionEnd:HH:mm:ss dd.MM.yyyy} ({Utility.ToCorrectCase(length, TimeUnit.Days)})";
+                        $"{subscriber.SubscriptionEnd:HH:mm:ss dd.MM.yyyy} ({Utility.ToCorrectCase(length, Utility.TimeUnit.Days)})";
                 }
                 embed.AddField("Подписка", subscription, true);
 
@@ -1109,17 +1108,17 @@ namespace Bot_NetCore.Commands
 
             var interactivity = ctx.Client.GetInteractivity();
 
-            List<CustomEmbedField> fields = new List<CustomEmbedField>();
+            List<Utility.CustomEmbedField> fields = new List<Utility.CustomEmbedField>();
 
             for (var i = count; i > 0; i--)
             {
                 var warn = warnings[i - 1];
-                fields.Add(new CustomEmbedField($"*{i}*.",
+                fields.Add(new Utility.CustomEmbedField($"*{i}*.",
                     $"**ID:** {warn.Id}\n**Причина:** {warn.Reason} \n **Выдан:** {await ctx.Client.GetUserAsync(warn.Moderator)} {warn.Date.ToShortDateString()}"));
             }
 
 
-            var fields_pagination = GeneratePagesInEmbeds(fields, "Список варнов.");
+            var fields_pagination = Utility.GeneratePagesInEmbeds(fields, "Список варнов.");
 
             if (fields_pagination.Count() > 1)
                 await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, fields_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
