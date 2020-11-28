@@ -140,6 +140,26 @@ namespace Bot_NetCore.Commands
 
             await member.SendMessageAsync("Администратор удалил тебя из списка участников Секретного Санты. **Причина:** " + reason);
         }
-        
+
+        [Command("sort")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Sort(CommandContext ctx)
+        {
+            var senders = SecretSantaParticipant.GetAll();
+            var receivers = SecretSantaParticipant.GetAll();
+
+            var random = new Random();
+            for (int i = 0; i < senders.Count; ++i)
+            {
+                var avaliable = receivers;
+                avaliable.Remove(senders[i]);
+
+                var receiver = random.Next(0, avaliable.Count);
+                senders[i].SendingTo = avaliable[receiver].Id;
+                receivers.Remove(avaliable[receiver]);
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Список сгененирован!");
+        }
     }
 }

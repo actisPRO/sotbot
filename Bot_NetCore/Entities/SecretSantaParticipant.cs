@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
 {
@@ -53,6 +54,30 @@ namespace Bot_NetCore.Entities
                     }
 
                     return null;
+                }
+            } 
+        }
+
+        public static List<SecretSantaParticipant> GetAll()
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    var result = new List<SecretSantaParticipant>();
+                    
+                    cmd.CommandText = "SELECT * FROM secret_santa";
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        result.Add(new SecretSantaParticipant(reader.GetUInt64("id"), reader.GetString("address"),
+                            reader.GetUInt64("sending_to")));
+                    }
+
+                    return result;
                 }
             } 
         }
