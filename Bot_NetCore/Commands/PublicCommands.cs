@@ -133,7 +133,6 @@ namespace Bot_NetCore.Commands
             {
                 var embedMessage = await ctx.Channel.GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
                 await embedMessage.ModifyAsync(embed: embed.Build());
-                await ctx.TriggerTypingAsync();
             }
         }
 
