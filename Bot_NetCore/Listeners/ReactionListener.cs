@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Listeners
 {
@@ -20,9 +21,9 @@ namespace Bot_NetCore.Listeners
         public static Dictionary<DiscordUser, DateTime> EmojiCooldowns = new Dictionary<DiscordUser, DateTime>();
 
         [AsyncListener(EventTypes.MessageReactionRemoved)]
-        public static async Task ClientOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
+        public static async Task ClientOnMessageReactionRemoved(DiscordClient client, MessageReactionRemoveEventArgs e)
         {
-            var discordUser = await e.Client.GetUserAsync(e.User.Id);
+            var discordUser = await client.GetUserAsync(e.User.Id);
             if (discordUser.IsBot) return;
 
             //Проверка если сообщение с принятием правил
@@ -49,9 +50,9 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.MessageReactionAdded)]
-        public static async Task ClientOnMessageReactionAdded(MessageReactionAddEventArgs e)
+        public static async Task ClientOnMessageReactionAdded(DiscordClient client, MessageReactionAddEventArgs e)
         {
-            var discordUser = await e.Client.GetUserAsync(e.User.Id);
+            var discordUser = await client.GetUserAsync(e.User.Id);
             if (discordUser.IsBot) return;
 
             //Проверка если сообщение с принятием правил сообщества
@@ -107,9 +108,7 @@ namespace Bot_NetCore.Listeners
                     //Убираем роль блокировки правил
                     await member.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
 
-                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил через реакцию.",
-                        DateTime.Now);
+                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил через реакцию.");
                 }
 
                 return;
@@ -159,7 +158,7 @@ namespace Bot_NetCore.Listeners
                         $"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны находиться на сервере " +
                         $"**{Utility.FormatTimespan(TimeSpan.FromDays(Bot.BotSettings.FleetDateOffset))}**.");
 
-                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), member);
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
                     return;
                 }
 
@@ -172,7 +171,7 @@ namespace Bot_NetCore.Listeners
                         $"**{Utility.FormatTimespan(TimeSpan.FromHours(Bot.BotSettings.FleetVoiceTimeOffset))}** в голосовых каналах. " +
                         $"Ваше время: **{Utility.FormatTimespan(voiceTime)}**");
 
-                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), member);
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
                     return;
                 }
 
@@ -183,7 +182,7 @@ namespace Bot_NetCore.Listeners
                 {
                     await member.SendMessageAsync(
                         $"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вам нужно авторизоваться с помощью Discord на сайте {Bot.BotSettings.WebURL}login.");
-                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), member);
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
                     return;
                 }
 
@@ -191,7 +190,7 @@ namespace Bot_NetCore.Listeners
                 {
                     await member.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны привязать Xbox к своему аккаунту, затем перейдите по ссылке " +
                                                 $"{Bot.BotSettings.WebURL}xbox - это обновит базу данных.");
-                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(e.Client, ":white_check_mark:"), member);
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
                     return;
                 }
 
@@ -208,9 +207,11 @@ namespace Bot_NetCore.Listeners
                 if (!member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
                 {
                     await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
-                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил рейда.",
-                        DateTime.Now);
+
+                    await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
+                            .SendMessageAsync($"{DiscordEmoji.FromName(client, ":new:")} Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) получил роль рейда.");
+
+                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил рейда.");
                 }
 
                 return;
@@ -267,9 +268,7 @@ namespace Bot_NetCore.Listeners
                         break;
                 }
                 //Отправка в лог
-                e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT",
-                    $"{discordUser.Username}#{discordUser.Discriminator} получил новую роль эмиссарства.",
-                    DateTime.Now);
+                client.Logger.LogInformation(BotLoggerEvents.Event, $"{discordUser.Username}#{discordUser.Discriminator} получил новую роль эмиссарства.");
 
                 return;
             }
@@ -330,7 +329,7 @@ namespace Bot_NetCore.Listeners
 
                 if (e.Message.Id == ship.CreationMessage)
                 {
-                    if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":white_check_mark:"))
+                    if (e.Emoji == DiscordEmoji.FromName(client, ":white_check_mark:"))
                     {
                         var name = ship.Name;
                         var channel = await e.Channel.Guild.CreateChannelAsync($"☠{name}☠", ChannelType.Voice,
@@ -354,11 +353,10 @@ namespace Bot_NetCore.Listeners
                             $"{Bot.BotSettings.OkEmoji} Администратор **{discordUser.Username}#{discordUser.Discriminator}** успешно подтвердил " +
                             $"запрос на создание корабля **{name}**!");
 
-                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                            $"Администратор {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил создание приватного корабля {name}.",
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Администратор {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил создание приватного корабля {name}.",
                             DateTime.Now);
                     }
-                    else if (e.Emoji == DiscordEmoji.FromName((DiscordClient)e.Client, ":no_entry:"))
+                    else if (e.Emoji == DiscordEmoji.FromName(client, ":no_entry:"))
                     {
                         var name = ship.Name;
                         var member =
@@ -379,8 +377,7 @@ namespace Bot_NetCore.Listeners
                             $"{Bot.BotSettings.OkEmoji} Администратор **{discordUser.Username}#{discordUser.Discriminator}** успешно отклонил запрос на " +
                             $"создание корабля **{name}**!");
 
-                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                            $"Администратор {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) отклонил создание приватного корабля {name}.",
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Администратор {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) отклонил создание приватного корабля {name}.",
                             DateTime.Now);
                     }
                     else

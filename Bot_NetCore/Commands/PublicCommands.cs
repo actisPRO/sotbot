@@ -11,6 +11,8 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Commands
 {
@@ -171,7 +173,7 @@ namespace Bot_NetCore.Commands
 
             try
             {
-                ctx.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Удаление ембеда в поиске игроков!", DateTime.Now);
+                ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
                 await embedMessage.DeleteAsync();
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
                 await VoiceListener.SaveFindChannelMessagesAsync();

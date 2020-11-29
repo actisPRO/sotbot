@@ -12,6 +12,8 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Commands
 {
@@ -500,8 +502,7 @@ namespace Bot_NetCore.Commands
                 if (ownerEl.Attribute("status").Value != "True")
                 {
                     var ship = ShipList.GetOwnedShip(Convert.ToUInt64(ownerEl.Value));
-                    ctx.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot Purge", $"Ship deletion: {ship.Name}",
-                        DateTime.Now);
+                    ctx.Client.Logger.LogInformation(BotLoggerEvents.Commands, $"Ship deletion: {ship.Name}");
 
                     try
                     {
