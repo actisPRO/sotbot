@@ -10,6 +10,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
 
 namespace Bot_NetCore.Listeners
@@ -17,7 +18,7 @@ namespace Bot_NetCore.Listeners
     public static class GuildMessageListener
     {
         [AsyncListener(EventTypes.MessageDeleted)]
-        public static async Task LogOnMessageDeleted(MessageDeleteEventArgs e)
+        public static async Task LogOnMessageDeleted(DiscordClient client, MessageDeleteEventArgs e)
         {
             if (e.Guild != null)
             {
@@ -53,8 +54,8 @@ namespace Bot_NetCore.Listeners
 
                                         var file = $"generated/attachments/{attachment.FileName}";
 
-                                        var client = new WebClient();
-                                        client.DownloadFile(attachment.Url, file);
+                                        var wClient = new WebClient();
+                                        wClient.DownloadFile(attachment.Url, file);
                                         await e.Guild.GetChannel(Bot.BotSettings.FulllogChannel)
                                             .SendFileAsync(file, "**Удаление сообщения**\n" +
                                                               $"**Автор:** {e.Message.Author.Username}#{e.Message.Author.Discriminator} ({e.Message.Author.Id})\n" +
@@ -80,7 +81,7 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.MessageCreated)]
-        public static async Task LogOnMessageCreated(MessageCreateEventArgs e)
+        public static async Task LogOnMessageCreated(DiscordClient client, MessageCreateEventArgs e)
         {
             if (e.Guild != null)
             {
@@ -131,9 +132,7 @@ namespace Bot_NetCore.Listeners
                         //Убираем роль блокировки правил
                         await user.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
 
-                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                            $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил через сообщение.",
-                            DateTime.Now);
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил через сообщение.");
                     }
                 }
 
@@ -144,11 +143,11 @@ namespace Bot_NetCore.Listeners
                                   $"**Сообщение:** {e.Message.Id}\n" +
                                   $"**Вложение:**\n";
 
-                    using (var client = new WebClient())
+                    using (var wClient = new WebClient())
                     {
                         var attachment = e.Message.Attachments[0]; //проверить: не может быть больше 1 вложения в сообщении
                         var file = $"generated/attachments/{attachment.FileName}";
-                        client.DownloadFile(attachment.Url, file);
+                        wClient.DownloadFile(attachment.Url, file);
                         var logMessage = await e.Guild.GetChannel(Bot.BotSettings.AttachmentsLog).SendFileAsync(file, message);
                         File.Delete(file);
 
@@ -178,7 +177,7 @@ namespace Bot_NetCore.Listeners
                         {
                             case "w":
                                 await e.Message.DeleteAsync();
-                                Bot.RunCommand((DiscordClient)e.Client, CommandType.Warn, args, e.Message);
+                                Bot.RunCommand(client, CommandType.Warn, args, e.Message);
                                 return;
                             default:
                                 return;

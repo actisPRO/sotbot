@@ -16,7 +16,7 @@ namespace Bot_NetCore.Listeners
         public static List<DiscordUser> DmHandled = new List<DiscordUser>();
 
         [AsyncListener(EventTypes.MessageCreated)]
-        public static async Task MessageCreated(MessageCreateEventArgs e)
+        public static async Task MessageCreated(DiscordClient client, MessageCreateEventArgs e)
         {
             if (e.Guild == null && 
                 !e.Author.IsCurrent && 

@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Listeners
 {
@@ -19,9 +20,9 @@ namespace Bot_NetCore.Listeners
         public static List<DiscordInvite> Invites;
 
         [AsyncListener(EventTypes.Ready)]
-        public static async Task InvitesOnClientOnReady(ReadyEventArgs e)
+        public static async Task InvitesOnClientOnReady(DiscordClient client, ReadyEventArgs e)
         {
-            var guild = e.Client.Guilds[Bot.BotSettings.Guild];
+            var guild = client.Guilds[Bot.BotSettings.Guild];
             var guildInvites = await guild.GetInvitesAsync();
             Invites = guildInvites.ToList();
         }
@@ -30,7 +31,7 @@ namespace Bot_NetCore.Listeners
         ///     Лог посещений
         /// </summary>
         [AsyncListener(EventTypes.GuildMemberRemoved)]
-        public static async Task ClientOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
+        public static async Task ClientOnGuildMemberRemoved(DiscordClient client, GuildMemberRemoveEventArgs e)
         {
             // Сохранение ролей участника
             var roles = e.Member.Roles;
@@ -68,7 +69,7 @@ namespace Bot_NetCore.Listeners
                     $"**Участник покинул сервер:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}).");
 
             //Обновляем статус бота
-            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
+            await Bot.UpdateBotStatusAsync(client, e.Guild);
 
             //Если пользователь не был никем приглашен, то при выходе он будет сохранен.
             if (!InviterList.Inviters.ToList().Any(i => i.Value.Referrals.ContainsKey(e.Member.Id)))
@@ -87,16 +88,14 @@ namespace Bot_NetCore.Listeners
 
             await LeaderboardCommands.UpdateLeaderboard(e.Guild);
 
-            e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) покинул сервер.",
-                DateTime.Now);
+            client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) покинул сервер.");
         }
 
         /// <summary>
         ///     Приветственное сообщение + лог посещений + проверка на бан
         /// </summary>
         [AsyncListener(EventTypes.GuildMemberAdded)]
-        public static async Task ClientOnGuildMemberAdded(GuildMemberAddEventArgs e)
+        public static async Task ClientOnGuildMemberAdded(DiscordClient client, GuildMemberAddEventArgs e)
         {
             //Проверка на бан
             var userBans = BanSQL.GetForUser(e.Member.Id);
@@ -169,9 +168,7 @@ namespace Bot_NetCore.Listeners
             }
             catch (Exception ex)
             {
-                e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
-                   $"Ошибка при выдаче доступа к приватному кораблю. \n{ex.Message}\n{ex.StackTrace}",
-                   DateTime.Now); ;
+                client.Logger.LogWarning(BotLoggerEvents.Event, $"Ошибка при выдаче доступа к приватному кораблю. \n{ex.Message}\n{ex.StackTrace}");
             }
 
             var invites = Invites.AsReadOnly().ToList(); //Сохраняем список старых инвайтов в локальную переменную
@@ -233,9 +230,8 @@ namespace Bot_NetCore.Listeners
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
                         $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. ");
 
-                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.",
-                        DateTime.Now);
+                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. " +
+                        $"Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.");
 
                     //Проверяем если пригласивший уже существует, если нет то создаем
                     if (!InviterList.Inviters.ContainsKey(updatedInvite.Inviter.Id))
@@ -259,9 +255,7 @@ namespace Bot_NetCore.Listeners
                             $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
                             $"Приглашение не удалось определить.");
 
-                    e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                        $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
-                        DateTime.Now);
+                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.");
                 }
             }
             catch (Exception ex)
@@ -271,12 +265,10 @@ namespace Bot_NetCore.Listeners
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
                         $"При попытке отследить инвайт произошла ошибка.");
 
-                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                    $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
+                client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.",
                     DateTime.Now);
 
-                e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
-                    "Не удалось определить приглашение.",
+                client.Logger.LogWarning(BotLoggerEvents.Event, "Не удалось определить приглашение.",
                     DateTime.Now);
 
                 var errChannel = e.Guild.GetChannel(Bot.BotSettings.ErrorLog);
@@ -291,16 +283,16 @@ namespace Bot_NetCore.Listeners
             }
 
             //Обновляем статус бота
-            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
+            await Bot.UpdateBotStatusAsync(client, e.Guild);
         }
 
         /// <summary>
         ///     Проверка на создание инвайтов
         /// </summary>
         [AsyncListener(EventTypes.InviteCreated)]
-        public static async Task ClientOnInviteCreated(InviteCreateEventArgs e)
+        public static async Task ClientOnInviteCreated(DiscordClient client, InviteCreateEventArgs e)
         {
-            var guildInvites = await e.Client.Guilds[Bot.BotSettings.Guild].GetInvitesAsync();
+            var guildInvites = await client.Guilds[Bot.BotSettings.Guild].GetInvitesAsync();
             Invites = guildInvites.ToList();
         }
 
@@ -308,9 +300,9 @@ namespace Bot_NetCore.Listeners
         ///     Проверка на удаление инвайтов
         /// </summary>
         [AsyncListener(EventTypes.InviteDeleted)]
-        public static async Task ClientOnInviteDeleted(InviteDeleteEventArgs e)
+        public static async Task ClientOnInviteDeleted(DiscordClient client, InviteDeleteEventArgs e)
         {
-            var guildInvites = await e.Client.Guilds[Bot.BotSettings.Guild].GetInvitesAsync();
+            var guildInvites = await client.Guilds[Bot.BotSettings.Guild].GetInvitesAsync();
             Invites = guildInvites.ToList();
         }
     }

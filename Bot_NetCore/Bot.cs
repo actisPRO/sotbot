@@ -18,6 +18,8 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -89,10 +91,8 @@ namespace Bot_NetCore
             var cfg = new DiscordConfiguration
             {
                 Token = BotSettings.Token,
-                LogLevel = LogLevel.Info,
                 AutoReconnect = true,
-                TokenType = TokenType.Bot,
-                UseInternalLogHandler = true
+                TokenType = TokenType.Bot
             };
 
             Client = new DiscordClient(cfg);
@@ -124,9 +124,6 @@ namespace Bot_NetCore
 
             //Ивенты
             AsyncListenerHandler.InstallListeners(Client, this);
-
-            //Логгер
-            Client.DebugLogger.LogMessageReceived += Listeners.LoggerListener.LogOnLogMessageReceived;
 
             ConnectionString =
                 $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword}; CharSet=utf8mb4;";

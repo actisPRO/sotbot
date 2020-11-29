@@ -4,29 +4,28 @@ using System.Threading.Tasks;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Listeners
 {
     public static class StartupListener
     {
         [AsyncListener(EventTypes.Ready)]
-        public static async Task ClientOnReady(ReadyEventArgs e)
+        public static async Task ClientOnReady(DiscordClient client, ReadyEventArgs e)
         {
-            e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", $"Sea Of Thieves Bot, version {Bot.BotSettings.Version}",
-                DateTime.Now);
-            e.Client.DebugLogger.LogMessage(LogLevel.Info, "SoT", "Made by Actis",
-                DateTime.Now); // и еще немного ЧСВ
+            client.Logger.LogInformation(BotLoggerEvents.Bot, "SoT", $"Sea Of Thieves Bot, version {Bot.BotSettings.Version}");
+            client.Logger.LogInformation(BotLoggerEvents.Bot, "Made by Actis"); // и еще немного ЧСВ
 
-            var guild = e.Client.Guilds[Bot.BotSettings.Guild];
+            var guild = client.Guilds[Bot.BotSettings.Guild];
 
-            var member = await guild.GetMemberAsync(e.Client.CurrentUser.Id);
+            var member = await guild.GetMemberAsync(client.CurrentUser.Id);
             await member.ModifyAsync(x => x.Nickname = $"SeaOfThieves {Bot.BotSettings.Version}");
         }
 
         [AsyncListener(EventTypes.GuildAvailable)]
-        public static async Task ClientOnGuildAvailable(GuildCreateEventArgs e)
+        public static async Task ClientOnGuildAvailable(DiscordClient client, GuildCreateEventArgs e)
         {
-            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
+            await Bot.UpdateBotStatusAsync(client, e.Guild);
 
             try
             {
