@@ -208,7 +208,7 @@ namespace Bot_NetCore.Entities
                 {
                     var statement = $"SELECT bans.* " +
                         $"FROM bans " +
-                        $"INNER JOIN(SELECT user, MAX(unban) as lastUnban FROM bans GROUP BY user, unban)groupedB " +
+                        $"INNER JOIN(SELECT user, MAX(unban) as lastUnban FROM bans GROUP BY user)groupedB " +
                         $"ON bans.user = groupedB.user AND bans.unban = groupedB.lastUnban " +
                         $"WHERE unban <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}';";
                     cmd.CommandText = statement;
