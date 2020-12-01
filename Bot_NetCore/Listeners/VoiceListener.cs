@@ -85,17 +85,19 @@ namespace Bot_NetCore.Listeners
                         DiscordChannel created = null;
                         // Проверяем канал в котором находится пользователь
 
+                        var channelName = Utility.GenerateChannelName(e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory).Children.Select(x => x.Name).ToArray());
+
                         if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
                             created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
+                                $"{channelSymbol} Шлюп {channelName}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 2);
                         else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
                             created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Бриг {e.User.Username}", ChannelType.Voice,
+                                $"{channelSymbol} Бриг {channelName}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 3);
                         else // Галеон
                             created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
+                                $"{channelSymbol} Галеон {channelName}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 4);
 
                         await member.PlaceInAsync(created);
