@@ -26,7 +26,7 @@ namespace Bot_NetCore.Listeners
         ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
         [AsyncListener(EventTypes.CommandErrored)]
-        public static async Task OnCommandErrored(DiscordClient client, CommandErrorEventArgs e)
+        public static async Task OnCommandErrored(CommandsNextExtension ctx, CommandErrorEventArgs e)
         {
             if (e.Exception is CommandNotFoundException) return;
 
@@ -115,7 +115,7 @@ namespace Bot_NetCore.Listeners
 
             var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
 
-            client.Logger.LogWarning(BotLoggerEvents.Event, $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
+            ctx.Client.Logger.LogWarning(BotLoggerEvents.Event, $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
                 $"({e.Context.User.Id}) пытался запустить команду {command}, но произошла ошибка.");
 
             await e.Context.RespondAsync(

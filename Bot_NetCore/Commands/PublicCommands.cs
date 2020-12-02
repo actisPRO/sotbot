@@ -70,7 +70,8 @@ namespace Bot_NetCore.Commands
             var invite = await channel.CreateInviteAsync();
             var usersNeeded = channel.UserLimit - channel.Users.Count();
 
-            var embedThumbnail = "";
+
+            string embedThumbnail;
             //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
             if (channel.Parent.Name.StartsWith("Рейд"))
             {
@@ -101,11 +102,35 @@ namespace Bot_NetCore.Commands
 
             content += ($"{DiscordEmoji.FromName(ctx.Client, ":loudspeaker:")} {description}\n\n");
 
+            var slotsCount = 1;
             foreach (var member in channel.Users)
-                content += $"{DiscordEmoji.FromName(ctx.Client, ":doubloon:")} {member.Mention}\n";
+            {
+                if (content.Length > 1900 || slotsCount > 15)
+                {
+                    content += $"{DiscordEmoji.FromName(ctx.Client, ":arrow_heading_down:")} и еще {channel.Users.Count() - slotsCount + 1}.\n";
+                    break;
+                }
+                else
+                {
+                    content += $"{DiscordEmoji.FromName(ctx.Client, ":doubloon:")} {member.Mention}\n";
+                    slotsCount++;
+                }
+            }
 
             for (int i = 0; i < usersNeeded; i++)
-                content += $"{DiscordEmoji.FromName(ctx.Client, ":gold:")} ☐\n";
+            {
+                if (content.Length > 1900 || slotsCount > 15)
+                {
+                    if (i != 0) //Без этого сообщение будет отправлено вместе с тем что выше
+                        content += $"{DiscordEmoji.FromName(ctx.Client, ":arrow_heading_down:")} и еще {channel.UserLimit - slotsCount + 1} свободно.\n";
+                    break;
+                }
+                else
+                {
+                    content += $"{DiscordEmoji.FromName(ctx.Client, ":gold:")} ☐\n";
+                    slotsCount++;
+                }
+            }
 
             content += $"\n**Подключиться:** {invite}";
 

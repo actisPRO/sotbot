@@ -324,12 +324,16 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task UpdateFindChannelEmbedOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
+            if (e.Before?.Channel?.Id == e.After?.Channel?.Id)
+                return;
+
             List<DiscordChannel> channels = new List<DiscordChannel>();
-            if (e.Before != null && e.Before.Channel != null)
+
+            if (e.Before?.Channel?.Id != null)
                 channels.Add(e.Before.Channel);
-            if (e.After != null && e.After.Channel != null)
-                if(!channels.Contains(e.After.Channel))
-                    channels.Add(e.After.Channel);
+
+            if (e.After?.Channel?.Id != null)
+                channels.Add(e.After.Channel);
 
             foreach (var channel in channels)
             {
@@ -388,11 +392,35 @@ namespace Bot_NetCore.Listeners
                             var content = $"{oldContent[0]}\n\n";
 
                             //Index 1 for users in channel
+                            var slotsCount = 1;
                             foreach (var member in channel.Users)
-                                content += $"{DiscordEmoji.FromName(client, ":doubloon:")} {member.Mention}\n";
+                            {
+                                if (content.Length > 1900 || slotsCount > 15)
+                                {
+                                    content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.Users.Count() - slotsCount + 1}.\n";
+                                    break;
+                                }
+                                else
+                                {
+                                    content += $"{DiscordEmoji.FromName(client, ":doubloon:")} {member.Mention}\n";
+                                    slotsCount++;
+                                }
+                            }
 
                             for (int i = 0; i < usersNeeded; i++)
-                                content += $"{DiscordEmoji.FromName(client, ":gold:")} ☐\n";
+                            {
+                                if (content.Length > 1900 || slotsCount > 15)
+                                {
+                                    if(i != 0) //Без этого сообщение будет отправлено вместе с тем что выше
+                                        content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.UserLimit - slotsCount + 1} свободно.\n";
+                                    break;
+                                }
+                                else
+                                {
+                                    content += $"{DiscordEmoji.FromName(client, ":gold:")} ☐\n";
+                                    slotsCount++;
+                                }
+                            }
 
                             //Index 2 for invite link
                             content += $"\n{oldContent[2]}";
