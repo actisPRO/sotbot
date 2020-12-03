@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DSharpPlus;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Misc
 {
@@ -26,7 +27,7 @@ namespace Bot_NetCore.Misc
             {
                 listener.Attribute.Register(bot, client, listener.Method);
 
-                client.DebugLogger.LogMessage(LogLevel.Debug, "SoT", $"{listener.Method.DeclaringType.Name}.{listener.Method.Name} installed as {listener.Attribute.Target} event", DateTime.Now);
+                client.Logger.LogDebug(BotLoggerEvents.AsyncListener, $"{listener.Method.DeclaringType.Name}.{listener.Method.Name} installed as {listener.Attribute.Target} event");
             }
         }
     }

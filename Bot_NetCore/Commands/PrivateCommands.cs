@@ -12,6 +12,8 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Commands
 {
@@ -23,8 +25,7 @@ namespace Bot_NetCore.Commands
     {
         [Command("new")]
         [Description("Отправляет запрос на создание приватного корабля.")]
-        public async Task New(CommandContext ctx, [Description("Уникальное имя корабля")] [RemainingText]
-            string name)
+        public async Task New(CommandContext ctx, [Description("Уникальное имя корабля")] [RemainingText] string name)
         {
             var doc = XDocument.Load("data/actions.xml");
             foreach (var action in doc.Element("actions").Elements("action"))
@@ -33,6 +34,12 @@ namespace Bot_NetCore.Commands
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не можете снова создать корабль!");
                     return;
                 }
+
+            if(ShipList.Ships.ContainsKey(name))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Корабль с таким названием уже существует!");
+                return;
+            }
 
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel)
                 .SendMessageAsync("**Запрос на создание корабля**\n\n" +
@@ -495,8 +502,7 @@ namespace Bot_NetCore.Commands
                 if (ownerEl.Attribute("status").Value != "True")
                 {
                     var ship = ShipList.GetOwnedShip(Convert.ToUInt64(ownerEl.Value));
-                    ctx.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot Purge", $"Ship deletion: {ship.Name}",
-                        DateTime.Now);
+                    ctx.Client.Logger.LogInformation(BotLoggerEvents.Commands, $"Ship deletion: {ship.Name}");
 
                     try
                     {

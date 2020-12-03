@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Misc
 {
@@ -31,7 +32,7 @@ namespace Bot_NetCore.Misc
 
         public static async Task LogFleetDeletionAsync(DiscordClient client, DiscordGuild guild, DiscordChannel fleetCategory)
         {
-            client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Удаление рейда {fleetCategory.Name} - {fleetCategory.Id}", DateTime.Now);
+            client.Logger.LogInformation(BotLoggerEvents.Event, $"Удаление рейда {fleetCategory.Name} - {fleetCategory.Id}");
 
             var embed = new DiscordEmbedBuilder
             {

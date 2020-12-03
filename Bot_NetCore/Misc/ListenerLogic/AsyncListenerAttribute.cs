@@ -2,6 +2,8 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Misc
 {
@@ -17,35 +19,33 @@ namespace Bot_NetCore.Misc
 
         public void Register(Bot bot, DiscordClient client, MethodInfo listener)
         {
-            Task OnEventWithArgs(object e)
+            Task OnEventWithArgs(DiscordClient client, object e)
             {
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        await (Task) listener.Invoke(null, new[] {e});
+                        await (Task)listener.Invoke(null, new[] { client, e });
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"<AsyncListener> Uncaught exception in listener thread: {ex}");
-                        Console.WriteLine(ex.StackTrace);
+                        client.Logger.LogError(BotLoggerEvents.AsyncListener, ex, $"Uncaught exception in listener thread");
                     }
                 });
                 return Task.CompletedTask;
             }
 
-            Task OnEventVoid()
+            Task OnCommandWithArgs(CommandsNextExtension commandsNext, object e)
             {
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        await (Task) listener.Invoke(null, new object[] {});
+                        await (Task)listener.Invoke(null, new[] { commandsNext, e });
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"<AsyncListener> Uncaught exception in listener thread: {ex}");
-                        Console.WriteLine(ex.StackTrace);
+                        client.Logger.LogError(BotLoggerEvents.AsyncListener, ex, $"Uncaught exception in listener thread");
                     }
                 });
                 return Task.CompletedTask;
@@ -60,7 +60,7 @@ namespace Bot_NetCore.Misc
                     client.SocketErrored += OnEventWithArgs;
                     break;
                 case EventTypes.SocketOpened:
-                    client.SocketOpened += OnEventVoid;
+                    client.SocketOpened += OnEventWithArgs;
                     break;
                 case EventTypes.SocketClosed:
                     client.SocketClosed += OnEventWithArgs;
@@ -195,10 +195,10 @@ namespace Bot_NetCore.Misc
                     client.InviteDeleted += OnEventWithArgs;
                     break;
                 case EventTypes.CommandExecuted:
-                    bot.Commands.CommandExecuted += OnEventWithArgs;
+                    bot.Commands.CommandExecuted += OnCommandWithArgs;
                     break;
                 case EventTypes.CommandErrored:
-                    bot.Commands.CommandErrored += OnEventWithArgs;
+                    bot.Commands.CommandErrored += OnCommandWithArgs;
                     break;
             }
         }

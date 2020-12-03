@@ -11,6 +11,8 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Commands
 {
@@ -68,7 +70,8 @@ namespace Bot_NetCore.Commands
             var invite = await channel.CreateInviteAsync();
             var usersNeeded = channel.UserLimit - channel.Users.Count();
 
-            var embedThumbnail = "";
+
+            string embedThumbnail;
             //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
             if (channel.Parent.Name.StartsWith("Рейд"))
             {
@@ -99,11 +102,35 @@ namespace Bot_NetCore.Commands
 
             content += ($"{DiscordEmoji.FromName(ctx.Client, ":loudspeaker:")} {description}\n\n");
 
+            var slotsCount = 1;
             foreach (var member in channel.Users)
-                content += $"{DiscordEmoji.FromName(ctx.Client, ":doubloon:")} {member.Mention}\n";
+            {
+                if (content.Length > 1900 || slotsCount > 15)
+                {
+                    content += $"{DiscordEmoji.FromName(ctx.Client, ":arrow_heading_down:")} и еще {channel.Users.Count() - slotsCount + 1}.\n";
+                    break;
+                }
+                else
+                {
+                    content += $"{DiscordEmoji.FromName(ctx.Client, ":doubloon:")} {member.Mention}\n";
+                    slotsCount++;
+                }
+            }
 
             for (int i = 0; i < usersNeeded; i++)
-                content += $"{DiscordEmoji.FromName(ctx.Client, ":gold:")} ☐\n";
+            {
+                if (content.Length > 1900 || slotsCount > 15)
+                {
+                    if (i != 0) //Без этого сообщение будет отправлено вместе с тем что выше
+                        content += $"{DiscordEmoji.FromName(ctx.Client, ":arrow_heading_down:")} и еще {channel.UserLimit - slotsCount + 1} свободно.\n";
+                    break;
+                }
+                else
+                {
+                    content += $"{DiscordEmoji.FromName(ctx.Client, ":gold:")} ☐\n";
+                    slotsCount++;
+                }
+            }
 
             content += $"\n**Подключиться:** {invite}";
 
@@ -133,7 +160,6 @@ namespace Bot_NetCore.Commands
             {
                 var embedMessage = await ctx.Channel.GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
                 await embedMessage.ModifyAsync(embed: embed.Build());
-                await ctx.TriggerTypingAsync();
             }
         }
 
@@ -172,7 +198,7 @@ namespace Bot_NetCore.Commands
 
             try
             {
-                ctx.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Удаление ембеда в поиске игроков!", DateTime.Now);
+                ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
                 await embedMessage.DeleteAsync();
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
                 await VoiceListener.SaveFindChannelMessagesAsync();

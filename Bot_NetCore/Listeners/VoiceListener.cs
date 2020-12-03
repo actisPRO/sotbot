@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
 
 namespace Bot_NetCore.Listeners
@@ -31,7 +32,7 @@ namespace Bot_NetCore.Listeners
         public static Dictionary<ulong, DateTime> VoiceTimeCounters = new Dictionary<ulong, DateTime>();
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task CreateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task CreateOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             try
             {
@@ -49,9 +50,7 @@ namespace Bot_NetCore.Listeners
                                 await m.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Вам нужно подождать " +
                                                          $"**{(ShipCooldowns[e.User] - DateTime.Now).Seconds}** секунд прежде чем " +
                                                          "создавать новый корабль!");
-                                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                                    $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Discriminator}) был перемещён в комнату ожидания.",
-                                    DateTime.Now);
+                                client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Discriminator}) был перемещён в комнату ожидания.");
                                 return;
                             }
 
@@ -67,43 +66,43 @@ namespace Bot_NetCore.Listeners
                         member.Roles.ToList().ForEach(x =>
                         {
                             if (x.Id == Bot.BotSettings.EmissaryGoldhoadersRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":moneybag:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":moneybag:");
                             else if (x.Id == Bot.BotSettings.EmissaryTradingCompanyRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":pig:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":pig:");
                             else if (x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":skull:");
                             else if (x.Id == Bot.BotSettings.EmissaryAthenaRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":gem:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":gem:");
                             else if (x.Id == Bot.BotSettings.EmissaryReaperBonesRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":skull_crossbones:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":skull_crossbones:");
                             else if (x.Id == Bot.BotSettings.HuntersRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":fish:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":fish:");
                             else if (x.Id == Bot.BotSettings.ArenaRole)
-                                channelSymbol = DiscordEmoji.FromName((DiscordClient)e.Client, ":crossed_swords:");
+                                channelSymbol = DiscordEmoji.FromName(client, ":crossed_swords:");
 
                         });
 
                         DiscordChannel created = null;
                         // Проверяем канал в котором находится пользователь
 
+                        var channelName = Utility.GenerateChannelName(e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory).Children.Select(x => x.Name).ToArray());
+
                         if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
                             created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Шлюп {e.User.Username}", ChannelType.Voice,
+                                $"{channelSymbol} Шлюп {channelName}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 2);
                         else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
                             created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Бриг {e.User.Username}", ChannelType.Voice,
+                                $"{channelSymbol} Бриг {channelName}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 3);
                         else // Галеон
                             created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Галеон {e.User.Username}", ChannelType.Voice,
+                                $"{channelSymbol} Галеон {channelName}", ChannelType.Voice,
                                 e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 4);
 
                         await member.PlaceInAsync(created);
 
-                        e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot",
-                            $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.",
-                            DateTime.Now);
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.");
                     }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
@@ -113,7 +112,7 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task FindOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task FindOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             if (e.Channel != null &&
                 e.Channel.Id == Bot.BotSettings.FindShip)
@@ -148,13 +147,13 @@ namespace Bot_NetCore.Listeners
                 var rShip = random.Next(0, possibleChannels.Count);
 
                 await m.PlaceInAsync(possibleChannels[rShip]);
-                e.Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {m.Username}#{m.Discriminator} успешно воспользовался поиском корабля!", DateTime.Now);
+                client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {m.Username}#{m.Discriminator} успешно воспользовался поиском корабля!");
                 return;
             }
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task PrivateOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task PrivateOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             if (e.Channel != null &&
                 e.Channel.ParentId == Bot.BotSettings.PrivateCategory)
@@ -169,7 +168,7 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task DeleteOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task DeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             e.Guild.Channels[Bot.BotSettings.AutocreateCategory].Children
                 .Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0).ToList()
@@ -187,13 +186,13 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task UpdateClientStatusOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task UpdateClientStatusOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            await Bot.UpdateBotStatusAsync(e.Client, e.Guild);
+            await Bot.UpdateBotStatusAsync(client, e.Guild);
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task UpdateVoiceTimeOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task UpdateVoiceTimeOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             //TODO: Раз в 10 минут проверять список и обновлять время
 
@@ -202,11 +201,12 @@ namespace Bot_NetCore.Listeners
                 e.After != null && e.After.Channel != null &&
                 e.Before.Channel.Id != e.After.Channel.Id)
             {
-                if(e.Before.Channel.Id == e.Guild.AfkChannel.Id)
+                if (e.Before.Channel.Id == e.Guild.AfkChannel.Id)
                 {
                     VoiceTimeCounters[e.User.Id] = DateTime.Now;
                 }
-                else if(e.After.Channel.Id == e.Guild.AfkChannel.Id)
+                else if (e.After.Channel.Id == e.Guild.AfkChannel.Id ||
+                        e.After.Channel.Id == Bot.BotSettings.WaitingRoom)
                 {
                     if (VoiceTimeCounters.ContainsKey(e.User.Id))
                     {
@@ -217,8 +217,9 @@ namespace Bot_NetCore.Listeners
                 }
             }
             //User left from voice
-            else if (e.Before != null && e.Before.Channel != null && 
-                e.Before.Channel.Id != e.Guild.AfkChannel.Id)
+            else if (e.Before != null && e.Before.Channel != null &&
+                     e.Before.Channel.Id != e.Guild.AfkChannel.Id &&
+                     e.Before.Channel.Id != Bot.BotSettings.WaitingRoom)
             {
                 if (VoiceTimeCounters.ContainsKey(e.User.Id))
                 {
@@ -229,9 +230,10 @@ namespace Bot_NetCore.Listeners
             }
             //User joined to server voice
             else if (e.After != null && e.After.Channel != null &&
-                e.After.Channel.Id != e.Guild.AfkChannel.Id)
+                     e.After.Channel.Id != e.Guild.AfkChannel.Id &&
+                     e.After.Channel.Id != Bot.BotSettings.WaitingRoom)
             {
-                    VoiceTimeCounters[e.User.Id] = DateTime.Now;
+                VoiceTimeCounters[e.User.Id] = DateTime.Now;
             }
 
             await Task.CompletedTask;
@@ -239,7 +241,7 @@ namespace Bot_NetCore.Listeners
 
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task FleetLogOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task FleetLogOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             //Для проверки если канал рейда чекать если название КАТЕГОРИИ канала начинается с "рейд"
 
@@ -252,7 +254,7 @@ namespace Bot_NetCore.Listeners
                         e.After.Channel.Parent.Name.StartsWith("Рейд"))
                     {
                         await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                            .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":twisted_rightwards_arrows:")} " +
+                            .SendMessageAsync($"{DiscordEmoji.FromName(client, ":twisted_rightwards_arrows:")} " +
                             $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
                             $"сменил канал с **{e.Before.Channel.Name}** ({e.Before.Channel.Id}) " +
                             $"на **{e.After.Channel.Name}** ({e.After.Channel.Id})");
@@ -264,7 +266,7 @@ namespace Bot_NetCore.Listeners
                 if (e.Before.Channel.Parent.Name.StartsWith("Рейд"))
                 {
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                        .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":negative_squared_cross_mark:")} " +
+                        .SendMessageAsync($"{DiscordEmoji.FromName(client, ":negative_squared_cross_mark:")} " +
                         $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
                         $"покинул канал **{e.Before.Channel.Name}** ({e.Before.Channel.Id})"); ; ;
                 }
@@ -275,7 +277,7 @@ namespace Bot_NetCore.Listeners
                 if (e.After.Channel.Parent.Name.StartsWith("Рейд"))
                 {
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                        .SendMessageAsync($"{DiscordEmoji.FromName(e.Client, ":white_check_mark:")} " +
+                        .SendMessageAsync($"{DiscordEmoji.FromName(client, ":white_check_mark:")} " +
                         $"Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) " +
                         $"подключился к каналу **{e.After.Channel.Name}** ({e.After.Channel.Id})");
                 }
@@ -283,7 +285,7 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task FleetDeleteOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task FleetDeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             //Проверка на пустые рейды
             if (e.Before != null && e.Before.Channel != null)
@@ -304,7 +306,7 @@ namespace Bot_NetCore.Listeners
                     //Удаляем каналы и категорию
                     if (fleetIsEmpty)
                     {
-                        await FleetLogging.LogFleetDeletionAsync(e.Client, e.Guild, leftChannel.Parent);
+                        await FleetLogging.LogFleetDeletionAsync(client, e.Guild, leftChannel.Parent);
 
                         foreach (var emptyChannel in leftChannel.Parent.Children.Where(x => x.Type == ChannelType.Voice))
                             try
@@ -320,14 +322,18 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task UpdateFindChannelEmbedOnVoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        public static async Task UpdateFindChannelEmbedOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
+            if (e.Before?.Channel?.Id == e.After?.Channel?.Id)
+                return;
+
             List<DiscordChannel> channels = new List<DiscordChannel>();
-            if (e.Before != null && e.Before.Channel != null)
+
+            if (e.Before?.Channel?.Id != null)
                 channels.Add(e.Before.Channel);
-            if (e.After != null && e.After.Channel != null)
-                if(!channels.Contains(e.After.Channel))
-                    channels.Add(e.After.Channel);
+
+            if (e.After?.Channel?.Id != null)
+                channels.Add(e.After.Channel);
 
             foreach (var channel in channels)
             {
@@ -335,14 +341,14 @@ namespace Bot_NetCore.Listeners
                 {
                     if (FindChannelInvites.ContainsKey(channel.Id))
                     {
-                        e.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Получение сообщения в поиске игроков!", DateTime.Now);
+                        client.Logger.LogDebug(BotLoggerEvents.Event, $"Получение сообщения в поиске игроков!");
                         var embedMessage = await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(FindChannelInvites[channel.Id]);
 
                         if (channel.Users.Count() == 0)
                         {
                             try
                             {
-                                e.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Удаление ембеда в поиске игроков!", DateTime.Now);
+                                client.Logger.LogDebug(BotLoggerEvents.Event, $"Удаление ембеда в поиске игроков!");
                                 await embedMessage.DeleteAsync();
                                 FindChannelInvites.Remove(channel.Id);
                                 await SaveFindChannelMessagesAsync();
@@ -386,11 +392,35 @@ namespace Bot_NetCore.Listeners
                             var content = $"{oldContent[0]}\n\n";
 
                             //Index 1 for users in channel
+                            var slotsCount = 1;
                             foreach (var member in channel.Users)
-                                content += $"{DiscordEmoji.FromName(e.Client, ":doubloon:")} {member.Mention}\n";
+                            {
+                                if (content.Length > 1900 || slotsCount > 15)
+                                {
+                                    content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.Users.Count() - slotsCount + 1}.\n";
+                                    break;
+                                }
+                                else
+                                {
+                                    content += $"{DiscordEmoji.FromName(client, ":doubloon:")} {member.Mention}\n";
+                                    slotsCount++;
+                                }
+                            }
 
                             for (int i = 0; i < usersNeeded; i++)
-                                content += $"{DiscordEmoji.FromName(e.Client, ":gold:")} ☐\n";
+                            {
+                                if (content.Length > 1900 || slotsCount > 15)
+                                {
+                                    if(i != 0) //Без этого сообщение будет отправлено вместе с тем что выше
+                                        content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.UserLimit - slotsCount + 1} свободно.\n";
+                                    break;
+                                }
+                                else
+                                {
+                                    content += $"{DiscordEmoji.FromName(client, ":gold:")} ☐\n";
+                                    slotsCount++;
+                                }
+                            }
 
                             //Index 2 for invite link
                             content += $"\n{oldContent[2]}";
@@ -405,18 +435,16 @@ namespace Bot_NetCore.Listeners
                             embed.WithAuthor($"{channel.Name}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
                             embed.WithThumbnail(embedThumbnail);
                             embed.WithTimestamp(DateTime.Now);
-                            embed.WithFooter(usersNeeded != 0 ? $"В поиске команды. +{usersNeeded}" : $"Канал заполнен {DiscordEmoji.FromName(e.Client, ":no_entry:")}");
+                            embed.WithFooter(usersNeeded != 0 ? $"В поиске команды. +{usersNeeded}" : $"Канал заполнен {DiscordEmoji.FromName(client, ":no_entry:")}");
 
-                            e.Client.DebugLogger.LogMessage(LogLevel.Debug, "Bot", $"Обновление ембеда в поиске игроков!", DateTime.Now);
+                            client.Logger.LogDebug(BotLoggerEvents.Event, $"Обновление ембеда в поиске игроков!");
                             await embedMessage.ModifyAsync(embed: embed.Build());
                         }
                     }
                 }
                 catch (NullReferenceException)
                 {
-                    e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
-                        $"Не удалось обновить сообщение с эмбедом для голосового канала. Канал будет удалён из привязки к сообщению.",
-                        DateTime.Now);
+                    client.Logger.LogWarning(BotLoggerEvents.Event, $"Не удалось обновить сообщение с эмбедом для голосового канала. Канал будет удалён из привязки к сообщению.");
                     FindChannelInvites.Remove(channel.Id);
                     await SaveFindChannelMessagesAsync();
                     return;

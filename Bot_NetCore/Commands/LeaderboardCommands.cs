@@ -12,6 +12,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
 {
@@ -269,7 +270,7 @@ namespace Bot_NetCore.Commands
 
             //Проверка только в первый день месяца
             //if(DateTime.Now.Day == 1)
-            await CheckAndUpdateTopInvitersAsync(guild);
+            //await CheckAndUpdateTopInvitersAsync(guild); //TODO: Revork this
         }
 
         /// <summary>

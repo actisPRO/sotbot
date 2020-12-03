@@ -8,17 +8,16 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Listeners
 {
     public class ErrorListener
     {
         [AsyncListener(EventTypes.ClientErrored)]
-        private static Task OnErrored(ClientErrorEventArgs e)
+        private static Task OnErrored(DiscordClient client, ClientErrorEventArgs e)
         {
-            e.Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot",
-                $"Возникла ошибка при выполнении ивента {e.EventName}.",
-                DateTime.Now);
+            client.Logger.LogWarning(BotLoggerEvents.Event, $"Возникла ошибка при выполнении ивента {e.EventName}.");
             return Task.CompletedTask;
         }
 
@@ -27,7 +26,7 @@ namespace Bot_NetCore.Listeners
         ///     Отправляем в консоль сообщения об ошибках при выполнении команды.
         /// </summary>
         [AsyncListener(EventTypes.CommandErrored)]
-        public static async Task OnCommandErrored(CommandErrorEventArgs e)
+        public static async Task OnCommandErrored(CommandsNextExtension ctx, CommandErrorEventArgs e)
         {
             if (e.Exception is CommandNotFoundException) return;
 
@@ -116,10 +115,8 @@ namespace Bot_NetCore.Listeners
 
             var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
 
-            e.Context.Client.DebugLogger.LogMessage(LogLevel.Warning, "SoT",
-                $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
-                $"({e.Context.User.Id}) пытался запустить команду {command}, но произошла ошибка.",
-                DateTime.Now);
+            ctx.Client.Logger.LogWarning(BotLoggerEvents.Event, $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
+                $"({e.Context.User.Id}) пытался запустить команду {command}, но произошла ошибка.");
 
             await e.Context.RespondAsync(
                 $"{Bot.BotSettings.ErrorEmoji} Возникла ошибка при выполнении команды **{command}**! Попробуйте ещё раз, если " +

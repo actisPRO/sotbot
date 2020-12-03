@@ -11,6 +11,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Listeners
 {
@@ -19,9 +20,9 @@ namespace Bot_NetCore.Listeners
         private static DiscordClient Client;
 
         [AsyncListener(EventTypes.Ready)]
-        public static async Task RegisterTimers(ReadyEventArgs e)
+        public static async Task RegisterTimers(DiscordClient client, ReadyEventArgs e)
         {
-            Client = e.Client;
+            Client = client;
 
             //Таймер, который каждую минуту проверяет все баны и удаляет истёкшие.
             var checkExpiredReports = new Timer(60000);
@@ -85,9 +86,7 @@ namespace Bot_NetCore.Listeners
                     }
                     catch (Exception ex)
                     {
-                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
-                            $"Возникла ошибка при очистке подписок {ex.StackTrace}.",
-                            DateTime.Now);
+                        Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке подписок.");
                     }
                 }
             }
@@ -219,9 +218,7 @@ namespace Bot_NetCore.Listeners
             }
             catch (Exception ex)
             {
-                Client.DebugLogger.LogMessage(LogLevel.Error, "Bot",
-                    $"Возникла ошибка при очистке голосований {ex.StackTrace}.",
-                    DateTime.Now);
+                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке голосований.");
             }
         }
 
@@ -270,23 +267,19 @@ namespace Bot_NetCore.Listeners
                         if (toDelete.Count() > 0)
                         {
                             await channel.Key.DeleteMessagesAsync(toDelete);
-                            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Канал {channel.Key.Name} был очищен.", DateTime.Now);
+                            Client.Logger.LogInformation(BotLoggerEvents.Timers, $"Канал {channel.Key.Name} был очищен.");
                         }
 
                     }
                     catch (Exception ex)
                     {
-                        Client.DebugLogger.LogMessage(LogLevel.Warning, "Bot", $"Ошибка при удалении сообщений в {channel.Key.Name}. \n{ex.Message}", DateTime.Now);
+                        Client.Logger.LogWarning(BotLoggerEvents.Timers, ex, $"Ошибка при удалении сообщений в {channel.Key.Name}.", DateTime.Now);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Client.DebugLogger.LogMessage(LogLevel.Error, "Bot", $"Ошибка при удалении сообщений в каналах. \n" +
-                        $"{ex.GetType()}" +
-                        $"{ex.Message}\n" +
-                        $"{ex.StackTrace}",
-                    DateTime.Now);
+                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при удалении сообщений в каналах.");
             }
         }
 
@@ -314,7 +307,7 @@ namespace Bot_NetCore.Listeners
                                 $"**Пользователь:** {user}\n" +
                                 $"**Дата:** {DateTime.Now}\n");
 
-                            Client.DebugLogger.LogMessage(LogLevel.Info, "Bot", $"Пользователь {user} был разбанен.", DateTime.Now);
+                            Client.Logger.LogInformation(BotLoggerEvents.Timers, $"Пользователь {user} был разбанен.");
                             break;
                         }
                     }
@@ -373,18 +366,14 @@ namespace Bot_NetCore.Listeners
                     }
                     catch (Exception ex)
                     {
-                        Client.DebugLogger.LogMessage(LogLevel.Error, "Bot", $"Ошибка при обновлении времени активности пользователя ({entry.Key}). \n" +
-                            $"{ex.GetType()}" +
-                            $"{ex.Message}\n" +
-                            $"{ex.StackTrace}",
-                            DateTime.Now);
+                        Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении времени активности пользователя ({entry.Key}).");
                     }
                 }
 
                 //Clear old values
                 VoiceListener.VoiceTimeCounters.Clear();
                 var guild = Client.Guilds[Bot.BotSettings.Guild];
-                foreach (var entry in guild.VoiceStates.Where(x => x.Value.Channel != null && x.Value.Channel.Id != guild.AfkChannel.Id).ToList())
+                foreach (var entry in guild.VoiceStates.Where(x => x.Value.Channel != null && x.Value.Channel.Id != guild.AfkChannel.Id && x.Value.Channel.Id != Bot.BotSettings.WaitingRoom).ToList())
                 {
                     if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
                         VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
@@ -392,11 +381,7 @@ namespace Bot_NetCore.Listeners
             } 
             catch(Exception ex)
             {
-                Client.DebugLogger.LogMessage(LogLevel.Error, "Bot", $"Ошибка при обновлении времени активности пользователей. \n" +
-                    $"{ex.GetType()}" +
-                    $"{ex.Message}\n" +
-                    $"{ex.StackTrace}",
-                    DateTime.Now);
+                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении времени активности пользователей.");
             }
         }
     }
