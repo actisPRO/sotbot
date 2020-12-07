@@ -28,35 +28,53 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.CommandErrored)]
         public static async Task OnCommandErrored(CommandsNextExtension ctx, CommandErrorEventArgs e)
         {
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+            var commandHint = $":information_source: Используйте `!help {command}` для подробной информации о команде.";
+
+            //Команда не найдена - Ничего не отправляем
             if (e.Exception is CommandNotFoundException) return;
 
-            if (e.Command.Name == "dgenlist" && e.Exception is NotFoundException) return; //костыль
+            //Костыль для команды "genlist" - вообще нужно?
+            if (e.Command.Name == "genlist" && e.Exception is NotFoundException) return; //костыль
 
-            if (e.Exception is ArgumentException &&
-                e.Exception.Message.Contains("Could not convert specified value to given type.") ||
-                e.Exception.Message == "Could not find a suitable overload for the command.")
+            //Проблемы с параметрами команды
+            if (e.Exception is ArgumentException)
             {
-                await e.Context.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных параметров.");
+                //Введены не правильные параметры команды
+                if (e.Exception.Message.Contains("Could not convert specified value to given type.") ||
+                    e.Exception.Message == "Could not find a suitable overload for the command.")
+                {
+                    await e.Context.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду. Проверьте правильность введенных параметров.\n{commandHint}");
+                }
+
+                if (e.Exception.Message == "Not enough arguments supplied to the command.")
+                {
+                    await e.Context.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели не все параметры.\n{commandHint}");
+                }
                 return;
             }
 
-            if (e.Exception is ArgumentException &&
-                e.Exception.Message == "Not enough arguments supplied to the command.")
+            //Введены пустые параметры команды
+            if (e.Exception is ArgumentNullException &&
+                e.Exception.Message.Contains("Value cannot be null."))
             {
                 await e.Context.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели не все параметры.");
+                    $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели недопустимые параметры.\n{commandHint}");
                 return;
             }
 
+            //Введена несуществующая подкоманда
             if (e.Exception is InvalidOperationException &&
                 e.Exception.Message == "No matching subcommands were found, and this group is not executable.")
             {
                 await e.Context.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Не удалось найти подкоманду.");
+                    $"{Bot.BotSettings.ErrorEmoji} Не удалось найти команду.\n{commandHint}");
                 return;
             }
 
+            //Параметр с временем не удалось определить
             if (e.Exception is InvalidOperationException &&
                 e.Exception.Message == "Unable to convert time!")
             {
@@ -64,20 +82,14 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
-                if (e.Exception is ArgumentNullException &&
-                    e.Exception.Message.Contains("Value cannot be null."))
-            {
-                await e.Context.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: вы ввели недопустимые параметры.");
-                return;
-            }
-
+            //Не удалось найти пользователя
             if (e.Exception is NotFoundException)
             {
                 await e.Context.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден указанный пользователь.");
                 return;
             }
 
+            //Ошибки при проверке выполнения команды
             if (e.Exception is ChecksFailedException)
             {
                 var msg = $"{Bot.BotSettings.ErrorEmoji} Не удалось выполнить команду: ";
@@ -113,8 +125,7 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
-            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
-
+            //Другие ошибки
             ctx.Client.Logger.LogWarning(BotLoggerEvents.Event, $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
                 $"({e.Context.User.Id}) пытался запустить команду {command}, но произошла ошибка.");
 
@@ -123,8 +134,8 @@ namespace Bot_NetCore.Listeners
                 "ошибка повторяется - проверьте канал `#📚-гайд-по-боту📚`. " +
                 $"**Информация об ошибке:** {e.Exception.Message}");
 
+            //Отправляем данные об ошибке в канал лога ошибок.
             var guild = await e.Context.Client.GetGuildAsync(Bot.BotSettings.Guild);
-
             var errChannel = guild.GetChannel(Bot.BotSettings.ErrorLog);
 
             var message = $"**Команда:** {command}\n" +
