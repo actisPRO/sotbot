@@ -37,7 +37,7 @@ namespace Bot_NetCore.Commands
             {
                 await ctx.Message.DeleteAsync();
             }
-            catch (NotFoundException) { }
+            catch { }
 
             try
             {

@@ -175,7 +175,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = "SELECT userid FROM xboxes WHERE xbox = @xbox";
+                    cmd.CommandText = "SELECT userid FROM users WHERE xbox = @xbox";
                     cmd.Parameters.AddWithValue("@xbox", xbox);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
