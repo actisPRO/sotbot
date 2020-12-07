@@ -184,8 +184,20 @@ namespace Bot_NetCore.Listeners
                         }
                     }
 
+                //Чистка сообщений в канале поиска игроков
                 if (e.Channel.Id == Bot.BotSettings.FindChannel && e.Message.Embeds.Count() == 0 && !e.Message.Pinned)
                 {
+                    //Проверка если сообщение содержит команду, если нет то отправляем инструкцию в лс.
+                    if(!e.Message.Content.StartsWith(Bot.BotSettings.Prefix) && !e.Author.IsBot)
+                    {
+                        try
+                        {
+                            await ((DiscordMember)e.Author).SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Для создания приглашения в свой канал, введите команду `!invite [текст]`\n" +
+                                $"Полный гайд в закрепленных сообщениях в канале <#{Bot.BotSettings.FindChannel}>.");
+                        }
+                        catch { }
+                    }
+
                     var delete = new Timer(5000);
                     delete.Elapsed += async (sender, args) =>
                     {
