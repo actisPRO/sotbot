@@ -41,7 +41,7 @@ namespace Bot_NetCore.Commands
                     }
 
                     //Сбор информации в переменные
-                    var bans = GetBansInfo(user.Id);
+                    var ban = GetBansInfo(user.Id);
                     var warnings = WarnSQL.GetForUser(user.Id).Count;
                     var reports = ReportSQL.GetForUser(user.Id);
                     var webUser = WebUser.GetByDiscordId(user.Id);
@@ -52,10 +52,10 @@ namespace Bot_NetCore.Commands
                     embed.WithThumbnail(user.AvatarUrl);
 
                     //Статус на сервере
-                    if (bans != null)
+                    if (ban != null)
                     {
                         embed.WithColor(new DiscordColor("#c0392b"));
-                        embed.WithDescription("Забанен.");
+                        embed.WithDescription($"Забанен до {ban}.");
                     }
                     else if (member == null)
                     {
