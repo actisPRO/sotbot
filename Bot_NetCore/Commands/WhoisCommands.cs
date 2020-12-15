@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
-using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
-using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using MaxMind.GeoIP2;
 using MaxMind.GeoIP2.Exceptions;
@@ -28,10 +25,9 @@ namespace Bot_NetCore.Commands
         public class WhoisCommand : BaseCommandModule
         {
             [GroupCommand]
-            public async Task WhoIs(CommandContext ctx, [Description("Пользователь")] DiscordUser user)
+            public async Task WhoIs(CommandContext ctx, [Description("Пользователь"), RemainingText] DiscordUser user)
             {
                 await ctx.TriggerTypingAsync();
-
                 try
                 {
                     DiscordMember member = null;
@@ -44,149 +40,81 @@ namespace Bot_NetCore.Commands
                         // is not a member of the guild
                     }
 
-                    var embed = new DiscordEmbedBuilder();
-                    embed.WithColor(DiscordColor.Orange);
-                    embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
-                    embed.AddField("ID", user.Id.ToString(), true);
-
-                    //Баны
-                    var userBans = BanSQL.GetForUser(user.Id).Where(x => x.UnbanDateTime > DateTime.Now);
-                    if (userBans.Any())
-                    {
-                        embed.AddField("Бан", $"{userBans.OrderBy(x => x.UnbanDateTime).FirstOrDefault().UnbanDateTime}");
-                        embed.WithColor(DiscordColor.Red);
-                    }
-
-                    if (member == null)
-                    {
-                        embed.WithDescription("Покинул сервер");
-                    }
-                    else
-                    {
-                        embed.AddField("Имя на сервере", member.DisplayName, true);
-                        embed.AddField("Присоединился", member.JoinedAt.ToString("HH:mm:ss dd.MM.yyyy"));
-                        embed.WithColor(DiscordColor.Green);
-                    }
-
-                    //Предупреждения
+                    //Сбор информации в переменные
+                    var bans = GetBansInfo(user.Id);
                     var warnings = WarnSQL.GetForUser(user.Id).Count;
-
-                    // Web
+                    var reports = ReportSQL.GetForUser(user.Id);
                     var webUser = WebUser.GetByDiscordId(user.Id);
-                    if (webUser == null)
+
+                    //Создание эмбеда
+                    var embed = new DiscordEmbedBuilder();
+                    embed.WithAuthor($"{user.Username}#{user.Discriminator}", iconUrl: user.AvatarUrl);
+                    embed.WithThumbnail(user.AvatarUrl);
+
+                    //Статус на сервере
+                    if (bans != null)
                     {
-                        embed.AddField("Привязка", "Нет", true);
+                        embed.WithColor(new DiscordColor("#c0392b"));
+                        embed.WithDescription("Забанен.");
+                    }
+                    else if (member == null)
+                    {
+                        embed.WithColor(new DiscordColor("#e67e22"));
+                        embed.WithDescription("Не является участником.");
                     }
                     else
                     {
-                        embed.AddField("Привязка", "Да", true);
-                        // Country
-                        using (var reader = new DatabaseReader("data/GeoLite2-City.mmdb"))
-                        {
-                            try
-                            {
-                                var city = reader.City(webUser.LastIp);
-                                embed.AddField("Страна", $":flag_{city.Country.IsoCode.ToLower()}:", true);
-                            }
-                            catch (AddressNotFoundException) { }
-                            catch (NullReferenceException) { }
-                        }
-
-                        if (!string.IsNullOrEmpty(webUser.LastXbox))
-                            embed.AddField("Xbox", webUser.LastXbox, true);
+                        embed.WithColor(new DiscordColor("#27ae60"));
+                        embed.WithDescription("Участник сервера.");
                     }
 
-                    //Emoji используется при выводе списка предупреждений.
-                    var emoji = DiscordEmoji.FromName(ctx.Client, ":pencil:");
 
-                    embed.AddField("Предупреждения", $"{emoji} {warnings}", true);
-
-                    var mute = "Нет";
-
-                    var codex = "Не принял";
-                    var hasPurge = false;
-
-                    var fleetCodex = "Не принял";
-                    var hasFleetPurge = false;
-
-                    foreach (var purge in ReportSQL.GetForUser(user.Id))
-                    {
-                        if (purge.ReportType == ReportType.Mute)
-                            if (purge.ReportEnd > DateTime.Now)
-                                mute = Utility.FormatTimespan(DateTime.Now - purge.ReportEnd);
-
-                        if (purge.ReportType == ReportType.CodexPurge)
-                        {
-                            if (purge.ReportEnd > DateTime.Now)
-                            {
-                                hasPurge = true;
-                                codex = Utility.FormatTimespan(DateTime.Now - purge.ReportEnd);
-                            }
-                            else if (!hasPurge && purge.ReportEnd <= DateTime.Now)
-                                codex = "Не принял*";
-                        }
-
-                        if (purge.ReportType == ReportType.FleetPurge)
-                        {
-                            if (purge.ReportEnd > DateTime.Now)
-                            {
-                                hasFleetPurge = true;
-                                fleetCodex = Utility.FormatTimespan(DateTime.Now - purge.ReportEnd);
-                            }
-                            else if (!hasFleetPurge && purge.ReportEnd <= DateTime.Now)
-                                fleetCodex = "Не принял*";
-                        }
-                    }
-
-                    if (BlacklistEntry.IsBlacklisted(user.Id)) fleetCodex = "В ЧС";
-
-                    if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
-                        codex = "Принял";
-                    if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
-                        fleetCodex = "Принял";
-
+                    //1 Row - ID, Username
+                    embed.AddFieldOrDefault("ID", user.Id.ToString(), true);
                     if (member != null)
                     {
-                        embed.AddField("Правила", codex, true);
-                        embed.AddField("Правила рейда", fleetCodex, true);
+
+                        embed.AddFieldOrDefault("Имя на сервере", member.Mention, true);
                     }
+                    embed.NewInlineRow();
 
-                    //Мут
-                    embed.AddField("Мут", mute, true);
-
-                    //Донат
-                    var donate = 0;
-                    if (Donator.Donators.ContainsKey(user.Id)) donate = Donator.Donators[user.Id].Balance;
-                    embed.AddField("Донат", donate.ToString(), true);
-
-                    //Подписка
-                    var subscription = "Нет";
-                    if (Subscriber.Subscribers.ContainsKey(user.Id))
+                    //2 Row - Creation and join dates
+                    embed.AddFieldOrDefault("Создан", user.CreationTimestamp.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
+                    if (member != null)
                     {
-                        var subscriber = Subscriber.Subscribers[user.Id];
-                        var length = subscriber.SubscriptionEnd - DateTime.Now;
-
-                        subscription =
-                            $"{subscriber.SubscriptionEnd:HH:mm:ss dd.MM.yyyy} ({Utility.ToCorrectCase(length, Utility.TimeUnit.Days)})";
+                        embed.AddFieldOrDefault("Присоединился", member.JoinedAt.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
                     }
-                    embed.AddField("Подписка", subscription, true);
+                    embed.NewInlineRow();
 
-                    //Приватный корабль
-                    var privateShip = "Нет";
-                    foreach (var ship in ShipList.Ships.Values)
-                        foreach (var shipMember in ship.Members.Values)
-                            if (shipMember.Type == MemberType.Owner && shipMember.Id == user.Id)
-                            {
-                                privateShip = ship.Name;
-                                break;
-                            }
-                    embed.AddField("Владелец приватного корабля", privateShip);
+                    //3 Row - WebUser info
+                    if (webUser != null)
+                    {
+                        embed.AddFieldOrDefault("Привязка", "Да", true);
+                        embed.AddFieldOrEmpty("Страна", GetCountryFlag(webUser.LastIp), true);
+                        if (!string.IsNullOrEmpty(webUser.LastXbox))
+                            embed.AddFieldOrDefault("Xbox", webUser.LastXbox.ToString(), true);
+                        else
+                            embed.AddFieldOrDefault("Xbox", "Нет", true);
+                    }
+                    embed.NewInlineRow();
 
-                    //Заметка
-                    var note = "Отсутствует";
+                    //4 Row - Donate info
+                    embed.AddFieldOrReplace("Донат", GetDonationInfo(user.Id), "Нет", true);
+                    embed.AddFieldOrReplace("Подписка", GetSubscriptionInfo(user.Id), "Нет", true);
+                    embed.AddFieldOrReplace("Приватный корабль", GetPrivateShip(user.Id), "Нет", true);
+                    embed.NewInlineRow();
+
+                    //5 Row - Reports info
+                    embed.AddFieldOrDefault("Предупреждения", $":pencil: {warnings}", true);
+                    embed.AddFieldOrDefault("Правила", GetCodexInfo(reports, member), true);
+                    embed.AddFieldOrDefault("Правила рейда", GetFleetCodexInfo(reports, member), true);
+                    embed.AddFieldOrDefault("Мут", $"{GetMutesInfo(reports)}", true);
+                    embed.AddFieldOrDefault("Голосовой мут", $"{GetVoiceMutesInfo(reports)}", true);
+                    embed.NewInlineRow();
+
+                    //6 Row - Note
                     if (Note.Notes.ContainsKey(user.Id))
-                        note = Note.Notes[user.Id].Content;
-                    embed.AddField("Заметка", note, false);
+                        embed.AddFieldOrDefault("Заметка", Note.Notes[user.Id].Content);
 
                     embed.WithFooter("(*) Не принял после разблокировки");
 
@@ -196,6 +124,8 @@ namespace Bot_NetCore.Commands
                     if (warnings > 0)
                     {
                         var interactivity = ctx.Client.GetInteractivity();
+
+                        var emoji = DiscordEmoji.FromName(ctx.Client, ":pencil:");
 
                         await message.CreateReactionAsync(emoji);
 
@@ -222,7 +152,6 @@ namespace Bot_NetCore.Commands
                         {
                             await message.DeleteAllReactionsAsync();
                         }
-
                     }
                 }
                 catch (NotFoundException)
@@ -336,6 +265,114 @@ namespace Bot_NetCore.Commands
                     foreach (var user in users)
                         msg += $"\n{user.Username} ({user.UserId})";
                     await ctx.RespondAsync(msg);
+                }
+            }
+
+            private static string GetBansInfo(ulong userId)
+            {
+                var userBans = BanSQL.GetForUser(userId).Where(x => x.UnbanDateTime > DateTime.Now);
+                if (userBans.Any())
+                {
+                    return $"{userBans.OrderBy(x => x.UnbanDateTime).FirstOrDefault().UnbanDateTime}";
+                }
+                return null;
+            }
+
+            private static string GetDonationInfo(ulong userId)
+            {
+                //Донат
+                if (Donator.Donators.ContainsKey(userId)) 
+                    return Donator.Donators[userId].Balance.ToString();
+                return null;
+            }
+
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0071:Simplify interpolation", Justification = "<Pending>")]
+            private static string GetSubscriptionInfo(ulong userId)
+            {
+                //Подписка
+                if (Subscriber.Subscribers.ContainsKey(userId))
+                {
+                    var subscriber = Subscriber.Subscribers[userId];
+                    var length = subscriber.SubscriptionEnd - DateTime.Now;
+
+                    return $"{subscriber.SubscriptionEnd:HH:mm:ss \n dd.MM.yyyy} ({Utility.ToCorrectCase(length, Utility.TimeUnit.Days)})";
+                }
+                return null;
+            }
+
+            private static string GetPrivateShip(ulong userId)
+            {
+                //Приватный корабль
+                foreach (var ship in ShipList.Ships.Values)
+                    foreach (var shipMember in ship.Members.Values)
+                        if (shipMember.Type == MemberType.Owner && shipMember.Id == userId)
+                        {
+                            return ship.Name;
+                        }
+                return null;
+            }
+
+            private static string GetCodexInfo(List<ReportSQL> reports, DiscordMember member)
+            {
+                if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.CodexRole))
+                    return "Принял";
+                foreach (var report in reports)
+                {
+                    if (report.ReportType == ReportType.CodexPurge)
+                    {
+                        if (report.ReportEnd <= DateTime.Now)
+                            return "Не принял*";
+                        else if (report.ReportEnd > DateTime.Now)
+                            return Utility.FormatTimespan(DateTime.Now - report.ReportEnd);
+                    }
+                }
+                return "Не принял";
+            }
+
+            private static string GetFleetCodexInfo(List<ReportSQL> reports, DiscordMember member)
+            {
+                if (member is { } && member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
+                    return "Принял";
+                foreach (var report in reports)
+                {
+                    if (report.ReportType == ReportType.FleetPurge)
+                    {
+                        if (report.ReportEnd <= DateTime.Now)
+                            return "Не принял*";
+                        else if (report.ReportEnd > DateTime.Now)
+                            return Utility.FormatTimespan(DateTime.Now - report.ReportEnd);
+                    }
+                }
+                return "Не принял";
+            }
+
+            private static string GetMutesInfo(List<ReportSQL> reports)
+            {
+                foreach (var report in reports)
+                    if (report.ReportType == ReportType.Mute && report.ReportEnd > DateTime.Now)
+                        return Utility.FormatTimespan(DateTime.Now - report.ReportEnd);
+                return null;
+            }
+
+            private static string GetVoiceMutesInfo(List<ReportSQL> reports)
+            {
+                foreach (var report in reports)
+                    if (report.ReportType == ReportType.VoiceMute && report.ReportEnd > DateTime.Now)
+                        return Utility.FormatTimespan(DateTime.Now - report.ReportEnd);
+                return null;
+            }
+
+            private static string GetCountryFlag(string ip)
+            {
+                using (var reader = new DatabaseReader("data/GeoLite2-City.mmdb"))
+                {
+                    try
+                    {
+                        var city = reader.City(ip);
+                        return $":flag_{city.Country.IsoCode.ToLower()}:";
+                    }
+                    catch (AddressNotFoundException) { return null; }
+                    catch (NullReferenceException) { return null; }
                 }
             }
         }
