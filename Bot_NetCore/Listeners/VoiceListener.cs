@@ -184,8 +184,6 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task UpdateVoiceTimeOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            //TODO: Раз в 10 минут проверять список и обновлять время
-
             // User changed voice channel
             if (e.Before != null && e.Before.Channel != null &&
                 e.After != null && e.After.Channel != null &&
