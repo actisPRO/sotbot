@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot_NetCore", "Bot_NetCore\Bot_NetCore.csproj", "{424E2FE8-4D60-4ACE-AF2F-E6E6B0A645DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsBot", "StatsBot\StatsBot.csproj", "{99B042AB-505F-4203-BE7F-07FDADA125FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{424E2FE8-4D60-4ACE-AF2F-E6E6B0A645DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{424E2FE8-4D60-4ACE-AF2F-E6E6B0A645DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{424E2FE8-4D60-4ACE-AF2F-E6E6B0A645DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99B042AB-505F-4203-BE7F-07FDADA125FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99B042AB-505F-4203-BE7F-07FDADA125FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99B042AB-505F-4203-BE7F-07FDADA125FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99B042AB-505F-4203-BE7F-07FDADA125FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
