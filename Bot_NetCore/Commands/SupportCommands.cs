@@ -10,7 +10,6 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
@@ -189,28 +188,35 @@ namespace Bot_NetCore.Commands
                                         break;
                                 }
 
+                                //Сохраняем в базу данных
+                                var ticketData = TicketSQL.Create(supportChannel.Id, ctx.User.Id, ctx.Channel.Id, ticketMessage.Id,
+                                    emsg.Result.Content, DateTime.Now, SupportNames[selectedCategory]);
+
+                                //Обновляем тикет в лс
                                 ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
                                 {
                                     Description = "Тикет был создан.\n‎",
-                                    Color = new DiscordColor("#2ecc71")
+                                    Color = new DiscordColor("#f1c40f")
                                 };
-                                ticketEmbed.WithFooter("‎\nТикет успешно создан");
+                                ticketEmbed.WithFooter($"‎\nID: {ticketData.ChannelId}");
                                 ticketEmbed.WithTimestamp(DateTime.Now);
 
                                 await ticketMessage.ModifyAsync(embed: ticketEmbed.Build());
 
                                 await ctx.RespondAsync($"Ваш запрос был отравлен. Ждите ответ в {supportChannel.Mention}.");
 
+                                //Обновляем тикет для отправки в канал
                                 ticketEmbed = new DiscordEmbedBuilder(ticketEmbed)
                                 {
                                     Title = "Sea of Thieves RU | Тикет",
-                                    Description = "Ожидайте ответ на ваш запрос.\n‎",
-                                    Color = new DiscordColor("#16a085")
+                                    Description = "Ожидайте ответ на ваш запрос.\n‎"
                                 }
                                 .WithAuthor(ctx.User.ToString(), iconUrl: ctx.User.AvatarUrl)
-                                .WithFooter("‎\nВ ожидании ответа.");
+                                .WithFooter($"‎\nID: {ticketData.ChannelId}");
 
-                                await supportChannel.SendMessageAsync($"Тикет от пользователя: {ctx.User.Mention}", embed: ticketEmbed.Build());
+                                var message = await supportChannel.SendMessageAsync($"Тикет от пользователя: {ctx.User.Mention}", embed: ticketEmbed.Build());
+
+                                ticketData.MessageId = message.Id;
                             }
                             else
                             {
@@ -343,6 +349,38 @@ namespace Bot_NetCore.Commands
                     }
 
                     await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Категория тикета была изменена на `{circleEmoji} {SupportNames[selectedCategory]}`. Модератор: {ctx.User}");
+
+                    //Get ticket data from db
+                    var ticketData = TicketSQL.Get(ctx.Channel.Id);
+
+                    ticketData.Category = SupportNames[selectedCategory];
+
+                    //Update dm embed
+                    try
+                    {
+                        var dmChannel = await ctx.Client.GetChannelAsync(ticketData.DmChannelId);
+                        var dmEmbedMessage = await dmChannel.GetMessageAsync(ticketData.DmMessageId);
+
+                        var dmEmbed = dmEmbedMessage.Embeds.FirstOrDefault();
+                        var newEmbed = new DiscordEmbedBuilder(dmEmbed);
+                        newEmbed.Fields[0].Value = $"{circleEmoji} {SupportNames[selectedCategory]}";
+
+                        await dmEmbedMessage.ModifyAsync(embed: newEmbed.Build());
+                    }
+                    catch { }
+
+                    //Update channel embed
+                    try
+                    {
+                        var embedMessage = await ctx.Channel.GetMessageAsync(ticketData.MessageId);
+
+                        var embed = embedMessage.Embeds.FirstOrDefault();
+                        var newEmbed = new DiscordEmbedBuilder(embed);
+                        newEmbed.Fields[0].Value = $"{circleEmoji} {SupportNames[selectedCategory]}";
+
+                        await embedMessage.ModifyAsync(embed: newEmbed.Build());
+                    }
+                    catch { }
                 }
                 else
                 {
@@ -367,7 +405,53 @@ namespace Bot_NetCore.Commands
                 foreach (var overwrite in overwritesToBeBlocked)
                     await overwrite.UpdateAsync(deny: Permissions.SendMessages, reason: "закрытие тикета");
 
-                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Тикет был успешно закрыт. Модератор: {ctx.User}");
+                //Get ticket data from db
+                var ticketData = TicketSQL.Get(ctx.Channel.Id);
+
+                ticketData.Status = TicketSQL.TicketStatus.Closed;
+
+                try
+                {
+                    var member = await ctx.Guild.GetMemberAsync(ticketData.UserId);
+
+                    await member.SendMessageAsync($"Тикет `{ticketData.MessageId}` закрыт модератором {ctx.Member.Username}.");
+                }
+                catch { }
+
+                //Update dm embed
+                try
+                {
+                    var dmChannel = await ctx.Client.GetChannelAsync(ticketData.DmChannelId);
+                    var dmEmbedMessage = await dmChannel.GetMessageAsync(ticketData.DmMessageId);
+
+                    var dmEmbed = dmEmbedMessage.Embeds.FirstOrDefault();
+                    var newEmbed = new DiscordEmbedBuilder(dmEmbed)
+                    {
+                        Description = "Тикет закрыт",
+                        Color = new DiscordColor("#2ecc71")
+                    };
+
+                    await dmEmbedMessage.ModifyAsync(embed: newEmbed.Build());
+                }
+                catch { }
+
+                //Update channel embed
+                try
+                {
+                    var embedMessage = await ctx.Channel.GetMessageAsync(ticketData.MessageId);
+
+                    var embed = embedMessage.Embeds.FirstOrDefault();
+                    var newEmbed = new DiscordEmbedBuilder(embed)
+                    {
+                        Description = "Тикет закрыт",
+                        Color = new DiscordColor("#2ecc71")
+                    };
+
+                    await embedMessage.ModifyAsync(embed: newEmbed.Build());
+                }
+                catch { }
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Тикет был успешно закрыт. Модератор: {ctx.User}\n Канал будет удалён автоматически через 2 дня.");
             }
 
             [Command("delete")]
@@ -380,6 +464,11 @@ namespace Bot_NetCore.Commands
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Команда используется только в каналах поддержки.");
                     return;
                 }
+
+                //Get ticket data from db
+                var ticketData = TicketSQL.Get(ctx.Channel.Id);
+
+                ticketData.Status = TicketSQL.TicketStatus.Deleted;
 
                 await ctx.Channel.DeleteAsync();
             }

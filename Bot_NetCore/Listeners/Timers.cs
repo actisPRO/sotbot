@@ -56,6 +56,11 @@ namespace Bot_NetCore.Listeners
             updateVoiceTimes.AutoReset = true;
             updateVoiceTimes.Enabled = true;
 
+            var checkExpiredTickets = new Timer(60000 * 30);
+            updateVoiceTimes.Elapsed += CheckExpiredTicketsAsync;
+            updateVoiceTimes.AutoReset = true;
+            updateVoiceTimes.Enabled = true;
+
             await Task.CompletedTask;
         }
 
@@ -383,10 +388,31 @@ namespace Bot_NetCore.Listeners
                     if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
                         VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
                 }
-            } 
-            catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении времени активности пользователей.");
+            }
+        }
+        /// <summary>
+        ///     Удаление старых тикетов.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static async void CheckExpiredTicketsAsync(object sender, ElapsedEventArgs e)
+        {
+            var expiredTickets = TicketSQL.GetClosedFor(TimeSpan.FromDays(2));
+
+            var guild = Client.Guilds[Bot.BotSettings.Guild];
+
+            foreach(var ticket in expiredTickets)
+            {
+                ticket.Status = TicketSQL.TicketStatus.Deleted;
+                try
+                {
+                    await guild.GetChannel(ticket.ChannelId).DeleteAsync();
+                }
+                catch (NotFoundException) { }
             }
         }
     }
