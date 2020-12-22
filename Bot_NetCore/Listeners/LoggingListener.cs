@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Bot_NetCore.Misc;
-using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
-using DSharpPlus.EventArgs;
 
 namespace Bot_NetCore.Listeners
 {
