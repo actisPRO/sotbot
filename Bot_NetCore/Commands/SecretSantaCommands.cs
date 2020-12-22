@@ -6,9 +6,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using K4os.Compression.LZ4.Internal;
 
 namespace Bot_NetCore.Commands
 {
