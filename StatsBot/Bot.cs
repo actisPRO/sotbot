@@ -15,6 +15,7 @@ namespace StatsBot
         public static void Main(string[] args)
         {
             var bot = new Bot();
+            bot.RunBotAsync().GetAwaiter().GetResult();
         }
 
         public async Task RunBotAsync()
@@ -33,7 +34,7 @@ namespace StatsBot
 
             var ccfg = new CommandsNextConfiguration()
             {
-                StringPrefixes = new[] { "!s " },
+                StringPrefixes = new[] { "!" },
                 EnableDms = false,
                 CaseSensitive = false,
                 EnableMentionPrefix = true
@@ -43,10 +44,17 @@ namespace StatsBot
 
             Client.Ready += (sender, args) =>
             {
-                sender.Logger.LogInformation("Stats", "Bot is ready.");
+                sender.Logger.LogInformation("Bot is ready");
                 return Task.CompletedTask;
             };
 
+            CommandsExtension.CommandErrored += (sender, args) =>
+            {
+                sender.Client.Logger.LogError($"Command {args.Command.Name} errored:\n{args.Exception.StackTrace}\n");
+                return Task.CompletedTask;
+            };
+
+            await Client.ConnectAsync();
             await Task.Delay(-1);
         }
     }
