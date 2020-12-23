@@ -26,7 +26,6 @@ namespace StatsBot
                 435486626551037963, // rules
                 740544717527449610, // news global
                 435730405077811200, // server news
-                435377838066237440, // tavern
                 725708512121847849, // game questions
                 573865939976585226, // help
                 679729943185588264, // outfits
@@ -35,12 +34,15 @@ namespace StatsBot
                 722157860217421894, // caps
                 556442653772742676, // raid
                 744944702415175760, // raid rules
+                435377838066237440, // tavern
             };
             
             var result = new Dictionary<DiscordUser, Data>();
-            foreach (var channel in ctx.Guild.Channels.Values)
-            { 
-                if (!channels.Contains(channel.Id)) continue;
+            foreach (var channelId in channels)
+            {
+                var channel = ctx.Guild.Channels[channelId];
+                bool errored = false;
+                var channelData = new Dictionary<DiscordUser, Data>();
                 await ctx.RespondAsync("Парсинг сообщений в канале " + channel);
                 
                 // all the messages in the channel
@@ -48,38 +50,54 @@ namespace StatsBot
                 ulong lastMessageId = channel.LastMessageId;
                 var messages = await channel.GetMessagesBeforeAsync(lastMessageId, 100);
                 int count = 0;
+                bool first = true;
+                
                 while (messages.Count != 0)
                 {
                     count += messages.Count();
                     ctx.Client.Logger.LogInformation($"Parsing channel {channel.Id}: Messages: {count}.");
-                    foreach (var message in messages)
+                    for (int i = first ? 0 : 1; i < messages.Count; ++i)
                     {
+                        first = false;
+                        var message = messages[i];
                         var author = message.Author;
                 
                         if (!result.ContainsKey(author)) result[author] = new Data(author.Username + "#" + author.Discriminator);
+                        if (!channelData.ContainsKey(author)) channelData[author] = new Data(author.Username + "#" + author.Discriminator);
 
                         result[author].Messages += 1;
+                        channelData[author].Messages += 1;
                         foreach (var reaction in message.Reactions)
+                        {
                             result[author].ReactionsReceived += reaction.Count;
+                            channelData[author].ReactionsReceived += reaction.Count;
+                        }
                     }
                     
                     lastMessageId = messages.Last().Id;
-                    
+
                     try
                     {
                         messages = await channel.GetMessagesBeforeAsync(lastMessageId, 100);
                     }
                     catch (Exception)
                     {
-                        messages = await channel.GetMessagesBeforeAsync(lastMessageId, 95);
+                        ctx.Client.Logger.LogError("Errored while parsing channel. Stopped at " + count);
+                        break;
                     }
                 }
 
-                await ctx.RespondAsync($"Завершён парсинг в канале. **Количество сообщений: {count}.**");
+                await ctx.RespondAsync($"Завершён парсинг в канале. **Количество сообщений: {count}.**. ");
 
                 using (var fs = new FileStream("global_stats.csv", FileMode.Create))
                 using (var sw = new StreamWriter(fs))
                     foreach (var kv in result)
+                        await sw.WriteLineAsync(
+                            $"\"{kv.Key.Id}\",\"{kv.Value.Username}\",\"{kv.Value.Messages}\",\"{kv.Value.ReactionsReceived}\"");
+                
+                using (var fs = new FileStream(channel.Id + ".csv", FileMode.Create))
+                using (var sw = new StreamWriter(fs))
+                    foreach (var kv in channelData)
                         await sw.WriteLineAsync(
                             $"\"{kv.Key.Id}\",\"{kv.Value.Username}\",\"{kv.Value.Messages}\",\"{kv.Value.ReactionsReceived}\"");
             }
