@@ -37,7 +37,9 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var messagesToDelete = await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, messages);
+            var channelMessages = await ctx.Channel.GetMessagesBeforeAsync(ctx.Message.Id, messages);
+
+            var messagesToDelete = channelMessages.Where(x => x.Pinned == false);
 
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
@@ -100,7 +102,10 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var messagesToDelete = await ctx.Channel.GetMessagesBeforeAsync(startFrom, messages);
+            var channelMessages = await ctx.Channel.GetMessagesBeforeAsync(startFrom, messages);
+
+            var messagesToDelete = channelMessages.Where(x => x.Pinned == false);
+
             foreach (var message in messagesToDelete) await ctx.Channel.DeleteMessageAsync(message);
             await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
             await ctx.Channel.DeleteMessageAsync(ctx.Message);
