@@ -56,7 +56,7 @@ namespace Bot_NetCore.Commands
                 {
                     var message = $"**Автор:** {msg.Author.Username}#{msg.Author.Discriminator} ({msg.Author.Id})\n" +
                                   $"**Канал:** {msg.Channel}\n" +
-                                  $"**Содержимое:** ```{msg.Content}```\n";
+                                  $"**Содержимое:** ```\u200B{ msg.Content}```\n";
 
                     //Проверка на длинну сообщения.
                     if (singleMessage.Length + message.Length >= 2000 - header.Length)
