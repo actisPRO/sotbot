@@ -70,10 +70,15 @@ namespace Bot_NetCore.Listeners
                     {
                         var guild = Client.Guilds[Bot.BotSettings.Guild];
                         var member = await guild.GetMemberAsync(sub.Member);
-                        if (member != null)
+                        try
                         {
-                            await member.SendMessageAsync("Ваша подписка истекла :cry:");
+                            if (member != null)
+                            {
+                                await member.SendMessageAsync("Ваша подписка истекла :cry:");
+                            }
                         }
+                        catch (NotFoundException) { }
+                        catch (ArgumentException) { }
 
                         try
                         {

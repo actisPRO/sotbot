@@ -119,21 +119,11 @@ namespace Bot_NetCore.Listeners
             {
                 var shipCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory);
 
-                var membersLookingForTeam = new List<ulong>();
-                foreach (var message in (await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessagesAsync(100)))
-                {
-                    if (message.Pinned) continue; // автор закрепленного сообщения не должен учитываться
-                    if (membersLookingForTeam.Contains(message.Author.Id)) continue; // автор сообщения уже мог быть добавлен в лист
-
-                    membersLookingForTeam.Add(message.Author.Id);
-                }
-
                 var possibleChannels = new List<DiscordChannel>();
                 foreach (var ship in shipCategory.Children)
-                    if (ship.Users.Count() < ship.UserLimit)
-                        foreach (var user in ship.Users)
-                            if (membersLookingForTeam.Contains(user.Id))
-                                possibleChannels.Add(ship);
+                    if (ship.Users.Count() < ship.UserLimit && FindChannelInvites.ContainsKey(ship.Id))
+                        possibleChannels.Add(ship);
+                        
 
                 var m = await e.Guild.GetMemberAsync(e.User.Id);
                 if (possibleChannels.Count == 0)
