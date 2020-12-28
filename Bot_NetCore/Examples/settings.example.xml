@@ -124,4 +124,11 @@
     <ThumbnailThree>https://cdn.discordapp.com/attachments/736006872997429349/772920778009477140/3.gif</ThumbnailThree>
     <ThumbnailNA>https://cdn.discordapp.com/attachments/736006872997429349/773485269843313650/NA.png</ThumbnailNA>
     <ThumbnailRaid>https://cdn.discordapp.com/attachments/736006872997429349/773485265058660352/Raid.png</ThumbnailRaid>
+
+    <FleetDateOffset>1</FleetDateOffset>
+    <FleetVoiceTimeOffset>3</FleetVoiceTimeOffset>
+    
+    <FleetVotingMessage>792907695630975006</FleetVotingMessage>
+    <BrigEmoji>791712089692962848</BrigEmoji>
+    <GalleonEmoji>791712089974374420</GalleonEmoji>
 </Settings>
