@@ -55,6 +55,11 @@ namespace Bot_NetCore.Listeners
             updateVoiceTimes.Elapsed += UpdateVoiceTimesOnElapsedAsync;
             updateVoiceTimes.AutoReset = true;
             updateVoiceTimes.Enabled = true;
+            
+            var sendMessagesOnExactTime = new Timer(60000);
+            sendMessagesOnExactTime.Elapsed += SendMessagesOnExactTimeOnElapsed;
+            sendMessagesOnExactTime.AutoReset = true;
+            sendMessagesOnExactTime.Enabled = true;
 
             var checkExpiredTickets = new Timer(60000 * 30);
             updateVoiceTimes.Elapsed += CheckExpiredTicketsAsync;
@@ -67,6 +72,14 @@ namespace Bot_NetCore.Listeners
             checkExpiredFleetPoll.Enabled = true;
 
             await Task.CompletedTask;
+        }
+
+        private static async void SendMessagesOnExactTimeOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            // send a new year message
+            DateTime currentTime = DateTime.Now;
+            if (currentTime.Month == 1 && currentTime.Day == 1 && currentTime.Hour == 0 && currentTime.Minute == 0)
+                await Client.Guilds[Bot.BotSettings.Guild].GetChannel(435730405077811200).SendMessageAsync("**:christmas_tree: С Новым Годом, пираты! :christmas_tree:**");
         }
 
         private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
