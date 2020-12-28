@@ -19,6 +19,15 @@ namespace Bot_NetCore.Listeners
     {
         private static DiscordClient Client;
         private static int RainbowColor = 0;
+        private static DiscordColor[] Colors = new DiscordColor[]
+        {
+            DiscordColor.Red,
+            DiscordColor.Orange,
+            DiscordColor.Yellow,
+            DiscordColor.Green,
+            DiscordColor.Cyan,
+            DiscordColor.HotPink
+        };
 
         [AsyncListener(EventTypes.Ready)]
         public static async Task RegisterTimers(DiscordClient client, ReadyEventArgs e)
@@ -85,35 +94,8 @@ namespace Bot_NetCore.Listeners
             if (Bot.BotSettings.RainbowEnabled)
             {
                 var role = Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.RainbowRole);
-                var color = DiscordColor.Red;
-                switch (RainbowColor)
-                {
-                    default:
-                        RainbowColor = 1;
-                        color = DiscordColor.Red;
-                        break;
-                    case 2:
-                        color = DiscordColor.Orange;
-                        break;
-                    case 3:
-                        color = DiscordColor.Yellow;
-                        break;
-                    case 4:
-                        color = DiscordColor.Green;
-                        break;
-                    case 5:
-                        color = DiscordColor.Cyan;
-                        break;
-                    case 6:
-                        color = DiscordColor.Blue;
-                        break;
-                    case 7:
-                        color = DiscordColor.Purple;
-                        break;
-                }
-
-                await role.ModifyAsync(color: color);
-
+                if (RainbowColor >= Colors.Length) RainbowColor = 0;
+                await role.ModifyAsync(color: Colors[RainbowColor]);
                 ++RainbowColor;
             }
         }
