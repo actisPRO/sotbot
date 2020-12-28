@@ -11,10 +11,13 @@ namespace StatsBot
     {
         public DiscordClient Client { get; private set; }
         public CommandsNextExtension CommandsExtension { get; private set; }
+
+        public static string ConnectionString = "";
         
         public static void Main(string[] args)
         {
             var bot = new Bot();
+            ConnectionString = GetConnectionString();
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
 
@@ -56,6 +59,20 @@ namespace StatsBot
 
             await Client.ConnectAsync();
             await Task.Delay(-1);
+        }
+
+        public static string GetConnectionString()
+        {
+            using (var sr = new StreamReader("mysql.txt"))
+            {
+                string ip = sr.ReadLine();
+                string db = sr.ReadLine();
+                string user = sr.ReadLine();
+                string password = sr.ReadLine();
+                
+                return
+                    $"Server={ip}; Port=3306; Database={db}; Uid={user}; Pwd={password}; CharSet=utf8mb4;";
+            }
         }
     }
 }
