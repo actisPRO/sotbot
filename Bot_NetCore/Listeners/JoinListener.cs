@@ -15,9 +15,15 @@ namespace Bot_NetCore.Listeners
 {
     public static class JoinListener
     {
-        ///     Invites список приглашений
+        /// <summary>
+        ///     Invites список приглашений.
         /// </summary>
         public static List<DiscordInvite> Invites;
+
+        /// <summary>
+        ///     Количество использований ссылки инвайта.
+        /// </summary>
+        public static int GuildInviteUsage;
 
         [AsyncListener(EventTypes.Ready)]
         public static async Task InvitesOnClientOnReady(DiscordClient client, ReadyEventArgs e)
@@ -25,6 +31,15 @@ namespace Bot_NetCore.Listeners
             var guild = client.Guilds[Bot.BotSettings.Guild];
             var guildInvites = await guild.GetInvitesAsync();
             Invites = guildInvites.ToList();
+            try
+            {
+                var guildInvite = await guild.GetVanityInviteAsync();
+                GuildInviteUsage = guildInvite.Uses;
+            }
+            catch
+            {
+                GuildInviteUsage = -1;
+            }
         }
 
         /// <summary>
@@ -208,6 +223,7 @@ namespace Bot_NetCore.Listeners
                 UsersLeftList.SaveToXML(Bot.BotSettings.UsersLeftXML);
             }
 
+            //Определение инвайта
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
@@ -250,12 +266,25 @@ namespace Bot_NetCore.Listeners
                 }
                 else
                 {
-                    await e.Guild.GetChannel(Bot.BotSettings.UserlogChannel)
+                    var guildInvite = await e.Guild.GetVanityInviteAsync();
+                    if (guildInvite.Uses > GuildInviteUsage)
+                    {
+                        GuildInviteUsage = guildInvite.Uses;
+                        await e.Guild.GetChannel(Bot.BotSettings.UserlogChannel).SendMessageAsync(
+                        $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
+                        $"Используя персональную ссылку **{guildInvite.Code}**.");
+
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Используя персональную ссылку {guildInvite.Code}.");
+                    }
+                    else
+                    {
+                        await e.Guild.GetChannel(Bot.BotSettings.UserlogChannel)
                         .SendMessageAsync(
                             $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
                             $"Приглашение не удалось определить.");
 
-                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.");
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Приглашение не удалось определить.");
+                    }
                 }
             }
             catch (Exception ex)
