@@ -7,8 +7,11 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using Jitbit.Utils;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.FileIO;
 
 namespace StatsBot
 {
@@ -153,6 +156,54 @@ namespace StatsBot
                     await sw.WriteLineAsync(
                         $"\"{kv.Key.Id}\",\"{kv.Value.Username}\",\"{kv.Value.Messages}\",\"{kv.Value.ReactionsReceived}\"");
         }
+
+        [Command("generate")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Generate(CommandContext ctx)
+        {
+            var userData = new Dictionary<ulong, Data>();
+            var extendedData = new Dictionary<ulong, ExtendedData>();
+            using (TextFieldParser parser = new TextFieldParser("global_stats.csv"))
+            {
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                while (!parser.EndOfData)
+                {
+                    //Process row
+                    try
+                    {
+                        string[] fields = parser.ReadFields();
+                        userData[Convert.ToUInt64(fields[0])] = new Data(fields[1])
+                        {
+                            Id = Convert.ToUInt64(fields[0]),
+                            Username = fields[1],
+                            ReactionsReceived = Convert.ToInt32(fields[2]),
+                            Messages = Convert.ToInt32(fields[3]),
+                            ReactionsGiven = 0
+                        };
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            }
+
+            var result = new CsvExport();
+            foreach (var user in extendedData.Values)
+            {
+                result.AddRow();
+                result["ID"] = user.Id;
+                result["Username"] = user.Username;
+                result["Messages"] = user.Messages;
+                result["Reactions"] = user.ReactionsReceived;
+                result["Voice"] = user.VoiceTime;
+                result["Warnings"] = user.Warnings;
+            }
+            result.ExportToFile("global_stats_full.csv");
+
+            await ctx.RespondAsync("Сгенерирован обновленный файл **global_stats_full.csv**!");
+        }
     }
 
     internal class ExtendedData
@@ -180,8 +231,8 @@ namespace StatsBot
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT COUNT(id) FROM warnings WHERE user = &ID;";
-                    cmd.Parameters.AddWithValue("&ID", id);
+                    cmd.CommandText = $"SELECT COUNT(id) FROM warnings WHERE user = @ID;";
+                    cmd.Parameters.AddWithValue("@ID", id);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
 
@@ -200,7 +251,26 @@ namespace StatsBot
 
         private TimeSpan GetHours(ulong id)
         {
-            return TimeSpan.FromHours(1);
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = $"SELECT time FROM voice_times WHERE user = @ID;";
+                    cmd.Parameters.AddWithValue("@ID", id);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    if (!reader.Read())
+                    {
+                        return new TimeSpan(0);
+                    }
+                    else
+                    {
+                        return reader.GetTimeSpan(0);
+                    }
+                }
+            }
         }
     }
 
