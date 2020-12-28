@@ -700,7 +700,7 @@ namespace Bot_NetCore.Commands
             {
                 //user can block the bot
             }
-            await guildMember.BanAsync();
+            await guildMember.BanAsync(delete_message_days: 1);
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Бан**\n\n" +
@@ -783,10 +783,7 @@ namespace Bot_NetCore.Commands
             {
                 await ctx.Guild.UnbanMemberAsync(member);
             }
-            catch
-            {
-
-            }
+            catch { }
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Снятие бана**\n\n" +

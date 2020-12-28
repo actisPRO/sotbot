@@ -46,6 +46,7 @@ namespace Bot_NetCore.Listeners
             clearChannelMessages.AutoReset = true;
             clearChannelMessages.Enabled = true;
 
+
             var clearVotes = new Timer(60000);
             clearVotes.Elapsed += ClearAndRepairVotesOnElapsed;
             clearVotes.AutoReset = true;
@@ -374,6 +375,7 @@ namespace Bot_NetCore.Listeners
                     {
                         if (bans[i].User.Id == ban.User)
                         {
+                            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"Попытка снятия бана {ban}");
                             await guild.UnbanMemberAsync(ban.User);
                             var user = await Client.GetUserAsync(ban.User);
                             await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
@@ -395,29 +397,31 @@ namespace Bot_NetCore.Listeners
             {
                 if (report.ReportType == ReportType.Mute)
                 {
+                    Client.Logger.LogDebug(BotLoggerEvents.Timers, $"Попытка снятия блокировки {report}");
                     try
                     {
                         var user = await guild.GetMemberAsync(report.User);
                         await user.RevokeRoleAsync(guild.GetRole(Bot.BotSettings.MuteRole), "Unmuted");
-                        ReportSQL.Delete(report.Id);
                     }
                     catch (NotFoundException)
                     {
                         //Пользователь не найден
                     }
+                    ReportSQL.Delete(report.Id);
                 }
                 else if (report.ReportType == ReportType.VoiceMute)
                 {
+                    Client.Logger.LogDebug(BotLoggerEvents.Timers, $"Попытка снятия блокировки {report}");
                     try
                     {
                         var user = await guild.GetMemberAsync(report.User);
                         await user.RevokeRoleAsync(guild.GetRole(Bot.BotSettings.VoiceMuteRole), "Unmuted");
-                        ReportSQL.Delete(report.Id);
                     }
                     catch (NotFoundException)
                     {
                         //Пользователь не найден
                     }
+                    ReportSQL.Delete(report.Id);
                 }
             }
         }

@@ -357,6 +357,11 @@ namespace Bot_NetCore.Entities
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return $"{Id} {ReportType} {User}";
+        }
     }
 
     public enum ReportType

@@ -128,11 +128,15 @@ namespace Bot_NetCore.Listeners
                     //Проверка времени входа на сервер.
                     if (member.JoinedAt > DateTime.Now.AddMinutes(-10))
                     {
-                        await member.SendMessageAsync(
+                        try
+                        {
+                            await member.SendMessageAsync(
                             $"{Bot.BotSettings.ErrorEmoji} Для принятия правил вы должны находиться на сервере минимум " +
                             $"**{Utility.FormatTimespan(TimeSpan.FromMinutes(10))}**.");
 
-                        await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
+                            await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
+                        }
+                        catch (UnauthorizedException) { }
                         return;
                     } 
                     else if (!member.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
