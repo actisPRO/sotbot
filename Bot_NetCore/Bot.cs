@@ -781,6 +781,26 @@ namespace Bot_NetCore
         ///     ID реакции галеона.
         /// </summary>
         public ulong GalleonEmoji;
+
+        /// <summary>
+        ///     Включена-ли радужная роль.
+        /// </summary>
+        public bool RainbowEnabled;
+
+        /// <summary>
+        ///     Включен-ли доступ к радужной роли для всех.
+        /// </summary>
+        public bool RainbowPublic;
+
+        /// <summary>
+        ///     ID роли-радуги
+        /// </summary>
+        public ulong RainbowRole;
+
+        /// <summary>
+        ///     Скорость изменения цвета у радужной роли (в секундах)
+        /// </summary>
+        public int RainbowCooldown;
     }
 
     public enum CommandType
