@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
-using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -14,22 +12,13 @@ namespace Bot_NetCore.Commands
 {
     [Group("blacklist")]
     [Aliases("bl")]
-    [Hidden]
+    [RequireCustomRole(RoleType.FleetCaptain)]
     [RequireGuild]
     public class BlacklistCommands : BaseCommandModule
     {
         [Command("add")]
         public async Task Add(CommandContext ctx)
-        {
-            var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member); //Только капитаны рейда, модераторы не учитываются
-
-            //Проверка на модератора или капитана рейда
-            if (!Bot.IsModerator(ctx.Member) && !isFleetCaptain)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-            
+        {            
             var embed = new DiscordEmbedBuilder();
             embed.Description = "**Добавление записи в чёрный список**\n";
             embed.WithAuthor(ctx.Member.Username + "#" + ctx.Member.Discriminator, iconUrl: ctx.Member.AvatarUrl);
@@ -197,21 +186,11 @@ namespace Bot_NetCore.Commands
         [Command("remove")]
         public async Task Remove(CommandContext ctx, string id)
         {
-            var isFleetCaptain = ctx.Member.Roles.Contains(ctx.Guild.GetRole(Bot.BotSettings.FleetCaptainRole)) && !Bot.IsModerator(ctx.Member); //Только капитаны рейда, модераторы не учитываются
-
-            //Проверка на модератора или капитана рейда
-            if (!Bot.IsModerator(ctx.Member) && !isFleetCaptain)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-            
             BlacklistEntry.Remove(id);
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалена запись!");
         }
 
         [Command("check")]
-        [RequireCustomRole(RoleType.FleetCaptain)]
         public async Task Check(CommandContext ctx)
         {
             await ctx.RespondAsync(
