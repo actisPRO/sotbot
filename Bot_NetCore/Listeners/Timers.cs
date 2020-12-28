@@ -61,6 +61,11 @@ namespace Bot_NetCore.Listeners
             updateVoiceTimes.AutoReset = true;
             updateVoiceTimes.Enabled = true;
 
+            var checkExpiredFleetPoll = new Timer(10000);
+            checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
+            checkExpiredFleetPoll.AutoReset = true;
+            checkExpiredFleetPoll.Enabled = true;
+
             await Task.CompletedTask;
         }
 
@@ -389,6 +394,7 @@ namespace Bot_NetCore.Listeners
                 Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении времени активности пользователей.");
             }
         }
+
         /// <summary>
         ///     Удаление старых тикетов.
         /// </summary>
@@ -400,7 +406,7 @@ namespace Bot_NetCore.Listeners
 
             var guild = Client.Guilds[Bot.BotSettings.Guild];
 
-            foreach(var ticket in expiredTickets)
+            foreach (var ticket in expiredTickets)
             {
                 ticket.Status = TicketSQL.TicketStatus.Deleted;
                 try
@@ -408,6 +414,66 @@ namespace Bot_NetCore.Listeners
                     await guild.GetChannel(ticket.ChannelId).DeleteAsync();
                 }
                 catch (NotFoundException) { }
+            }
+        }
+
+        /// <summary>
+        ///     Удаление старых тикетов.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static async void CheckExpiredFleetPoll(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.FleetCreationChannel)
+                    .GetMessageAsync(Bot.BotSettings.FleetVotingMessage);
+
+                if (message.Embeds.Count > 0)
+                {
+                    var embed = new DiscordEmbedBuilder(message.Embeds.FirstOrDefault());
+                    var date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 8, 0, 0);
+
+                    if (date - embed.Timestamp > TimeSpan.FromSeconds(1))
+                    {
+                        if (embed.Fields.Count < 3)
+                        {
+                            embed.AddFieldOrEmpty("\u200B\nРезультаты:", "");
+                        }
+                        embed.Fields[2].Value = "\u200B";
+                        foreach (var reaction in message.Reactions)
+                        {
+                            if (reaction.Emoji.GetDiscordName() != ":black_small_square:")
+                                embed.Fields[2].Value += $"{reaction.Emoji} - **{reaction.Count - 1}**; ";
+                        }
+
+                        embed.WithTimestamp(DateTime.Now);
+
+                        await message.ModifyAsync(embed: embed.Build());
+
+                        await message.DeleteAllReactionsAsync();
+
+                        var emojis = new DiscordEmoji[]
+                        {
+                            DiscordEmoji.FromName(Client, ":one:"),
+                            DiscordEmoji.FromName(Client, ":two:"),
+                            DiscordEmoji.FromName(Client, ":three:"),
+                            DiscordEmoji.FromName(Client, ":black_small_square:"),
+                            DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.BrigEmoji),
+                            DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.GalleonEmoji)
+                        };
+
+                        foreach (var emoji in emojis)
+                        {
+                            await Task.Delay(400);
+                            await message.CreateReactionAsync(emoji);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении голосования рейдов.");
             }
         }
     }
