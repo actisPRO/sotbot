@@ -93,10 +93,17 @@ namespace Bot_NetCore.Listeners
         {
             if (Bot.BotSettings.RainbowEnabled)
             {
-                var role = Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.RainbowRole);
-                if (RainbowColor >= Colors.Length) RainbowColor = 0;
-                await role.ModifyAsync(color: Colors[RainbowColor]);
-                ++RainbowColor;
+                try
+                {
+                    var role = Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.RainbowRole);
+                    if (RainbowColor >= Colors.Length) RainbowColor = 0;
+                    await role.ModifyAsync(color: Colors[RainbowColor]);
+                    ++RainbowColor;
+                }
+                catch (NullReferenceException)
+                {
+                    
+                }
             }
         }
 
