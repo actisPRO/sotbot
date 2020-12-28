@@ -330,103 +330,110 @@ namespace Bot_NetCore.Listeners
                     if (FindChannelInvites.ContainsKey(channel.Id))
                     {
                         client.Logger.LogDebug(BotLoggerEvents.Event, $"Получение сообщения в поиске игроков!");
-                        var embedMessage = await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(FindChannelInvites[channel.Id]);
-
-                        if (channel.Users.Count() == 0)
+                        try
                         {
-                            try
+                            var embedMessage = await e.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(FindChannelInvites[channel.Id]);
+
+                            if (channel.Users.Count() == 0)
                             {
-                                client.Logger.LogDebug(BotLoggerEvents.Event, $"Удаление ембеда в поиске игроков!");
-                                await embedMessage.DeleteAsync();
-                                FindChannelInvites.Remove(channel.Id);
-                                await SaveFindChannelMessagesAsync();
-                            }
-                            catch (NotFoundException) { }
-                        }
-                        else
-                        {
-                            var oldEmbed = embedMessage.Embeds.FirstOrDefault();
-                            var oldContent = oldEmbed.Description.Split("\n\n");
-
-                            var usersNeeded = channel.UserLimit - channel.Users.Count();
-
-                            var embedThumbnail = "";
-                            //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
-                            if (channel.Parent.Name.StartsWith("Рейд"))
-                            {
-                                if (channel.Name.StartsWith("Рейд"))
-                                    usersNeeded = Math.Max(0, (usersNeeded - 1));
-
-                                embedThumbnail = usersNeeded switch
+                                try
                                 {
-                                    0 => Bot.BotSettings.ThumbnailFull,
-                                    _ => Bot.BotSettings.ThumbnailRaid
-                                };
+                                    client.Logger.LogDebug(BotLoggerEvents.Event, $"Удаление ембеда в поиске игроков!");
+                                    await embedMessage.DeleteAsync();
+                                    FindChannelInvites.Remove(channel.Id);
+                                    await SaveFindChannelMessagesAsync();
+                                }
+                                catch (NotFoundException) { }
                             }
-                            //Если это не канал рейда, вставляем подходящую картинку по слотам, или NA если число другое
                             else
                             {
-                                embedThumbnail = usersNeeded switch
+                                var oldEmbed = embedMessage.Embeds.FirstOrDefault();
+                                var oldContent = oldEmbed.Description.Split("\n\n");
+
+                                var usersNeeded = channel.UserLimit - channel.Users.Count();
+
+                                var embedThumbnail = "";
+                                //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
+                                if (channel.Parent.Name.StartsWith("Рейд"))
                                 {
-                                    0 => Bot.BotSettings.ThumbnailFull,
-                                    1 => Bot.BotSettings.ThumbnailOne,
-                                    2 => Bot.BotSettings.ThumbnailTwo,
-                                    3 => Bot.BotSettings.ThumbnailThree,
-                                    _ => Bot.BotSettings.ThumbnailNA
+                                    if (channel.Name.StartsWith("Рейд"))
+                                        usersNeeded = Math.Max(0, (usersNeeded - 1));
+
+                                    embedThumbnail = usersNeeded switch
+                                    {
+                                        0 => Bot.BotSettings.ThumbnailFull,
+                                        _ => Bot.BotSettings.ThumbnailRaid
+                                    };
+                                }
+                                //Если это не канал рейда, вставляем подходящую картинку по слотам, или NA если число другое
+                                else
+                                {
+                                    embedThumbnail = usersNeeded switch
+                                    {
+                                        0 => Bot.BotSettings.ThumbnailFull,
+                                        1 => Bot.BotSettings.ThumbnailOne,
+                                        2 => Bot.BotSettings.ThumbnailTwo,
+                                        3 => Bot.BotSettings.ThumbnailThree,
+                                        _ => Bot.BotSettings.ThumbnailNA
+                                    };
+                                }
+
+                                //Index 0 for description
+                                var content = $"{oldContent[0]}\n\n";
+
+                                //Index 1 for users in channel
+                                var slotsCount = 1;
+                                foreach (var member in channel.Users)
+                                {
+                                    if (content.Length > 1900 || slotsCount > 15)
+                                    {
+                                        content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.Users.Count() - slotsCount + 1}.\n";
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        content += $"{DiscordEmoji.FromName(client, ":doubloon:")} {member.Mention}\n";
+                                        slotsCount++;
+                                    }
+                                }
+
+                                for (int i = 0; i < usersNeeded; i++)
+                                {
+                                    if (content.Length > 1900 || slotsCount > 15)
+                                    {
+                                        if (i != 0) //Без этого сообщение будет отправлено вместе с тем что выше
+                                            content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.UserLimit - slotsCount + 1} свободно.\n";
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        content += $"{DiscordEmoji.FromName(client, ":gold:")} ☐\n";
+                                        slotsCount++;
+                                    }
+                                }
+
+                                //Index 2 for invite link
+                                content += $"\n{oldContent[2]}";
+
+                                //Embed
+                                var embed = new DiscordEmbedBuilder
+                                {
+                                    Description = content,
+                                    Color = usersNeeded == 0 ? new DiscordColor("#2c3e50") : new DiscordColor("#e67e22")
                                 };
+
+                                embed.WithAuthor($"{channel.Name}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
+                                embed.WithThumbnail(embedThumbnail);
+                                embed.WithTimestamp(DateTime.Now);
+                                embed.WithFooter(usersNeeded != 0 ? $"В поиске команды. +{usersNeeded}" : $"Канал заполнен {DiscordEmoji.FromName(client, ":no_entry:")}");
+
+                                client.Logger.LogDebug(BotLoggerEvents.Event, $"Обновление ембеда в поиске игроков!");
+                                await embedMessage.ModifyAsync(embed: embed.Build());
                             }
-
-                            //Index 0 for description
-                            var content = $"{oldContent[0]}\n\n";
-
-                            //Index 1 for users in channel
-                            var slotsCount = 1;
-                            foreach (var member in channel.Users)
-                            {
-                                if (content.Length > 1900 || slotsCount > 15)
-                                {
-                                    content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.Users.Count() - slotsCount + 1}.\n";
-                                    break;
-                                }
-                                else
-                                {
-                                    content += $"{DiscordEmoji.FromName(client, ":doubloon:")} {member.Mention}\n";
-                                    slotsCount++;
-                                }
-                            }
-
-                            for (int i = 0; i < usersNeeded; i++)
-                            {
-                                if (content.Length > 1900 || slotsCount > 15)
-                                {
-                                    if(i != 0) //Без этого сообщение будет отправлено вместе с тем что выше
-                                        content += $"{DiscordEmoji.FromName(client, ":arrow_heading_down:")} и еще {channel.UserLimit - slotsCount + 1} свободно.\n";
-                                    break;
-                                }
-                                else
-                                {
-                                    content += $"{DiscordEmoji.FromName(client, ":gold:")} ☐\n";
-                                    slotsCount++;
-                                }
-                            }
-
-                            //Index 2 for invite link
-                            content += $"\n{oldContent[2]}";
-
-                            //Embed
-                            var embed = new DiscordEmbedBuilder
-                            {
-                                Description = content,
-                                Color = usersNeeded == 0 ? new DiscordColor("#2c3e50") : new DiscordColor("#e67e22")
-                            };
-
-                            embed.WithAuthor($"{channel.Name}", oldEmbed.Author.Url.ToString(), oldEmbed.Author.IconUrl.ToString());
-                            embed.WithThumbnail(embedThumbnail);
-                            embed.WithTimestamp(DateTime.Now);
-                            embed.WithFooter(usersNeeded != 0 ? $"В поиске команды. +{usersNeeded}" : $"Канал заполнен {DiscordEmoji.FromName(client, ":no_entry:")}");
-
-                            client.Logger.LogDebug(BotLoggerEvents.Event, $"Обновление ембеда в поиске игроков!");
-                            await embedMessage.ModifyAsync(embed: embed.Build());
+                        }
+                        catch (NotFoundException)
+                        {
+                            FindChannelInvites.Remove(channel.Id);
                         }
                     }
                 }
