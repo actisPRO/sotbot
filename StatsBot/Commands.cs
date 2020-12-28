@@ -8,6 +8,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 
 namespace StatsBot
 {
@@ -154,8 +155,58 @@ namespace StatsBot
         }
     }
 
+    internal class ExtendedData
+    {
+        public ulong Id;
+        public string Username;
+        public int Messages;
+        public int ReactionsReceived;
+        public TimeSpan VoiceTime;
+        public int Warnings;
+
+        public ExtendedData(Data data)
+        {
+            Id = data.Id;
+            Username = data.Username;
+            Messages = data.Messages;
+            ReactionsReceived = data.ReactionsReceived;
+            VoiceTime = GetHours(data.Id);
+            Warnings = GetWarnCount(data.Id);
+        }
+
+        private static int GetWarnCount(ulong id)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = $"SELECT COUNT(id) FROM warnings WHERE user = &ID;";
+                    cmd.Parameters.AddWithValue("&ID", id);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    if (!reader.Read())
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return reader.GetInt32(0);
+                    }
+                }
+            }
+        }
+
+        private TimeSpan GetHours(ulong id)
+        {
+            return TimeSpan.FromHours(1);
+        }
+    }
+
     internal class Data
     {
+        public ulong Id;
         public string Username;
         public int Messages = 0;
         public int ReactionsGiven = 0;
