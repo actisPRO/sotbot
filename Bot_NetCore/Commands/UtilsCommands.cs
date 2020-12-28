@@ -310,6 +310,16 @@ namespace Bot_NetCore.Commands
         {
             await ctx.Message.DeleteAsync();
 
+            var emojis = new DiscordEmoji[]
+            {
+                DiscordEmoji.FromName(ctx.Client, ":one:"),
+                DiscordEmoji.FromName(ctx.Client, ":two:"),
+                DiscordEmoji.FromName(ctx.Client, ":three:"),
+                DiscordEmoji.FromName(ctx.Client, ":black_small_square:"),
+                DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.BrigEmoji),
+                DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.GalleonEmoji)
+            };
+            
             var embed = new DiscordEmbedBuilder()
                 .WithTitle("Голосование за следующий рейд")
                 .WithDescription("Оставьте реакцию под этим сообщением за тот тип рейда который хотите чтобы **завтра** был у нас на сервере.\n\n" +
@@ -318,20 +328,10 @@ namespace Bot_NetCore.Commands
                 .WithThumbnail("https://cdn.discordapp.com/attachments/772989975301324890/772990308052107284/RAID.gif")
                 .WithTimestamp(DateTime.Now)
                 .WithFooter("‎\nПо результатам голосования капитаны смогут подобрать рейд")
-                .AddField("Тип Рейда:", "‎\n:one: **Эмиссарский**\n:two: **ФОТД** \n:three: **Меги**", true)
-                .AddField("Тип Корабля:", "‎\n<:brig:791712089692962848> **Brigantine**\n<:galleon:791712089974374420> **Galleon**", true);
+                .AddField("Тип Рейда:", "\n:one: **Эмиссарский**\n:two: **ФОТД** \n:three: **Меги**", true)
+                .AddField("Тип Корабля:", $"\n{emojis[4]} **Brigantine**\n{emojis[5]} **Galleon**", true);
 
             var msg = await ctx.RespondAsync(embed: embed.Build());
-
-            var emojis = new DiscordEmoji[]
-                {
-                    DiscordEmoji.FromName(ctx.Client, ":one:"),
-                    DiscordEmoji.FromName(ctx.Client, ":two:"),
-                    DiscordEmoji.FromName(ctx.Client, ":three:"),
-                    DiscordEmoji.FromName(ctx.Client, ":black_small_square:"),
-                    DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.BrigEmoji),
-                    DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.GalleonEmoji)
-                };
 
             foreach (var emoji in emojis)
             {
