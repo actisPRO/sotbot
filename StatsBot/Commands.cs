@@ -255,7 +255,7 @@ namespace StatsBot
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"SELECT time FROM voice_times WHERE user = @ID;";
+                    cmd.CommandText = $"SELECT time FROM voice_times WHERE user_id = @ID;";
                     cmd.Parameters.AddWithValue("@ID", id);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
