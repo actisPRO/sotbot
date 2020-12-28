@@ -131,4 +131,6 @@
     <FleetVotingMessage>792907695630975006</FleetVotingMessage>
     <BrigEmoji>791712089692962848</BrigEmoji>
     <GalleonEmoji>791712089974374420</GalleonEmoji>
+
+    <RainbowCooldown>60</RainbowCooldown>
 </Settings>

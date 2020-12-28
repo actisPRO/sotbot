@@ -233,6 +233,7 @@ namespace Bot_NetCore.Commands
 
         [Command("color")]
         [Description("Устанавливает донатерский цвет. Формат: #000000 для владельцев приватных ролей, либо название цвета.")]
+        [RequirePermissions(Permissions.Administrator)] //Убрать после снятия блокировки
         public async Task Color(CommandContext ctx, [RemainingText] string color)
         {
             if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
@@ -381,6 +382,7 @@ namespace Bot_NetCore.Commands
 
         [Command("rename")]
         [Description("Измененяет название роли донатера.")]
+        [RequirePermissions(Permissions.Administrator)] //Убрать после снятия блокировки
         public async Task Rename(CommandContext ctx, [RemainingText] string newName)
         {
             if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))

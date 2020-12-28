@@ -76,7 +76,7 @@ namespace Bot_NetCore.Listeners
             updateVoiceTimes.AutoReset = true;
             updateVoiceTimes.Enabled = true;
 
-            var checkExpiredFleetPoll = new Timer(10000);
+            var checkExpiredFleetPoll = new Timer(60000 * 5);
             checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
             checkExpiredFleetPoll.AutoReset = true;
             checkExpiredFleetPoll.Enabled = true;
@@ -93,6 +93,8 @@ namespace Bot_NetCore.Listeners
         {
             if (Bot.BotSettings.RainbowEnabled)
             {
+                Client.Logger.LogDebug(BotLoggerEvents.Timers, $"RainbowRoleOnElapsed running");
+
                 try
                 {
                     var role = Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.RainbowRole);
@@ -109,6 +111,8 @@ namespace Bot_NetCore.Listeners
 
         private static async void SendMessagesOnExactTimeOnElapsed(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"SendMessagesOnExactTimeOnElapsed running");
+
             // send a new year message
             DateTime currentTime = DateTime.Now;
             if (currentTime.Month == 1 && currentTime.Day == 1 && currentTime.Hour == 0 && currentTime.Minute == 0)
@@ -117,6 +121,8 @@ namespace Bot_NetCore.Listeners
 
         private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearSubscriptionsOnElapsed running");
+
             for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
             {
                 var sub = Subscriber.Subscribers.Values.ToArray()[i];
@@ -155,6 +161,8 @@ namespace Bot_NetCore.Listeners
 
         private static async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"DeleteShipsOnElapsed running");
+
             for (int i = 0; i < ShipList.Ships.Count; ++i)
             {
                 var ship = ShipList.Ships.Values.ToArray()[i];
@@ -206,6 +214,8 @@ namespace Bot_NetCore.Listeners
 
         private static async void ClearAndRepairVotesOnElapsed(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearAndRepairVotesOnElapsed running");
+
             try
             {
                 var channelMessages = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel)
@@ -291,6 +301,8 @@ namespace Bot_NetCore.Listeners
         /// <param name="e"></param>
         private static async void ClearChannelMessagesOnElapsed(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearChannelMessagesOnElapsed running");
+
             try
             {
                 var guild = Client.Guilds[Bot.BotSettings.Guild];
@@ -346,6 +358,8 @@ namespace Bot_NetCore.Listeners
 
         private static async void CheckExpiredReports(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"CheckExpiredReports running");
+
             var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
 
             //Check for expired bans
@@ -416,6 +430,8 @@ namespace Bot_NetCore.Listeners
         /// <param name="e"></param>
         private static void UpdateVoiceTimesOnElapsedAsync(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"UpdateVoiceTimesOnElapsedAsync running");
+
             try
             {
                 foreach (var entry in VoiceListener.VoiceTimeCounters)
@@ -453,6 +469,8 @@ namespace Bot_NetCore.Listeners
         /// <param name="e"></param>
         private static async void CheckExpiredTicketsAsync(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"CheckExpiredTicketsAsync running");
+
             var expiredTickets = TicketSQL.GetClosedFor(TimeSpan.FromDays(2));
 
             var guild = Client.Guilds[Bot.BotSettings.Guild];
@@ -475,6 +493,8 @@ namespace Bot_NetCore.Listeners
         /// <param name="e"></param>
         private static async void CheckExpiredFleetPoll(object sender, ElapsedEventArgs e)
         {
+            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"CheckExpiredFleetPoll running");
+
             try
             {
                 var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.FleetCreationChannel)

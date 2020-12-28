@@ -28,11 +28,11 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.CommandErrored)]
         public static async Task OnCommandErrored(CommandsNextExtension ctx, CommandErrorEventArgs e)
         {
-            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
-            var commandHint = $":information_source: Используйте `!help {command}` для подробной информации о команде.";
-
             //Команда не найдена - Ничего не отправляем
             if (e.Exception is CommandNotFoundException) return;
+
+            var command = (e.Command.Parent != null ? e.Command.Parent.Name + " " : "") + e.Command.Name;
+            var commandHint = $":information_source: Используйте `!help {command}` для подробной информации о команде.";
 
             //Костыль для команды "genlist" - вообще нужно?
             if (e.Command.Name == "genlist" && e.Exception is NotFoundException) return; //костыль
