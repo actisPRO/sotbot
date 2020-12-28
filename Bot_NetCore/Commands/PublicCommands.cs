@@ -22,7 +22,7 @@ namespace Bot_NetCore.Commands
         [Aliases("i")]
         [Description("Создаёт приглашение в поиске игроков")]
         [Cooldown(1, 30, CooldownBucketType.User)]
-        public async Task Invite(CommandContext ctx, [Description("Описание (На афину, на форт и т.д.)")][RemainingText] string description)
+        public async Task Invite(CommandContext ctx, [Description("Описание (На афину, на форт и т.д.)"), RemainingText] string description)
         {
             //Проверка на использование канала с поиском игроков
             if (ctx.Channel.Id != Bot.BotSettings.FindChannel)
@@ -193,10 +193,9 @@ namespace Bot_NetCore.Commands
 
             var channel = ctx.Member.VoiceState?.Channel;
 
-            var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
-
             try
             {
+                var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
                 ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
                 await embedMessage.DeleteAsync();
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
@@ -209,7 +208,7 @@ namespace Bot_NetCore.Commands
         [Command("votekick")]
         [Aliases("vk")]
         [Description("Создаёт голосование против другого игрока")]
-        public async Task VoteKick(CommandContext ctx, [Description("Пользователь")] DiscordMember member)
+        public async Task VoteKick(CommandContext ctx, [Description("Пользователь"), RemainingText] DiscordMember member)
         {
             if (ctx.Member.Id == member.Id)
             {
