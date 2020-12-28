@@ -18,6 +18,7 @@ namespace Bot_NetCore.Listeners
     public static class Timers
     {
         private static DiscordClient Client;
+        private static int RainbowColor = 0;
 
         [AsyncListener(EventTypes.Ready)]
         public static async Task RegisterTimers(DiscordClient client, ReadyEventArgs e)
@@ -70,8 +71,51 @@ namespace Bot_NetCore.Listeners
             checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
             checkExpiredFleetPoll.AutoReset = true;
             checkExpiredFleetPoll.Enabled = true;
+            
+            var rainbowRole = new Timer(Bot.BotSettings.RainbowCooldown * 1000);
+            rainbowRole.Elapsed += RainbowRoleOnElapsed;
+            rainbowRole.AutoReset = true;
+            rainbowRole.Enabled = true;
 
             await Task.CompletedTask;
+        }
+
+        private static async void RainbowRoleOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            if (Bot.BotSettings.RainbowEnabled)
+            {
+                var role = Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.RainbowRole);
+                var color = DiscordColor.Red;
+                switch (RainbowColor)
+                {
+                    default:
+                        RainbowColor = 1;
+                        color = DiscordColor.Red;
+                        break;
+                    case 2:
+                        color = DiscordColor.Orange;
+                        break;
+                    case 3:
+                        color = DiscordColor.Yellow;
+                        break;
+                    case 4:
+                        color = DiscordColor.Green;
+                        break;
+                    case 5:
+                        color = DiscordColor.Cyan;
+                        break;
+                    case 6:
+                        color = DiscordColor.Blue;
+                        break;
+                    case 7:
+                        color = DiscordColor.Purple;
+                        break;
+                }
+
+                await role.ModifyAsync(color: color);
+
+                ++RainbowColor;
+            }
         }
 
         private static async void SendMessagesOnExactTimeOnElapsed(object sender, ElapsedEventArgs e)
