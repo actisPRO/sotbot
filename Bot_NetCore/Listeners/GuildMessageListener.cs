@@ -123,14 +123,25 @@ namespace Bot_NetCore.Listeners
                     }
 
                     //Выдаем роль правил
-                    var user = (DiscordMember)e.Author;
-                    if (!user.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
+                    var member = await e.Guild.GetMemberAsync(e.Author.Id);
+
+                    //Проверка времени входа на сервер.
+                    if (member.JoinedAt > DateTime.Now.AddMinutes(-10))
+                    {
+                        await member.SendMessageAsync(
+                            $"{Bot.BotSettings.ErrorEmoji} Для принятия правил вы должны находиться на сервере минимум " +
+                            $"**{Utility.FormatTimespan(TimeSpan.FromMinutes(10))}**.");
+
+                        await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
+                        return;
+                    } 
+                    else if (!member.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
                     {
                         //Выдаем роль правил
-                        await user.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
+                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole));
 
                         //Убираем роль блокировки правил
-                        await user.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
+                        await member.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
 
                         client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) подтвердил прочтение правил через сообщение.");
                     }

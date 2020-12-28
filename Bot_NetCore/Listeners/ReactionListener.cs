@@ -111,6 +111,18 @@ namespace Bot_NetCore.Listeners
 
                 //Выдаем роль правил
                 var member = await e.Guild.GetMemberAsync(discordUser.Id);
+
+                //Проверка времени входа на сервер.
+                if (member.JoinedAt > DateTime.Now.AddMinutes(-10))
+                {
+                    await member.SendMessageAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Для принятия правил вы должны находиться на сервере минимум " +
+                        $"**{Utility.FormatTimespan(TimeSpan.FromMinutes(10))}**.");
+
+                    await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
+                    return;
+                }
+
                 if (!member.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
                 {
                     //Выдаем роль правил

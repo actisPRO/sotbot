@@ -91,8 +91,7 @@ namespace Bot_NetCore
             {
                 Token = BotSettings.Token,
                 AutoReconnect = true,
-                TokenType = TokenType.Bot,
-                MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug
+                TokenType = TokenType.Bot
             };
 
             Client = new DiscordClient(cfg);
