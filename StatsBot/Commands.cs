@@ -184,7 +184,7 @@ namespace StatsBot
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.Message + "\n" + e.StackTrace);
                     }
                 }
             }
@@ -197,7 +197,7 @@ namespace StatsBot
                 result["Username"] = user.Username;
                 result["Messages"] = user.Messages;
                 result["Reactions"] = user.ReactionsReceived;
-                result["Voice"] = user.VoiceTime;
+                result["Voice"] = $"{Math.Floor(user.VoiceTime.TotalHours)}:{user.VoiceTime.Minutes}:{user.VoiceTime.Seconds}";
                 result["Warnings"] = user.Warnings;
             }
             result.ExportToFile("global_stats_full.csv");
@@ -263,11 +263,11 @@ namespace StatsBot
                     var reader = cmd.ExecuteReader();
                     if (!reader.Read())
                     {
-                        return new TimeSpan(0);
+                        return TimeSpan.Zero;
                     }
                     else
                     {
-                        return reader.GetTimeSpan(0);
+                        return reader.GetTimeSpan("time");
                     }
                 }
             }
