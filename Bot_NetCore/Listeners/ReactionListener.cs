@@ -45,6 +45,17 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
+            //Проверка если сообщение с принятием правил рейда
+            if (e.Message.Id == Bot.BotSettings.FleetCodexMessageId)
+            {
+                //Забираем роль
+                var member = await e.Guild.GetMemberAsync(discordUser.Id);
+                if (member.Roles.Any(x => x.Id == Bot.BotSettings.FleetCodexRole))
+                    await member.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
+
+                return;
+            }
+
             //Emissary Message
             if (e.Message.Id == Bot.BotSettings.EmissaryMessageId) return;
         }
