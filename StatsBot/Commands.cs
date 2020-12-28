@@ -161,7 +161,6 @@ namespace StatsBot
         [RequirePermissions(Permissions.Administrator)]
         public async Task Generate(CommandContext ctx)
         {
-            var userData = new Dictionary<ulong, Data>();
             var extendedData = new Dictionary<ulong, ExtendedData>();
             using (TextFieldParser parser = new TextFieldParser("global_stats.csv"))
             {
@@ -173,7 +172,7 @@ namespace StatsBot
                     try
                     {
                         string[] fields = parser.ReadFields();
-                        userData[Convert.ToUInt64(fields[0])] = new Data(fields[1])
+                        var data = new Data(fields[1])
                         {
                             Id = Convert.ToUInt64(fields[0]),
                             Username = fields[1],
@@ -181,6 +180,7 @@ namespace StatsBot
                             Messages = Convert.ToInt32(fields[3]),
                             ReactionsGiven = 0
                         };
+                        extendedData[Convert.ToUInt64(fields[0])] = new ExtendedData(data);
                     }
                     catch (Exception e)
                     {
