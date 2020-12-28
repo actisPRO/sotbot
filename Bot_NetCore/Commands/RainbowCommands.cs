@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 
@@ -13,7 +14,8 @@ namespace Bot_NetCore.Commands
         [Description("Добавляет радужную роль")]
         public async Task Add(CommandContext ctx)
         {
-            if (!Bot.BotSettings.RainbowPublic || !Bot.BotSettings.RainbowEnabled)
+            if (!Bot.BotSettings.RainbowPublic || !Bot.BotSettings.RainbowEnabled &&
+                !Bot.IsModerator(ctx.Member) && !ctx.Member.Roles.Contains(ctx.Guild.Roles[Bot.BotSettings.FleetCaptainRole]))
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} В данный момент нельзя добавить себе эту роль.");
                 return;
