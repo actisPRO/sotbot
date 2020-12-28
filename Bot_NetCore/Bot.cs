@@ -766,6 +766,21 @@ namespace Bot_NetCore
         ///     Количество часов которое пользователеь должен провести в голосовых каналах до того как принять правила.
         /// </summary>
         public int FleetVoiceTimeOffset;
+
+        /// <summary>
+        ///     ID сообщения с голосованием за тип рейда.
+        /// </summary>
+        public ulong FleetVotingMessage;
+
+        /// <summary>
+        ///     ID реакции бриги.
+        /// </summary>
+        public ulong BrigEmoji;
+
+        /// <summary>
+        ///     ID реакции галеона.
+        /// </summary>
+        public ulong GalleonEmoji;
     }
 
     public enum CommandType

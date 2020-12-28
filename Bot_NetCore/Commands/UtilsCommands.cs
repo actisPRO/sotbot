@@ -303,5 +303,43 @@ namespace Bot_NetCore.Commands
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно создана копия роли. Роль: {newRole.Mention} \n {resultString}");
         }
+
+        [Command("createfleetpoll")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task CreateFleetPoll(CommandContext ctx)
+        {
+            await ctx.Message.DeleteAsync();
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Голосование за следующий рейд")
+                .WithDescription("Оставьте реакцию под этим сообщением за тот тип рейда который хотите чтобы **завтра** был у нас на сервере.\n\n" +
+                                 "Таким образом капитанам рейда будет легче узнать какой тип рейда больше всего востребован.\n‎")
+                .WithColor(new DiscordColor(0x58FF9B))
+                .WithThumbnail("https://cdn.discordapp.com/attachments/772989975301324890/772990308052107284/RAID.gif")
+                .WithTimestamp(DateTime.Now)
+                .WithFooter("‎\nПо результатам голосования капитаны смогут подобрать рейд")
+                .AddField("Тип Рейда:", "‎\n:one: **Эмиссарский**\n:two: **ФОТД** \n:three: **Меги**", true)
+                .AddField("Тип Корабля:", "‎\n<:brig:791712089692962848> **Brigantine**\n<:galleon:791712089974374420> **Galleon**", true);
+
+            var msg = await ctx.RespondAsync(embed: embed.Build());
+
+            var emojis = new DiscordEmoji[]
+                {
+                    DiscordEmoji.FromName(ctx.Client, ":one:"),
+                    DiscordEmoji.FromName(ctx.Client, ":two:"),
+                    DiscordEmoji.FromName(ctx.Client, ":three:"),
+                    DiscordEmoji.FromName(ctx.Client, ":black_small_square:"),
+                    DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.BrigEmoji),
+                    DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.GalleonEmoji)
+                };
+
+            foreach (var emoji in emojis)
+            {
+                await msg.CreateReactionAsync(emoji);
+                await Task.Delay(400);
+            }
+
+            Bot.EditSettings("FleetVotingMessage", msg.Id.ToString());
+        }
     }
 }
