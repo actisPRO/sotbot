@@ -504,7 +504,7 @@ namespace Bot_NetCore.Listeners
                     var embed = new DiscordEmbedBuilder(message.Embeds.FirstOrDefault());
                     var date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 8, 0, 0);
 
-                    if (date - embed.Timestamp > TimeSpan.FromSeconds(1))
+                    if (date - embed.Timestamp > TimeSpan.FromDays(1))
                     {
                         if (embed.Fields.Count < 3)
                         {
