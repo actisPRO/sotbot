@@ -7,6 +7,7 @@ using DSharpPlus.Entities;
 
 namespace RainbowBot
 {
+    [Group("rainbow")]
     public class Commands : BaseCommandModule
     {
         private static List<ulong> WhitelistRoles = new List<ulong>

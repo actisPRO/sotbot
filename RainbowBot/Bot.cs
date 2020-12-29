@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace RainbowBot
@@ -41,7 +43,8 @@ namespace RainbowBot
                 StringPrefixes = new[] { "!" },
                 EnableDms = false,
                 CaseSensitive = false,
-                EnableMentionPrefix = true
+                EnableMentionPrefix = true,
+                EnableDefaultHelp = false
             };
             CommandsExtension = Client.UseCommandsNext(ccfg);
             CommandsExtension.RegisterCommands<Commands>();
@@ -57,9 +60,42 @@ namespace RainbowBot
                 sender.Client.Logger.LogError($"Command {args.Command.Name} errored:\n{args.Exception.StackTrace}\n");
                 return Task.CompletedTask;
             };
+            
+            var updateRainbow = new Timer((int) Math.Round(BotSettings.Cooldown * 1000));
+            updateRainbow.Elapsed += UpdateRainbowOnElapsed;
+            updateRainbow.AutoReset = true;
+            updateRainbow.Enabled = true;
 
             await Client.ConnectAsync();
             await Task.Delay(-1);
+        }
+
+        public int RainbowColor = 0;
+        private static DiscordColor[] Colors = new DiscordColor[]
+        {
+            DiscordColor.Red,
+            DiscordColor.Orange,
+            DiscordColor.Yellow,
+            DiscordColor.Green,
+            DiscordColor.Cyan,
+            DiscordColor.HotPink
+        };
+        private async void UpdateRainbowOnElapsed(object sender, ElapsedEventArgs e)
+        {
+            if (BotSettings.IsEnabled)
+            {
+                try
+                {
+                    var role = Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.RoleId);
+                    if (RainbowColor >= Colors.Length) RainbowColor = 0;
+                    await role.ModifyAsync(color: Colors[RainbowColor]);
+                    ++RainbowColor;
+                }
+                catch (NullReferenceException)
+                {
+                    
+                }
+            }
         }
 
         public Settings LoadSettings()
