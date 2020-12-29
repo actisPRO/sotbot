@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -57,6 +58,8 @@ namespace RainbowBot
 
             CommandsExtension.CommandErrored += (sender, args) =>
             {
+                if (args.Exception is CommandNotFoundException) return Task.CompletedTask;
+
                 sender.Client.Logger.LogError($"Command {args.Command.Name} errored:\n{args.Exception.StackTrace}\n");
                 return Task.CompletedTask;
             };
