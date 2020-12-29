@@ -85,6 +85,15 @@ namespace Bot_NetCore.Listeners
         {
             if (e.Guild != null)
             {
+                //TODO: REMOVE THIS -> Автобан за гифку
+                if (e.Message.Content == "https://media.discordapp.net/attachments/741675549612572793/782183382850600960/not_spoiler.gif" ||
+                        e.Message.Content.Contains("https://media.discordapp.net/attachments/741675549612572793/782183382850600960/not_spoiler.gif") ||
+                        e.Message.Content.Contains("not_spoiler.gif"))
+                {
+                    var member = await e.Guild.GetMemberAsync(e.Author.Id);
+                    await member.BanAsync(1);
+                }
+
                 if (e.Channel.Id == Bot.BotSettings.CodexReserveChannel)
                 {
                     if (!Bot.IsModerator(await e.Guild.GetMemberAsync(e.Author.Id)))
@@ -163,12 +172,24 @@ namespace Bot_NetCore.Listeners
                         var attachment = e.Message.Attachments[0]; //проверить: не может быть больше 1 вложения в сообщении
                         var file = $"generated/attachments/{attachment.FileName}";
                         wClient.DownloadFile(attachment.Url, file);
-                        var logMessage = await e.Guild.GetChannel(Bot.BotSettings.AttachmentsLog).SendFileAsync(file, message);
-                        File.Delete(file);
 
-                        using (var fs = new FileStream("generated/attachments_messages.csv", FileMode.Append))
-                        using (var sw = new StreamWriter(fs))
-                            await sw.WriteLineAsync($"{e.Message.Id},{logMessage.Id}");
+                        //TODO: REMOVE THIS -> Автобан за гифку
+                        if ((new FileInfo(file).Length) == 1058939)
+                        {
+                            var member = await e.Guild.GetMemberAsync(e.Author.Id);
+                            await member.BanAsync(1);
+                        }
+                        //TODO
+                        else
+                        {
+
+                            var logMessage = await e.Guild.GetChannel(Bot.BotSettings.AttachmentsLog).SendFileAsync(file, message);
+                            File.Delete(file);
+
+                            using (var fs = new FileStream("generated/attachments_messages.csv", FileMode.Append))
+                            using (var sw = new StreamWriter(fs))
+                                await sw.WriteLineAsync($"{e.Message.Id},{logMessage.Id}");
+                        }
                     }
                 }
 
