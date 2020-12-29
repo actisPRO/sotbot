@@ -130,15 +130,14 @@ namespace RainbowBot
                 throw ex;
             }
         }
-
-        public struct Settings
-        {
-            public string Token;
-            public ulong Guild;
-            public bool IsPublic;
-            public bool IsEnabled;
-            public ulong RoleId;
-            public float Cooldown;
-        }
+    }
+    public struct Settings
+    {
+        public string Token;
+        public ulong Guild;
+        public bool IsPublic;
+        public bool IsEnabled;
+        public ulong RoleId;
+        public float Cooldown;
     }
 }
