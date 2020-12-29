@@ -81,11 +81,6 @@ namespace Bot_NetCore.Listeners
             checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
             checkExpiredFleetPoll.AutoReset = true;
             checkExpiredFleetPoll.Enabled = true;
-            
-            var rainbowRole = new Timer(Bot.BotSettings.RainbowCooldown * 1000);
-            rainbowRole.Elapsed += RainbowRoleOnElapsed;
-            rainbowRole.AutoReset = true;
-            rainbowRole.Enabled = true;
 
             await Task.CompletedTask;
         }
