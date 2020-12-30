@@ -161,7 +161,9 @@ namespace StatsBot
         [RequirePermissions(Permissions.Administrator)]
         public async Task Generate(CommandContext ctx)
         {
+            ctx.Client.Logger.LogInformation("Generating stats file. . .");
             var extendedData = new Dictionary<ulong, ExtendedData>();
+            var members = await ctx.Guild.GetAllMembersAsync();
             using (TextFieldParser parser = new TextFieldParser("global_stats.csv"))
             {
                 parser.TextFieldType = FieldType.Delimited;
@@ -180,13 +182,37 @@ namespace StatsBot
                             Messages = Convert.ToInt32(fields[3]),
                             ReactionsGiven = 0
                         };
-                        extendedData[Convert.ToUInt64(fields[0])] = new ExtendedData(data);
+                        var selectedMembers = from DiscordMember discordMember in members
+                            where discordMember.Id == data.Id
+                            select discordMember;
+                        var member = selectedMembers.Any() ? selectedMembers.First() : null;
+                                
+                        extendedData[Convert.ToUInt64(fields[0])] = new ExtendedData(data, member);
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e.Message + "\n" + e.StackTrace);
                     }
                 }
+            }
+            
+            ctx.Client.Logger.LogInformation("Getting data for users without messages. . .");
+            
+            // get users without messages
+            var users = from DiscordMember discordMember in members
+                where !extendedData.Keys.Contains(discordMember.Id)
+                select discordMember;
+            foreach (var user in users)
+            {
+                var data = new Data(user.Username + "#" + user.Discriminator)
+                {
+                    Id = user.Id,
+                    Messages = 0,
+                    ReactionsGiven = 0,
+                    ReactionsReceived = 0
+                };
+                
+                extendedData[user.Id] = new ExtendedData(data, user);
             }
 
             var result = new CsvExport();
@@ -199,10 +225,12 @@ namespace StatsBot
                 result["Reactions"] = user.ReactionsReceived;
                 result["Voice"] = $"{Math.Floor(user.VoiceTime.TotalHours)}:{user.VoiceTime.Minutes}:{user.VoiceTime.Seconds}";
                 result["Warnings"] = user.Warnings;
+                result["Days"] = user.Days;
+                result["Roles"] = user.Roles;
             }
             result.ExportToFile("global_stats_full.csv");
 
-            await ctx.RespondAsync("Сгенерирован обновленный файл **global_stats_full.csv**!");
+            await ctx.RespondWithFileAsync("global_stats_full.csv", "Сгенерирован обновленный файл **global_stats_full.csv**!");
         }
     }
 
@@ -214,8 +242,10 @@ namespace StatsBot
         public int ReactionsReceived;
         public TimeSpan VoiceTime;
         public int Warnings;
+        public int Days;
+        public int Roles;
 
-        public ExtendedData(Data data)
+        public ExtendedData(Data data, DiscordMember member = null)
         {
             Id = data.Id;
             Username = data.Username;
@@ -223,6 +253,8 @@ namespace StatsBot
             ReactionsReceived = data.ReactionsReceived;
             VoiceTime = GetHours(data.Id);
             Warnings = GetWarnCount(data.Id);
+            Roles = member == null ? 0 : member.Roles.Count();
+            Days = member == null ? 0 : GetDays(member);
         }
 
         private static int GetWarnCount(ulong id)
@@ -271,6 +303,14 @@ namespace StatsBot
                     }
                 }
             }
+        }
+
+        private int GetDays(DiscordMember member)
+        {
+            var new_year = new DateTime(DateTime.Today.Year + 1, 1, 1, 0, 0, 0);
+            var diff = new_year - member.JoinedAt;
+
+            return diff.Days;
         }
     }
 

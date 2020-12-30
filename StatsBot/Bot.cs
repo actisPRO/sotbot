@@ -53,7 +53,7 @@ namespace StatsBot
 
             CommandsExtension.CommandErrored += (sender, args) =>
             {
-                sender.Client.Logger.LogError($"Command {args.Command.Name} errored:\n{args.Exception.StackTrace}\n");
+                sender.Client.Logger.LogError($"Command {args.Command.Name} errored: {args.Exception.Message}\n{args.Exception.StackTrace}\n");
                 return Task.CompletedTask;
             };
 
