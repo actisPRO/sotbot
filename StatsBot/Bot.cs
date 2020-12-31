@@ -72,6 +72,8 @@ namespace StatsBot
                             VoiceTime = timeSpan,
                             Warnings = Convert.ToInt32(fields[5])
                         };
+
+                        Data[piece.Id] = piece;
                     }
                 }
                 sender.Logger.LogInformation("Bot is ready");

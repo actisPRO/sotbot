@@ -243,7 +243,7 @@ namespace StatsBot
             }
 
             var memberStats = Bot.Data[ctx.Member.Id];
-            var message = $"**:christmas_tree: Привет, {ctx.Member.Mention}! :christmas_tree:\n";
+            var message = $"**:christmas_tree: Привет, {ctx.Member.Mention}! :christmas_tree:**\n";
             TimeSpan time = DateTime.Now - ctx.Member.JoinedAt;
             
             // days
@@ -257,33 +257,33 @@ namespace StatsBot
                 daysPart = $"{daysStr} прекрасных дня, проведённых вместе с нами";
             else daysPart = $"{daysStr} прекрасных дней, проведённых вместе с нами";
 
-            message += $"За {daysPart}, ты:\n\n";
+            message += $"**За {daysPart}, ты:**\n\n";
             
             // messages
             string messageStr = memberStats.Messages.ToString();
             string messagePart = "";
-            if (messageStr.EndsWith("1") && !messageStr.EndsWith("11")) messagePart = $"**{messageStr}** сообщение";
+            if (messageStr.EndsWith("1") && !messageStr.EndsWith("11")) messagePart = $"**{messageStr} сообщение**";
             else if ((messageStr.EndsWith("2") || messageStr.EndsWith("3") || messageStr.EndsWith("4")) &&
                      !(messageStr.EndsWith("12") || messageStr.EndsWith("13")
                                                  || messageStr.EndsWith("14")))
-                messagePart = $"**{messageStr}** сообщения";
-            else messagePart = $"**{messageStr}** сообщений";
+                messagePart = $"**{messageStr} сообщения**";
+            else messagePart = $"**{messageStr} сообщений**";
 
-            message += $"Отправил {messagePart}\n";
+            message += $":envelope: Отправил {messagePart}\n";
             
             // reactions
             if (memberStats.ReactionsReceived > 0)
             {
-                string rStr = memberStats.Messages.ToString();
+                string rStr = memberStats.ReactionsReceived.ToString();
                 string rPart = "";
-                if (rStr.EndsWith("1") && !rStr.EndsWith("11")) rPart = $"**{rStr}** реакцию";
+                if (rStr.EndsWith("1") && !rStr.EndsWith("11")) rPart = $"**{rStr} реакцию** ";
                 else if ((rStr.EndsWith("2") || rStr.EndsWith("3") || rStr.EndsWith("4")) &&
                          !(rStr.EndsWith("12") || rStr.EndsWith("13")
                                                || rStr.EndsWith("14")))
-                    rPart = $"**{rStr}** реакции";
-                else rPart = $"**{rStr}** реакций";
+                    rPart = $"**{rStr} реакции**";
+                else rPart = $"**{rStr} реакций**";
 
-                message += $"Получил {rPart}\n";
+                message += $":smile: Получил {rPart}\n";
             }
             
             // time
@@ -292,14 +292,14 @@ namespace StatsBot
             {
                 string timeStr = hours.ToString();
                 string timePart = "";
-                if (timeStr.EndsWith("1") && !timeStr.EndsWith("11")) timePart = $"**{timeStr}** час";
+                if (timeStr.EndsWith("1") && !timeStr.EndsWith("11")) timePart = $"**{timeStr} час**";
                 else if ((timeStr.EndsWith("2") || timeStr.EndsWith("3") || timeStr.EndsWith("4")) &&
                          !(timeStr.EndsWith("12") || timeStr.EndsWith("13")
                                                   || timeStr.EndsWith("14")))
-                    timePart = $"**{timeStr}** часа";
-                else timePart = $"**{timeStr}** часов";
+                    timePart = $"**{timeStr} часа**";
+                else timePart = $"**{timeStr} часов**";
 
-                message += $"Провёл {timePart} в голосовых каналах\n";
+                message += $":microphone2: Провёл {timePart} в голосовых каналах\n";
             }
             
             // roles
@@ -307,14 +307,14 @@ namespace StatsBot
             {
                 string rStr = ctx.Member.Roles.Count().ToString();
                 string rPart = "";
-                if (rStr.EndsWith("1") && !rStr.EndsWith("11")) rPart = $"**{rStr}** роль";
+                if (rStr.EndsWith("1") && !rStr.EndsWith("11")) rPart = $"**{rStr} роль**";
                 else if ((rStr.EndsWith("2") || rStr.EndsWith("3") || rStr.EndsWith("4")) &&
                          !(rStr.EndsWith("12") || rStr.EndsWith("13")
                                                || rStr.EndsWith("14")))
-                    rPart = $"**{rStr}** роли";
-                else rPart = $"**{rStr}** ролей";
+                    rPart = $"**{rStr} роли**";
+                else rPart = $"**{rStr} ролей**";
 
-                message += $"Заработал {rPart}\n";
+                message += $":trophy: Заработал {rPart}\n";
             }
             
             // warnings
@@ -322,19 +322,20 @@ namespace StatsBot
             {
                 string rStr = memberStats.Warnings.ToString();
                 string rPart = "";
-                if (rStr.EndsWith("1") && !rStr.EndsWith("11")) rPart = $"**{rStr}** предупреждение";
+                if (rStr.EndsWith("1") && !rStr.EndsWith("11")) rPart = $"**{rStr} предупреждение**";
                 else if ((rStr.EndsWith("2") || rStr.EndsWith("3") || rStr.EndsWith("4")) &&
                          !(rStr.EndsWith("12") || rStr.EndsWith("13")
                                                || rStr.EndsWith("14")))
-                    rPart = $"**{rStr}** предупреждения";
-                else rPart = $"**{rStr}** предупреждений";
+                    rPart = $"**{rStr} предупреждения**";
+                else rPart = $"**{rStr} предупреждений**";
 
-                message += $"И получил {rPart}\n";
+                message += $":bookmark_tabs: И получил {rPart}\n";
             }
 
             message += "\n**С Новым Годом!**\nhttps://youtu.be/UgU-BduzovM";
 
             await ctx.Member.SendMessageAsync(message);
+            await ctx.RespondAsync($":envelope: Статистика отправлена в ЛС :wink:");
         }
     }
 
