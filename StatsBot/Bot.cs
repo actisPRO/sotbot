@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic.FileIO;
 
 namespace StatsBot
 {
@@ -13,6 +15,8 @@ namespace StatsBot
         public CommandsNextExtension CommandsExtension { get; private set; }
 
         public static string ConnectionString = "";
+        
+        public static Dictionary<ulong, ExtendedData> Data = new Dictionary<ulong, ExtendedData>();
         
         public static void Main(string[] args)
         {
@@ -47,13 +51,50 @@ namespace StatsBot
 
             Client.Ready += (sender, args) =>
             {
+                using (TextFieldParser parser = new TextFieldParser("global_stats_full.csv"))
+                {
+                    parser.TextFieldType = FieldType.Delimited;
+                    parser.SetDelimiters(",");
+                    while (!parser.EndOfData)
+                    {
+                        string[] fields = parser.ReadFields();
+                        var time = fields[4].Split(':');
+                        var timeSpan = new TimeSpan(Convert.ToInt32(time[0]),
+                            Convert.ToInt32(time[1]),
+                            Convert.ToInt32(time[2]));
+                        
+                        var piece = new ExtendedData()
+                        {
+                            Id = Convert.ToUInt64(fields[0]),
+                            Username = fields[1],
+                            ReactionsReceived = Convert.ToInt32(fields[2]),
+                            Messages = Convert.ToInt32(fields[3]),
+                            VoiceTime = timeSpan,
+                            Warnings = Convert.ToInt32(fields[5])
+                        };
+                    }
+                }
                 sender.Logger.LogInformation("Bot is ready");
+
+                return Task.CompletedTask;
+            };
+
+            CommandsExtension.CommandExecuted += (sender, args) =>
+            {
+                Client.Logger.LogInformation(args.Context.Member + " выполнил команду " + args.Command.Name);
                 return Task.CompletedTask;
             };
 
             CommandsExtension.CommandErrored += (sender, args) =>
             {
-                sender.Client.Logger.LogError($"Command {args.Command.Name} errored: {args.Exception.Message}\n{args.Exception.StackTrace}\n");
+                try
+                {
+                    sender.Client.Logger.LogError($"Command {args.Command.Name} errored: {args.Exception.Message}\n{args.Exception.StackTrace}\n");
+                }
+                catch (Exception)
+                {
+                    
+                }
                 return Task.CompletedTask;
             };
 
