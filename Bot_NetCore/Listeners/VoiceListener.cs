@@ -88,17 +88,17 @@ namespace Bot_NetCore.Listeners
                         var channelName = Utility.GenerateChannelName(e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory).Children.Select(x => x.Name).ToArray());
 
                         if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
-                            created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Шлюп {channelName}", ChannelType.Voice,
-                                e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 2);
+                            created = await e.Guild.CreateVoiceChannelAsync(
+                                $"{channelSymbol} Шлюп {channelName}", e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), 
+                                bitrate: Bot.BotSettings.Bitrate, user_limit: 2);
                         else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
-                            created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Бриг {channelName}", ChannelType.Voice,
-                                e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 3);
+                            created = await e.Guild.CreateVoiceChannelAsync(
+                                $"{channelSymbol} Бриг {channelName}", e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory),
+                                bitrate: Bot.BotSettings.Bitrate, user_limit: 3);
                         else // Галеон
-                            created = await e.Guild.CreateChannelAsync(
-                                $"{channelSymbol} Галеон {channelName}", ChannelType.Voice,
-                                e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), bitrate: Bot.BotSettings.Bitrate, userLimit: 4);
+                            created = await e.Guild.CreateVoiceChannelAsync(
+                                $"{channelSymbol} Галеон {channelName}", e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), 
+                                bitrate: Bot.BotSettings.Bitrate, user_limit: 4);
 
                         await member.PlaceInAsync(created);
 
