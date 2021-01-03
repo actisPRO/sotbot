@@ -19,6 +19,7 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedField.Global
@@ -91,7 +92,8 @@ namespace Bot_NetCore
             {
                 Token = BotSettings.Token,
                 AutoReconnect = true,
-                TokenType = TokenType.Bot
+                TokenType = TokenType.Bot,
+                MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information
             };
 
             Client = new DiscordClient(cfg);
@@ -284,6 +286,11 @@ namespace Bot_NetCore
         ///     Версия.
         /// </summary>
         public string Version;
+        
+        /// <summary>
+        ///     Is debug logging enabled?
+        /// </summary>
+        public bool Debug;
 
         /// <summary>
         ///     ID основного сервера.
