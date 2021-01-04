@@ -12,8 +12,10 @@
     <ErrorEmoji>⛔</ErrorEmoji>
     
     <RolesChannel>474870448157491200</RolesChannel>
-    
-    <AutocreateCategory>435427887621996548</AutocreateCategory>
+
+    <AutocreateSloopCategory>701810273060913202</AutocreateSloopCategory>
+    <AutocreateBrigantineCategory>795684918058811402</AutocreateBrigantineCategory>
+    <AutocreateGalleonCategory>795684955584856104</AutocreateGalleonCategory>
     <AutocreateGalleon>533876650371186698</AutocreateGalleon>
     <AutocreateBrigantine>000000000000000000</AutocreateBrigantine>
     <AutocreateSloop>111111111111111111</AutocreateSloop>

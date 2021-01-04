@@ -82,27 +82,37 @@ namespace Bot_NetCore.Listeners
 
                         });
 
+                        var autoCreateSloopCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateSloopCategory);
+                        var autoCreateBrigantineCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateBrigantineCategory);
+                        var autoCreateGalleongCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateGalleonCategory);
+
+                        //Генерируем создание канала
+                        var used_names = autoCreateSloopCategory.Children.Select(x => x.Name).ToArray();
+                        used_names.Concat(autoCreateBrigantineCategory.Children.Select(x => x.Name).ToArray());
+                        used_names.Concat(autoCreateGalleongCategory.Children.Select(x => x.Name).ToArray());
+
+                        var channelName = $"{channelSymbol} {Utility.GenerateChannelName(used_names)}";
+
                         DiscordChannel created = null;
                         // Проверяем канал в котором находится пользователь
 
-                        var channelName = Utility.GenerateChannelName(e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory).Children.Select(x => x.Name).ToArray());
-
                         if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
                             created = await e.Guild.CreateVoiceChannelAsync(
-                                $"{channelSymbol} Шлюп {channelName}", e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), 
+                                channelName, autoCreateSloopCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 2);
                         else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
                             created = await e.Guild.CreateVoiceChannelAsync(
-                                $"{channelSymbol} Бриг {channelName}", e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory),
+                                channelName, autoCreateBrigantineCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 3);
                         else // Галеон
                             created = await e.Guild.CreateVoiceChannelAsync(
-                                $"{channelSymbol} Галеон {channelName}", e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory), 
+                                channelName, autoCreateGalleongCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 4);
 
                         await member.PlaceInAsync(created);
 
-                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание.");
+                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание." +
+                            $"Каналов в категории: {created.Parent.Children.Count()}");
                     }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
@@ -117,12 +127,17 @@ namespace Bot_NetCore.Listeners
             if (e.Channel != null &&
                 e.Channel.Id == Bot.BotSettings.FindShip)
             {
-                var shipCategory = e.Guild.GetChannel(Bot.BotSettings.AutocreateCategory);
+                var shipCategories = new[] {
+                    e.Guild.GetChannel(Bot.BotSettings.AutocreateSloopCategory),
+                    e.Guild.GetChannel(Bot.BotSettings.AutocreateBrigantineCategory),
+                    e.Guild.GetChannel(Bot.BotSettings.AutocreateGalleonCategory)
+                };
 
                 var possibleChannels = new List<DiscordChannel>();
-                foreach (var ship in shipCategory.Children)
-                    if (ship.Users.Count() < ship.UserLimit && FindChannelInvites.ContainsKey(ship.Id))
-                        possibleChannels.Add(ship);
+                foreach(var shipCategory in shipCategories)
+                    foreach (var ship in shipCategory.Children)
+                        if (ship.Users.Count() < ship.UserLimit && FindChannelInvites.ContainsKey(ship.Id))
+                            possibleChannels.Add(ship);
                         
 
                 var m = await e.Guild.GetMemberAsync(e.User.Id);
@@ -160,17 +175,25 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task DeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            e.Guild.Channels[Bot.BotSettings.AutocreateCategory].Children
-                .Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0).ToList()
-                .ForEach(async x =>
-                    {
-                        try
+            var shipCategories = new[] {
+                    e.Guild.GetChannel(Bot.BotSettings.AutocreateSloopCategory),
+                    e.Guild.GetChannel(Bot.BotSettings.AutocreateBrigantineCategory),
+                    e.Guild.GetChannel(Bot.BotSettings.AutocreateGalleonCategory)
+                };
+
+            shipCategories.ToList().ForEach(x =>
+            {
+                x.Children.Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0).ToList()
+                    .ForEach(async x =>
                         {
-                            await x.DeleteAsync();
-                        }
-                        catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
-                        catch (NotFoundException) { }
-                    });
+                            try
+                            {
+                                await x.DeleteAsync();
+                            }
+                            catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
+                            catch (NotFoundException) { }
+                        });
+            });
 
             await Task.CompletedTask;
         }
