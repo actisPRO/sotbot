@@ -264,6 +264,13 @@ namespace Bot_NetCore.Listeners
                                 await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
 
                                 await message.DeleteAsync();
+
+                                //Закрытие канала, если в нём больше нету голосований
+                                if(channelMessages.Count() == 0)
+                                {
+                                    channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel);
+                                    await channel.AddOverwriteAsync(Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.CodexRole), deny: Permissions.AccessChannels);
+                                }
                             }
                             else if (DateTime.Now < vote.End) // починка голосования
                             {
