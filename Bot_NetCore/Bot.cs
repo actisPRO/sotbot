@@ -326,9 +326,19 @@ namespace Bot_NetCore
         public ulong RolesChannel;
 
         /// <summary>
-        ///     ID категории быстрых кораблей
+        ///     ID категории быстрых кораблей (Шлюп)
         /// </summary>
-        public ulong AutocreateCategory;
+        public ulong AutocreateSloopCategory;
+
+        /// <summary>
+        ///     ID категории быстрых кораблей (Бриг)
+        /// </summary>
+        public ulong AutocreateBrigantineCategory;
+
+        /// <summary>
+        ///     ID категории быстрых кораблей (Галеон)
+        /// </summary>
+        public ulong AutocreateGalleonCategory;
 
         /// <summary>
         ///     ID канала автосоздания для галеона.

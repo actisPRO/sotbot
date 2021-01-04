@@ -235,7 +235,12 @@ namespace Bot_NetCore.Misc
         {
             string[] names = System.IO.File.ReadAllLines(@"data/ship_names.txt");
             Random rnd = new Random();
-            return names.ToList().OrderBy(x => rnd.Next()).ToArray().FirstOrDefault(x => !usedNames.Contains(x));
+            var result = names.ToList().OrderBy(x => rnd.Next())
+                .FirstOrDefault(x => !usedNames.Any(y => y.Contains(x)));
+            if (result != null)
+                return result;
+            else
+                return names.ToList().OrderBy(x => rnd.Next()).FirstOrDefault();
         }
     }
 }
