@@ -78,6 +78,7 @@ namespace Bot_NetCore
             Note.Read(BotSettings.NotesXML);
             Donator.Read(BotSettings.DonatorXML);
             Subscriber.Read(BotSettings.SubscriberXML);
+            ShipNames.Read(BotSettings.ShipNamesCSV);
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");            
@@ -811,6 +812,11 @@ namespace Bot_NetCore
         ///     Скорость изменения цвета у радужной роли (в секундах)
         /// </summary>
         public int RainbowCooldown;
+
+        /// <summary>
+        ///     Файл с вариантами названий кораблей.
+        /// </summary>
+        public string ShipNamesCSV;
     }
 
     public enum CommandType

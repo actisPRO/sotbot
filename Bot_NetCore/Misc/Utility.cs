@@ -230,17 +230,5 @@ namespace Bot_NetCore.Misc
 
             return embed.Build();
         }
-
-        public static string GenerateChannelName(string[] usedNames)
-        {
-            string[] names = System.IO.File.ReadAllLines(@"data/ship_names.txt");
-            Random rnd = new Random();
-            var result = names.ToList().OrderBy(x => rnd.Next())
-                .FirstOrDefault(x => !usedNames.Any(y => y.Contains(x)));
-            if (result != null)
-                return result;
-            else
-                return names.ToList().OrderBy(x => rnd.Next()).FirstOrDefault();
-        }
     }
 }

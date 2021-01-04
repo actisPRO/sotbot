@@ -91,7 +91,7 @@ namespace Bot_NetCore.Listeners
                         used_names.Concat(autoCreateBrigantineCategory.Children.Select(x => x.Name).ToArray());
                         used_names.Concat(autoCreateGalleongCategory.Children.Select(x => x.Name).ToArray());
 
-                        var channelName = $"{channelSymbol} {Utility.GenerateChannelName(used_names)}";
+                        var channelName = $"{channelSymbol} {ShipNames.GenerateChannelName(used_names)}";
 
                         DiscordChannel created = null;
                         // Проверяем канал в котором находится пользователь
@@ -112,7 +112,7 @@ namespace Bot_NetCore.Listeners
                         await member.PlaceInAsync(created);
 
                         client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.User.Username}#{e.User.Discriminator} ({e.User.Id}) создал канал через автосоздание." +
-                            $"Каналов в категории: {created.Parent.Children.Count()}");
+                            $" Каналов в категории: {created.Parent.Children.Count()}");
                     }
             }
             catch (NullReferenceException) // исключение выбрасывается если пользователь покинул канал
