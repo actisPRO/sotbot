@@ -216,7 +216,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    var statement = $"DELETE FROM warnings WHERE channel = '{id}';";
+                    var statement = $"DELETE FROM tickets WHERE channel = '{id}';";
                     cmd.CommandText = statement;
                     cmd.Connection = connection;
                     cmd.Connection.Open();
