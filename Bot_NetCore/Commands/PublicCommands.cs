@@ -193,15 +193,19 @@ namespace Bot_NetCore.Commands
 
             var channel = ctx.Member.VoiceState?.Channel;
 
-            try
+            if (VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
             {
-                var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
-                ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
-                await embedMessage.DeleteAsync();
+                try
+                {
+                    var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
+                    ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
+                    await embedMessage.DeleteAsync();
+                }
+                catch (NotFoundException) { }
+
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
                 await VoiceListener.SaveFindChannelMessagesAsync();
             }
-            catch (NotFoundException) { }
         }
 
 
