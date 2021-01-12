@@ -147,7 +147,7 @@ namespace Bot_NetCore.Listeners
             var guild = await e.Context.Client.GetGuildAsync(Bot.BotSettings.Guild);
             var errChannel = guild.GetChannel(Bot.BotSettings.ErrorLog);
 
-            var message = $"**Команда:** {command}\n" +
+            var message = $"**Команда:** {command} {e.Context.RawArgumentString}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
                           $"**Пользователь:** {e.Context.User}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +

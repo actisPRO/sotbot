@@ -107,8 +107,10 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
+                    text = text.Replace("'", "''");
+
                     var statement = $"INSERT INTO tickets(channel, user, dm_channel, dm_message, message, text, created_at, category, status) " +
-                                    $"VALUES ('{channelId}', {userId}, {dmChannelId}, {dmMessageId}, '{messageId}', '{text}', '{createdAt:yyyy-MM-dd HH:mm:ss}', '{category}', '{status}');";
+                                    $"VALUES ('{channelId}', '{userId}', '{dmChannelId}', '{dmMessageId}', '{messageId}', '{text}', '{createdAt:yyyy-MM-dd HH:mm:ss}', '{category}', '{status}');";
                     cmd.CommandText = statement;
                     cmd.Connection = connection;
                     cmd.Connection.Open();
