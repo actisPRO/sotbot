@@ -67,7 +67,10 @@ namespace Bot_NetCore
                 ███████╗██╗██║╚█████╔╝
                 ╚══════╝╚═╝╚═╝ ╚════╝                      
             "); //Font Name: ANSI Shadow
-
+            
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");
+            
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
@@ -79,9 +82,6 @@ namespace Bot_NetCore
             Donator.Read(BotSettings.DonatorXML);
             Subscriber.Read(BotSettings.SubscriberXML);
             ShipNames.Read(BotSettings.ShipNamesCSV);
-            
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
-            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");            
             
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
