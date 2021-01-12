@@ -387,32 +387,44 @@ namespace Bot_NetCore.Commands
 
             var channel = ctx.Guild.GetChannel(ship.Channel);
 
-            DiscordMember owner = null;
+            ulong owner = 0;
             foreach (var member in ship.Members.Values)
                 if (member.Type == MemberType.Owner)
                 {
-                    owner = await ctx.Guild.GetMemberAsync(member.Id);
+                    owner = member.Id;
                     break;
                 }
 
             ship.Delete();
             ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-            await channel.DeleteAsync();
+            try
+            {
+                await channel.DeleteAsync();
+            }
+            catch (DSharpPlus.Exceptions.NotFoundException) { await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден канал для удаления..."); }
+            catch (NullReferenceException) { await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден канал для удаления..."); }
 
             var doc = XDocument.Load("data/actions.xml");
             foreach (var action in doc.Element("actions").Elements("action"))
-                if (owner != null && Convert.ToUInt64(action.Value) == owner.Id)
+                if (owner != 0 && Convert.ToUInt64(action.Value) == owner)
                     action.Remove();
             doc.Save("data/actions.xml");
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален корабль!");
 
+            DiscordUser user = null;
+            try
+            {
+                user = await ctx.Client.GetUserAsync(owner);
+            }
+            catch (DSharpPlus.Exceptions.NotFoundException) { }
+
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
                 "**Удаление корабля**\n\n" +
                 $"**Модератор:** {ctx.Member}\n" +
                 $"**Корабль:** {name}\n" +
-                $"**Владелец:** {owner}\n" +
+                $"**Владелец:** {user}\n" +
                 $"**Дата:** {DateTime.Now}");
         }
 
