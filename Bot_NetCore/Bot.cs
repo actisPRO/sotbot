@@ -122,7 +122,7 @@ namespace Bot_NetCore
             //Команды
             Commands.RegisterCommands(Assembly.GetExecutingAssembly());
 
-            //Кастомнуа справка команд
+            //Кастомная справка команд
             Commands.SetHelpFormatter<HelpFormatter>();
 
             //Ивенты

@@ -293,21 +293,16 @@ namespace Bot_NetCore.Commands
 
             resultEmbed.WithAuthor($"{member.Username}#{member.Discriminator}", iconUrl: member.AvatarUrl);
 
-            if (member.VoiceState?.Channel == null ||
-                member.VoiceState?.Channel != null &&
-                member.VoiceState?.Channel.Id != channel.Id)
-            {
-                resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Пользователь уже покинул канал.");
-                resultEmbed.WithColor(new DiscordColor("00FF00"));
-            }
-            else if (votesCount >= votesNeeded)
+            if (votesCount >= votesNeeded)
             {
                 resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал и ему был заблокирован доступ к каналу.");
                 resultEmbed.WithFooter($"Голосов за кик: {votesCount}");
                 resultEmbed.WithColor(new DiscordColor("00FF00"));
 
-                await channel.AddOverwriteAsync(member, deny: Permissions.AccessChannels);
-                await member.PlaceInAsync(ctx.Guild.AfkChannel);
+                await channel.AddOverwriteAsync(member, deny: Permissions.UseVoice);
+
+                if (member.VoiceState?.Channel != null && member.VoiceState?.Channel.Id == channel.Id)
+                    await member.PlaceInAsync(ctx.Guild.AfkChannel);
             }
             else
             {
