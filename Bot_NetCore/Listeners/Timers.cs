@@ -73,9 +73,9 @@ namespace Bot_NetCore.Listeners
             sendMessagesOnExactTime.Enabled = true;
 
             var checkExpiredTickets = new Timer(60000 * 30);
-            updateVoiceTimes.Elapsed += CheckExpiredTicketsAsync;
-            updateVoiceTimes.AutoReset = true;
-            updateVoiceTimes.Enabled = true;
+            checkExpiredTickets.Elapsed += CheckExpiredTicketsAsync;
+            checkExpiredTickets.AutoReset = true;
+            checkExpiredTickets.Enabled = true;
 
             var checkExpiredFleetPoll = new Timer(60000 * 5);
             checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
