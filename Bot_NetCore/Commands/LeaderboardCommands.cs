@@ -327,55 +327,55 @@ namespace Bot_NetCore.Commands
                     }
                 }
 
-                var modLogMessage = "";
+                //var modLogMessage = "";
 
                 //Grant role and sub to new top inviters
-                foreach (var inviter in topThreeInviters)
-                    try
-                    {
-                        var member = await guild.GetMemberAsync(inviter.Key);
+                //foreach (var inviter in topThreeInviters)
+                //    try
+                //    {
+                //        var member = await guild.GetMemberAsync(inviter.Key);
 
-                        modLogMessage += $"{member.DisplayName}#{member.Discriminator} \n";
+                //        modLogMessage += $"{member.DisplayName}#{member.Discriminator} \n";
                         
-                        var role = guild.GetRole(Bot.BotSettings.TopMonthRole);
-                        await member.GrantRoleAsync(role);
+                //        var role = guild.GetRole(Bot.BotSettings.TopMonthRole);
+                //        await member.GrantRoleAsync(role);
 
-                        //Grant sub for 30 days
-                        var timeSpan = Utility.TimeSpanParse("30d");
+                //        //Grant sub for 30 days
+                //        var timeSpan = Utility.TimeSpanParse("30d");
 
-                        var start = DateTime.Now;
+                //        var start = DateTime.Now;
 
-                        if (Subscriber.Subscribers.ContainsKey(member.Id))
-                            start = Subscriber.Subscribers[member.Id].SubscriptionEnd;
+                //        if (Subscriber.Subscribers.ContainsKey(member.Id))
+                //            start = Subscriber.Subscribers[member.Id].SubscriptionEnd;
 
-                        var end = start + timeSpan;
+                //        var end = start + timeSpan;
 
-                        var styleRole = await DonatorCommands.GetPrivateRoleAsync(guild, member);
-                        await member.GrantRoleAsync(styleRole);
+                //        var styleRole = await DonatorCommands.GetPrivateRoleAsync(guild, member);
+                //        await member.GrantRoleAsync(styleRole);
 
-                        var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, styleRole.Id, new List<ulong>());
+                //        var sub = new Subscriber(member.Id, SubscriptionType.Premium, start, end, styleRole.Id, new List<ulong>());
 
-                        Subscriber.Save(Bot.BotSettings.SubscriberXML);
+                //        Subscriber.Save(Bot.BotSettings.SubscriberXML);
 
-                        await member.SendMessageAsync(
-                            $"Спасибо за поддержку нашего сообщества! Вам выдана подписка за топ инвайты до: **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
-                            $"**Доступные возможности:**\n" +
-                            $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n" +
-                            $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n" +
-                            $"• `{Bot.BotSettings.Prefix}d roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
-                            $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n" +
-                            $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
-                            $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.");
+                //        await member.SendMessageAsync(
+                //            $"Спасибо за поддержку нашего сообщества! Вам выдана подписка за топ инвайты до: **{end:HH:mm:ss dd.MM.yyyy}**.\n" +
+                //            $"**Доступные возможности:**\n" +
+                //            $"• `{Bot.BotSettings.Prefix}d color hex-код цвета` — изменяет цвет вашего ника.\n" +
+                //            $"• `{Bot.BotSettings.Prefix}d rename` — изменяет название вашей роли донатера.\n" +
+                //            $"• `{Bot.BotSettings.Prefix}d roleadd` — выдаёт вам роль `💣☠️WANTED☠️💣`.\n" +
+                //            $"• `{Bot.BotSettings.Prefix}d rolerm` — снимает с вас роль `💣☠️WANTED☠️💣`.\n" +
+                //            $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
+                //            $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.");
                         
-                    }
-                    catch (NotFoundException)
-                    {
-                        //Пользователь не найден.
-                    }
+                //    }
+                //    catch (NotFoundException)
+                //    {
+                //        //Пользователь не найден.
+                //    }
 
-                await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                    "**Пользователям выдана подписка за топ инвайты** \n" +
-                    $"{modLogMessage}");
+                //await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                //    "**Пользователям выдана подписка за топ инвайты** \n" +
+                //    $"{modLogMessage}");
 
                 //Save data
                 SaveTopInviters(topThreeInviters, fileName);

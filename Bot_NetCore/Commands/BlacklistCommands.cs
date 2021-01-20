@@ -51,7 +51,7 @@ namespace Bot_NetCore.Commands
                 {
                     user = await ctx.Client.GetUserAsync(Convert.ToUInt64(userId.Result.Content));
                 }
-                catch (Exception e)
+                catch
                 {
                     await status.DeleteAsync();
                     await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось найти данного пользователя!");

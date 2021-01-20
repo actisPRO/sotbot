@@ -57,10 +57,10 @@ namespace Bot_NetCore.Listeners
             deleteShips.AutoReset = true;
             deleteShips.Enabled = true;
 
-            var clearSubscriptions = new Timer(60000);
-            clearSubscriptions.Elapsed += ClearSubscriptionsOnElapsed;
-            clearSubscriptions.AutoReset = true;
-            clearSubscriptions.Enabled = true;
+            //var clearSubscriptions = new Timer(60000);
+            //clearSubscriptions.Elapsed += ClearSubscriptionsOnElapsed;
+            //clearSubscriptions.AutoReset = true;
+            //clearSubscriptions.Enabled = true;
 
             var updateVoiceTimes = new Timer(60000 * 5);
             updateVoiceTimes.Elapsed += UpdateVoiceTimesOnElapsedAsync;
@@ -115,45 +115,45 @@ namespace Bot_NetCore.Listeners
                 await Client.Guilds[Bot.BotSettings.Guild].GetChannel(435730405077811200).SendMessageAsync("**:christmas_tree: С Новым Годом, пираты! :christmas_tree:**");
         }
 
-        private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
-        {
-            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearSubscriptionsOnElapsed running");
+        //private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
+        //{
+        //    Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearSubscriptionsOnElapsed running");
 
-            for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
-            {
-                var sub = Subscriber.Subscribers.Values.ToArray()[i];
-                if (DateTime.Now > sub.SubscriptionEnd)
-                {
-                    try
-                    {
-                        var guild = Client.Guilds[Bot.BotSettings.Guild];
-                        var member = await guild.GetMemberAsync(sub.Member);
-                        try
-                        {
-                            if (member != null)
-                            {
-                                await member.SendMessageAsync("Ваша подписка истекла :cry:");
-                            }
-                        }
-                        catch (NotFoundException) { }
-                        catch (ArgumentException) { }
+        //    for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
+        //    {
+        //        var sub = Subscriber.Subscribers.Values.ToArray()[i];
+        //        if (DateTime.Now > sub.SubscriptionEnd)
+        //        {
+        //            try
+        //            {
+        //                var guild = Client.Guilds[Bot.BotSettings.Guild];
+        //                var member = await guild.GetMemberAsync(sub.Member);
+        //                try
+        //                {
+        //                    if (member != null)
+        //                    {
+        //                        await member.SendMessageAsync("Ваша подписка истекла :cry:");
+        //                    }
+        //                }
+        //                catch (NotFoundException) { }
+        //                catch (ArgumentException) { }
 
-                        try
-                        {
-                            await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
-                        }
-                        catch (Exceptions.NotFoundException) { }
+        //                try
+        //                {
+        //                    await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
+        //                }
+        //                catch (Exceptions.NotFoundException) { }
 
-                        Subscriber.Subscribers.Remove(sub.Member);
-                        Subscriber.Save(Bot.BotSettings.SubscriberXML);
-                    }
-                    catch (Exception ex)
-                    {
-                        Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке подписок.");
-                    }
-                }
-            }
-        }
+        //                Subscriber.Subscribers.Remove(sub.Member);
+        //                Subscriber.Save(Bot.BotSettings.SubscriberXML);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке подписок.");
+        //            }
+        //        }
+        //    }
+        //}
 
         private static async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
         {

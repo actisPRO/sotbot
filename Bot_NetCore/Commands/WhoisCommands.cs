@@ -281,8 +281,9 @@ namespace Bot_NetCore.Commands
             private static string GetDonationInfo(ulong userId)
             {
                 //Донат
-                if (Donator.Donators.ContainsKey(userId)) 
-                    return Donator.Donators[userId].Balance.ToString();
+                var donator = DonatorSQL.GetById(userId);
+                if (donator != null)
+                    return donator.Balance.ToString();
                 return null;
             }
 
