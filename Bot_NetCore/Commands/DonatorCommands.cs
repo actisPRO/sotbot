@@ -10,6 +10,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Commands
 {
@@ -78,6 +79,8 @@ namespace Bot_NetCore.Commands
         {
             await ctx.TriggerTypingAsync();
 
+            ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Adding new donator {member} with {balance} balance");
+
             var donator = DonatorSQL.GetById(member.Id);
             if (donator == null)
                 donator = new DonatorSQL(member.Id, balance, 0, DateTime.Now);
@@ -90,6 +93,7 @@ namespace Bot_NetCore.Commands
             {
                 try
                 {
+                    ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Deleting donator role {donator.PrivateRole}");
                     await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
                 }
                 catch (Exceptions.NotFoundException) { }
@@ -113,10 +117,12 @@ namespace Bot_NetCore.Commands
 
                 if (donator.PrivateRole == 0)
                 {
-                    var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
-                    await ctx.Guild.Roles[role.Id].ModifyPositionAsync(ctx.Guild.Roles[Bot.BotSettings.DonatorSpacerRole].Position - 1);
-                    await member.GrantRoleAsync(role);
-                    donator.PrivateRole = role.Id;
+                    //ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Creating new donator role");
+                    //var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
+                    //await member.GrantRoleAsync(role);
+                    //await ctx.Guild.Roles[role.Id].ModifyPositionAsync(ctx.Guild.Roles[Bot.BotSettings.DonatorSpacerRole].Position - 1);
+                    //donator.PrivateRole = role.Id;
+                    //ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Role {role.Id} {role.Name} created");
                 }
             }
 
@@ -128,9 +134,15 @@ namespace Bot_NetCore.Commands
                 message += $"• `{Bot.BotSettings.Prefix}d friend` — добавляет другу ваш цвет (до 5 друзей).\n" +
                            $"• `{Bot.BotSettings.Prefix}d unfriend` — убирает у друга ваш цвет.";
 
+            ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Saving donator {donator.UserId}");
             donator = donator.SaveAndUpdate();
+            ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Saved donator {donator.UserId}");
 
-            await member.SendMessageAsync(message);
+            try
+            {
+                await member.SendMessageAsync(message);
+            }
+            catch (UnauthorizedException) { }
 
             if (donator.Balance == balance)
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно добавлен донатер! Баланс: **{donator.Balance}**"); //Новый донатер
@@ -242,12 +254,15 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            try
+            if (donator.PrivateRole != 0)
             {
-                await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
+                try
+                {
+                    await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
+                }
+                catch (NotFoundException) { }
+                catch (NullReferenceException) { }
             }
-            catch (NotFoundException) { }
-            catch (NullReferenceException) { }
 
             DonatorSQL.RemoveDonator(donator.UserId);
 
@@ -304,7 +319,7 @@ namespace Bot_NetCore.Commands
             }
             else if (donator.Balance >= prices.RolePrice)
             {
-                var role = ctx.Guild.GetRole(donator.PrivateRole);
+                var role = await GetDonatorRoleOrCreate(ctx.Guild, ctx.Member, donator);
                 try
                 {
                     await role.ModifyAsync(x => x.Color = new DiscordColor(color));
@@ -497,7 +512,7 @@ namespace Bot_NetCore.Commands
                 throw new NullReferenceException("Impossible to find one of admin roles. Check configuration", ex);
             }
 
-            var role = ctx.Guild.GetRole(donator.PrivateRole);
+            var role = await GetDonatorRoleOrCreate(ctx.Guild, ctx.Member, donator);
             await role.ModifyAsync(x => x.Name = newName);
             await ctx.RespondAsync(
                 $"{Bot.BotSettings.OkEmoji} Успешно изменено название роли донатера на **{newName}**");
@@ -592,7 +607,8 @@ namespace Bot_NetCore.Commands
             }
 
             donator.AddFriend(member.Id);
-            await member.GrantRoleAsync(ctx.Guild.GetRole(donator.PrivateRole));
+            var role = await GetDonatorRoleOrCreate(ctx.Guild, ctx.Member, donator);
+            await member.GrantRoleAsync(role);
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы успешно добавили вашему другу цвет!");
 
@@ -897,7 +913,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            donator.IsHidden = true;
+            donator.IsHidden = hidden;
             donator.SaveAndUpdate();
         }
 
@@ -999,12 +1015,13 @@ namespace Bot_NetCore.Commands
         public async Task RestoreLostDonatorsFromFile(CommandContext ctx, String filePath)
         {
             string[] lines = File.ReadAllLines(filePath);
+            List<string> errored = new List<string>();
             var linesCount = lines.Count();
             for (int i = 0; i < linesCount; i++)
             {
                 var values = lines[i].Split(',');
                 Console.WriteLine($"Restoring donator {i} of {linesCount}");
-
+                await ctx.RespondAsync($"Restoring donator {values[0]} {values[1]}");
                 try
                 {
                     var command = $"d add {values[0]} {values[1]}";
@@ -1022,11 +1039,14 @@ namespace Bot_NetCore.Commands
                 }
                 catch (Exception ex)
                 {
+                    errored.Add(lines[i]);
                     await ctx.RespondAsync($"Error when restoring {values[0]} {values[1]} {ex.Message}");
                 }
 
                 await Task.Delay(5000);
             }
+
+            File.WriteAllLines($"errored_{filePath}", errored);
         }
 
             private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
@@ -1047,6 +1067,27 @@ namespace Bot_NetCore.Commands
             }
 
             return colorRoles;
+        }
+
+        public static async Task<DiscordRole> GetDonatorRoleOrCreate(DiscordGuild guild, DiscordMember member, DonatorSQL donator)
+        {
+            DiscordRole role;
+
+            if (donator.PrivateRole != 0)
+            {
+                role = guild.GetRole(donator.PrivateRole);
+            }
+            else
+            {
+                role = await guild.CreateRoleAsync($"{member.DisplayName} Style");
+                await member.GrantRoleAsync(role);
+                await guild.Roles[role.Id].ModifyPositionAsync(guild.Roles[Bot.BotSettings.DonatorSpacerRole].Position - 1);
+                donator.PrivateRole = role.Id;
+            }
+
+            donator.PrivateRole = role.Id;
+            donator.SaveAndUpdate();
+            return role;
         }
 
         //public static async Task<DiscordRole> GetPrivateRoleAsync(DiscordGuild guild, DiscordMember member)
