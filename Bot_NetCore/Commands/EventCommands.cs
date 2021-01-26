@@ -88,8 +88,10 @@ namespace Bot_NetCore.Commands
             var i = 0;
             foreach (var message in allMessages)
             {
-                if (message.Attachments.Count != 0)
+                if (message.Attachments.Count != 0 || message.Embeds.Count != 0)
                 {
+                    await message.DeleteAllReactionsAsync();
+                    await Task.Delay(400);
                     await message.CreateReactionAsync(emoji);
                     if (i % 10 == 0)
                         await Task.Delay(2000);
@@ -136,7 +138,7 @@ namespace Bot_NetCore.Commands
             {
                 var member = await e.Guild.GetMemberAsync(e.User.Id);
 
-                if (member.JoinedAt > new DateTime(2021, 01, 30, 18, 0, 0))
+                if (member.JoinedAt > new DateTime(2021, 01, 29, 18, 0, 0))
                     await e.Message.DeleteReactionAsync(e.Emoji, e.User);
             }
         }
