@@ -43,5 +43,20 @@ namespace Bot_NetCore.Misc
 
             return result;
         }
+
+        public static void WriteToFile(Dictionary<string, int[]> stats, string filename)
+        {
+            var export = new CsvExport();
+            foreach (var element in stats)
+            {
+                export.AddRow();
+                export["Name"] = element.Key;
+                export["Sloops"] = element.Value[0];
+                export["Brigantines"] = element.Value[1];
+                export["Galleons"] = element.Value[2];
+            }
+            
+            export.ExportToFile(filename);
+        }
     }
 }

@@ -119,6 +119,8 @@ namespace Bot_NetCore.Listeners
                                 channelName, autoCreateGalleongCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 4);
                         }
+                        
+                        FastShipStats.WriteToFile(Bot.ShipNamesStats, "generated/stats/ship_names.csv");
 
                         await member.PlaceInAsync(created);
 
