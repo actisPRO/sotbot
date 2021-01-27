@@ -4,14 +4,14 @@ using Microsoft.VisualBasic.FileIO;
 
 namespace Bot_NetCore.Misc
 {
-    public class FastShipStats
+    public static class FastShipStats
     {
         /// <summary>
         ///     Loads fast ship name generation stats from the specified file.
         /// </summary>
         /// <param name="to"></param>
         /// <param name="filename"></param>
-        public Dictionary<string, int[]> LoadFromFile(string filename)
+        public static Dictionary<string, int[]> LoadFromFile(string filename)
         {
             var result = new Dictionary<string, int[]>();
             using (var parser = new TextFieldParser(filename))

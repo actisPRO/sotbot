@@ -55,6 +55,12 @@ namespace Bot_NetCore
         ///     Соединение с БД
         /// </summary>
         public static string ConnectionString { get; private set; }
+        
+        /// <summary>
+        ///    Dictionary with fast ship name generation statistics.
+        ///    Key is a name and value is an array of integers: 0 - sloops, 1 - brigantines, 2 - galleons.
+        /// </summary>
+        public static Dictionary<string, int[]> ShipNamesStats = new Dictionary<string, int[]>();
 
         public static void Main(string[] args)
         {
@@ -135,6 +141,8 @@ namespace Bot_NetCore
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
             if (!File.Exists("generated/find_channel_invites.csv")) File.Create("generated/find_channel_invites.csv");
             if (!File.Exists("generated/top_inviters.xml")) File.Create("generated/top_inviters.xml");
+            if (!Directory.Exists("generated/stats")) Directory.CreateDirectory("generated/stats");
+            if (!File.Exists("generated/stats/ship_names.csv")) File.Create("generated/stats/ship_names.csv");
             
             await Task.Delay(-1);
         }
@@ -151,7 +159,6 @@ namespace Bot_NetCore
                 $"Участников: {guild.MemberCount} \n" +
                 $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()}", ActivityType.Watching));
         }
-
 
         /// <summary>
         ///     Загрузка и перезагрузка настроек
