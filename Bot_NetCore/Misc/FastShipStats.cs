@@ -1,0 +1,47 @@
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.VisualBasic.FileIO;
+
+namespace Bot_NetCore.Misc
+{
+    public class FastShipStats
+    {
+        /// <summary>
+        ///     Loads fast ship name generation stats from the specified file.
+        /// </summary>
+        /// <param name="to"></param>
+        /// <param name="filename"></param>
+        public Dictionary<string, int[]> LoadFromFile(string filename)
+        {
+            var result = new Dictionary<string, int[]>();
+            using (var parser = new TextFieldParser(filename))
+            {
+                parser.TextFieldType = FieldType.Delimited;
+                parser.SetDelimiters(",");
+                while (!parser.EndOfData)
+                {
+                    var fields = parser.ReadFields();
+                    
+                    try
+                    {
+                        var ret = Convert.ToInt32(fields[1]);
+                    }
+                    catch (FormatException e)
+                    {
+                        // fields[1] cant be parsed correctly, so the line is a header line and we can skip it
+                        continue;
+                    }
+                    
+                    result[fields[0]] = new[]
+                    {
+                        Convert.ToInt32(fields[1]), // sloops
+                        Convert.ToInt32(fields[2]), // brigs
+                        Convert.ToInt32(fields[3]) // galleons
+                    };
+                }
+            }
+
+            return result;
+        }
+    }
+}
