@@ -21,7 +21,7 @@ namespace Bot_NetCore.Misc
                 while (!parser.EndOfData)
                 {
                     var fields = parser.ReadFields();
-                    
+
                     try
                     {
                         var ret = Convert.ToInt32(fields[1]);
@@ -29,6 +29,10 @@ namespace Bot_NetCore.Misc
                     catch (FormatException e)
                     {
                         // fields[1] cant be parsed correctly, so the line is a header line and we can skip it
+                        continue;
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
                         continue;
                     }
                     
