@@ -55,7 +55,11 @@ namespace Bot_NetCore.Commands
                                 "Внимательнее читайте условия в канале <#718099718369968199>.");
                         }
                         catch { }
-                        await message.DeleteAsync();
+                        try
+                        {
+                            await message.DeleteAsync();
+                        }
+                        catch { }
                         if (i % 5 == 0)
                             await Task.Delay(3000);
                         else
@@ -72,7 +76,7 @@ namespace Bot_NetCore.Commands
 
         [Command("createreactions")]
         [Description("Создает реакции под сообщением (Вводить в канале конкурса)")]
-        public async Task EventCreateReactions(CommandContext ctx, [Description("Реакция которая будет добавлена под каждым скриншотом")] DiscordEmoji emoji)
+        public async Task EventCreateReactions(CommandContext ctx, [RemainingText, Description("Реакции которые будут добавлены под каждым скриншотом (Через пробел)")] params DiscordEmoji[] emojis)
         {
             await ctx.Message.DeleteAsync();
             await ctx.TriggerTypingAsync();
@@ -85,19 +89,19 @@ namespace Bot_NetCore.Commands
                 messages = await ctx.Channel.GetMessagesBeforeAsync(messages.Last().Id);
             }
 
-            var i = 0;
             foreach (var message in allMessages)
             {
                 if (message.Attachments.Count != 0 || message.Embeds.Count != 0)
                 {
                     await message.DeleteAllReactionsAsync();
-                    await Task.Delay(400);
-                    await message.CreateReactionAsync(emoji);
-                    if (i % 10 == 0)
-                        await Task.Delay(2000);
-                    else
+
+                    foreach(var emoji in emojis)
+                    {
                         await Task.Delay(400);
-                    i++;
+                        await message.CreateReactionAsync(emoji);
+                    }
+
+                    await Task.Delay(400);
                 }
             }
         }
