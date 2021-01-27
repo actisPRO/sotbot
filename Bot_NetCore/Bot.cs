@@ -74,7 +74,10 @@ namespace Bot_NetCore
                 ███████╗██╗██║╚█████╔╝
                 ╚══════╝╚═╝╚═╝ ╚════╝                      
             "); //Font Name: ANSI Shadow
-
+            
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");
+            
             ReloadSettings(); // Загрузим настройки
 
             ShipList.ReadFromXML(BotSettings.ShipXML);
@@ -85,9 +88,7 @@ namespace Bot_NetCore
             Note.Read(BotSettings.NotesXML);
             Donator.Read(BotSettings.DonatorXML);
             Subscriber.Read(BotSettings.SubscriberXML);
-            
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
-            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("ru-RU");            
+            ShipNames.Read(BotSettings.ShipNamesCSV);
             
             bot.RunBotAsync().GetAwaiter().GetResult();
         }
@@ -126,7 +127,7 @@ namespace Bot_NetCore
             //Команды
             Commands.RegisterCommands(Assembly.GetExecutingAssembly());
 
-            //Кастомнуа справка команд
+            //Кастомная справка команд
             Commands.SetHelpFormatter<HelpFormatter>();
 
             //Ивенты
@@ -825,6 +826,11 @@ namespace Bot_NetCore
         ///     Скорость изменения цвета у радужной роли (в секундах)
         /// </summary>
         public int RainbowCooldown;
+
+        /// <summary>
+        ///     Файл с вариантами названий кораблей.
+        /// </summary>
+        public string ShipNamesCSV;
     }
 
     public enum CommandType

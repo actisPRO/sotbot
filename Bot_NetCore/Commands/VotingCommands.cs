@@ -29,7 +29,11 @@ namespace Bot_NetCore.Commands
 
             var embed = Utility.GenerateVoteEmbed(ctx.Member, DiscordColor.Yellow, topic, end, 0, 0, 0, id);
 
-            var message = await ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel).SendMessageAsync(embed: embed);
+            var channel = ctx.Guild.GetChannel(Bot.BotSettings.VotesChannel);
+            //Открытие канала для голосований
+            await channel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.CodexRole), allow: Permissions.AccessChannels);
+
+            var message = await channel.SendMessageAsync(embed: embed);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));

@@ -135,4 +135,6 @@
     <GalleonEmoji>791712089974374420</GalleonEmoji>
 
     <RainbowCooldown>60</RainbowCooldown>
+
+    <ShipNamesCSV>data/ship_names.csv</ShipNamesCSV>
 </Settings>

@@ -73,9 +73,9 @@ namespace Bot_NetCore.Listeners
             sendMessagesOnExactTime.Enabled = true;
 
             var checkExpiredTickets = new Timer(60000 * 30);
-            updateVoiceTimes.Elapsed += CheckExpiredTicketsAsync;
-            updateVoiceTimes.AutoReset = true;
-            updateVoiceTimes.Enabled = true;
+            checkExpiredTickets.Elapsed += CheckExpiredTicketsAsync;
+            checkExpiredTickets.AutoReset = true;
+            checkExpiredTickets.Enabled = true;
 
             var checkExpiredFleetPoll = new Timer(60000 * 5);
             checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
@@ -264,6 +264,13 @@ namespace Bot_NetCore.Listeners
                                 await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
 
                                 await message.DeleteAsync();
+
+                                //Закрытие канала, если в нём больше нету голосований
+                                if(channelMessages.Count() == 0)
+                                {
+                                    channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel);
+                                    await channel.AddOverwriteAsync(Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.CodexRole), deny: Permissions.AccessChannels);
+                                }
                             }
                             else if (DateTime.Now < vote.End) // починка голосования
                             {
@@ -496,47 +503,56 @@ namespace Bot_NetCore.Listeners
 
             try
             {
-                var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.FleetCreationChannel)
-                    .GetMessageAsync(Bot.BotSettings.FleetVotingMessage);
+                var morningTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 8, 0, 0);
 
-                if (message.Embeds.Count > 0)
+                if (DateTime.Now > morningTime)
                 {
-                    var embed = new DiscordEmbedBuilder(message.Embeds.FirstOrDefault());
-                    var date = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 8, 0, 0);
+                    var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.FleetCreationChannel)
+                        .GetMessageAsync(Bot.BotSettings.FleetVotingMessage);
 
-                    if (date - embed.Timestamp > TimeSpan.FromDays(1))
+                    if (message.Embeds.Count > 0)
                     {
-                        if (embed.Fields.Count < 3)
+                        var oldEmbed = message.Embeds.FirstOrDefault();
+
+                        //Проверка времени
+                        if ((morningTime.Year + morningTime.Day) > (oldEmbed.Timestamp.Value.Year + oldEmbed.Timestamp.Value.Day))
                         {
-                            embed.AddFieldOrEmpty("\u200B\nРезультаты:", "");
-                        }
-                        embed.Fields[2].Value = "\u200B";
-                        foreach (var reaction in message.Reactions)
-                        {
-                            if (reaction.Emoji.GetDiscordName() != ":black_small_square:")
-                                embed.Fields[2].Value += $"{reaction.Emoji} - **{reaction.Count - 1}**; ";
-                        }
+                            var embed = new DiscordEmbedBuilder(oldEmbed);
 
-                        embed.WithTimestamp(DateTime.Now);
+                            if (embed.Fields.Count < 3)
+                            {
+                                embed.AddFieldOrEmpty("\u200B\nРезультаты:", "");
+                            }
+                            embed.Fields[2].Value = "\u200B";
+                            foreach (var reaction in message.Reactions)
+                            {
+                                if (reaction.Emoji.GetDiscordName() != ":black_small_square:")
+                                    embed.Fields[2].Value += $"{reaction.Emoji} - **{reaction.Count - 1}**; ";
+                            }
 
-                        await message.ModifyAsync(embed: embed.Build());
+                            embed.WithTimestamp(DateTime.Now);
 
-                        await message.DeleteAllReactionsAsync();
+                            await message.ModifyAsync(embed: embed.Build());
 
-                        var emojis = new DiscordEmoji[]
-                        {
-                            DiscordEmoji.FromName(Client, ":one:"),
-                            DiscordEmoji.FromName(Client, ":two:"),
-                            DiscordEmoji.FromName(Client, ":three:"),
-                            DiscordEmoji.FromName(Client, ":black_small_square:"),
-                            DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.BrigEmoji),
-                            DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.GalleonEmoji)
-                        };
+                            await message.DeleteAllReactionsAsync();
 
-                        foreach (var emoji in emojis)
-                        {
-                            await Task.Delay(400);
-                            await message.CreateReactionAsync(emoji);
+                            var emojis = new DiscordEmoji[]
+                            {
+                                    DiscordEmoji.FromName(Client, ":one:"),
+                                    DiscordEmoji.FromName(Client, ":two:"),
+                                    DiscordEmoji.FromName(Client, ":three:"),
+                                    DiscordEmoji.FromName(Client, ":black_small_square:"),
+                                    DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.BrigEmoji),
+                                    DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.GalleonEmoji)
+                            };
+
+                            foreach (var emoji in emojis)
+                            {
+                                await Task.Delay(400);
+                                await message.CreateReactionAsync(emoji);
+                            }
+
+                            Client.Logger.LogInformation(BotLoggerEvents.Timers, $"Успешно обновлено голосование рейдов");
                         }
                     }
                 }

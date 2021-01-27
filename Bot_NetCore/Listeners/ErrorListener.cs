@@ -83,7 +83,7 @@ namespace Bot_NetCore.Listeners
             }
 
             //Не удалось найти пользователя
-            if (e.Exception is NotFoundException)
+            if (e.Exception is NotFoundException || e.Exception is NullReferenceException)
             {
                 await e.Context.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден указанный пользователь.");
                 return;
@@ -125,6 +125,15 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
+            //Ошибка сервера
+            if (e.Exception is ServerErrorException)
+            {
+                await e.Context.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Возникла ошибка во время запроса к серверу! Попробуйте ещё раз, если " +
+                    "ошибка повторяется - обратитесь к разработчикам через `!support`");
+                return;
+            }
+
             //Другие ошибки
             ctx.Client.Logger.LogWarning(BotLoggerEvents.Event, $"Участник {e.Context.User.Username}#{e.Context.User.Discriminator} " +
                 $"({e.Context.User.Id}) пытался запустить команду {command}, но произошла ошибка.");
@@ -138,7 +147,7 @@ namespace Bot_NetCore.Listeners
             var guild = await e.Context.Client.GetGuildAsync(Bot.BotSettings.Guild);
             var errChannel = guild.GetChannel(Bot.BotSettings.ErrorLog);
 
-            var message = $"**Команда:** {command}\n" +
+            var message = $"**Команда:** {command} {e.Context.RawArgumentString}\n" +
                           $"**Канал:** {e.Context.Channel}\n" +
                           $"**Пользователь:** {e.Context.User}\n" +
                           $"**Исключение:** {e.Exception.GetType()}:{e.Exception.Message}\n" +

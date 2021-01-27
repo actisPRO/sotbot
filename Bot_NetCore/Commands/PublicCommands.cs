@@ -193,15 +193,19 @@ namespace Bot_NetCore.Commands
 
             var channel = ctx.Member.VoiceState?.Channel;
 
-            try
+            if (VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
             {
-                var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
-                ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
-                await embedMessage.DeleteAsync();
+                try
+                {
+                    var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
+                    ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
+                    await embedMessage.DeleteAsync();
+                }
+                catch (NotFoundException) { }
+
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
                 await VoiceListener.SaveFindChannelMessagesAsync();
             }
-            catch (NotFoundException) { }
         }
 
 
@@ -289,21 +293,16 @@ namespace Bot_NetCore.Commands
 
             resultEmbed.WithAuthor($"{member.Username}#{member.Discriminator}", iconUrl: member.AvatarUrl);
 
-            if (member.VoiceState?.Channel == null ||
-                member.VoiceState?.Channel != null &&
-                member.VoiceState?.Channel.Id != channel.Id)
-            {
-                resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Пользователь уже покинул канал.");
-                resultEmbed.WithColor(new DiscordColor("00FF00"));
-            }
-            else if (votesCount >= votesNeeded)
+            if (votesCount >= votesNeeded)
             {
                 resultEmbed.WithDescription($"{Bot.BotSettings.OkEmoji} Участник был перемещен в афк канал и ему был заблокирован доступ к каналу.");
                 resultEmbed.WithFooter($"Голосов за кик: {votesCount}");
                 resultEmbed.WithColor(new DiscordColor("00FF00"));
 
-                await channel.AddOverwriteAsync(member, deny: Permissions.AccessChannels);
-                await member.PlaceInAsync(ctx.Guild.AfkChannel);
+                await channel.AddOverwriteAsync(member, deny: Permissions.UseVoice);
+
+                if (member.VoiceState?.Channel != null && member.VoiceState?.Channel.Id == channel.Id)
+                    await member.PlaceInAsync(ctx.Guild.AfkChannel);
             }
             else
             {

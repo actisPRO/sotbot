@@ -17,18 +17,30 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.MessageCreated)]
         public static async Task MessageCreated(DiscordClient client, MessageCreateEventArgs e)
         {
-            if (e.Guild == null && 
-                !e.Author.IsCurrent && 
+            if (e.Guild == null &&
+                !e.Author.IsCurrent &&
                 !e.Message.Content.StartsWith(Bot.BotSettings.Prefix) &&
                 !DmHandled.Contains(e.Author))
-                await e.Channel.SendMessageAsync("Если у вас есть вопросы по поводу сервера, вы можете создать тикет командой **`!support`**\n" +
-                    "\nВы можете найти ответ на свой вопрос в данных каналах:" +
-                    "\n• Правила сервера: <#435486626551037963>" +
-                    "\n• Описание доната: <#459657130786422784>" +
-                    "\n• Гайд по боту: <#476430819011985418>; создание каналов: <#435445608082440213>" +
-                    "\n• Запросы роли: <#696668143430533190> (из тех что перечислены в канале)" +
-                    "\n• Правила рейда и получение доступа к нему: <#744944702415175760> <#744944784765878324>" +
-                    "\n• Вопросы по игре: <#552407278158872590> <#725708512121847849> <#573865939976585226>");
+            {
+                var embed = new DiscordEmbedBuilder()
+                    .WithTitle("Помощь по серверу")
+                    .WithDescription("Если у вас есть **вопросы по поводу сервера**, \n" +
+                        "вы можете создать тикет командой **`!support`**\n\n")
+                    .WithColor(new DiscordColor("#27ae60"));
+
+                embed.AddFieldOrEmpty("Полезные каналы которые вам помогут:",
+                    "• <#435486626551037963> \n" +
+                    "• <#459657130786422784> \n" +
+                    "• <#696668143430533190> \n" +
+                    "• <#476430819011985418>, <#435445608082440213> \n" +
+                    "• <#744944702415175760>, <#744944784765878324> \n" +
+                    "• <#725708512121847849>, <#552407278158872590>");
+
+                embed.AddFieldOrEmpty("", "Наиболее актуальную информацию по командам всегда можно получить через `!help`");
+
+
+                await e.Channel.SendMessageAsync(embed: embed);
+            }
         }
     }
 }
