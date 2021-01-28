@@ -91,23 +91,37 @@ namespace Bot_NetCore.Listeners
                         used_names.Concat(autoCreateBrigantineCategory.Children.Select(x => x.Name).ToArray());
                         used_names.Concat(autoCreateGalleongCategory.Children.Select(x => x.Name).ToArray());
 
-                        var channelName = $"{channelSymbol} {ShipNames.GenerateChannelName(used_names)}";
+                        var generatedName = ShipNames.GenerateChannelName(used_names);
+                        var channelName = $"{channelSymbol} {generatedName}";
 
                         DiscordChannel created = null;
-                        // Проверяем канал в котором находится пользователь
 
-                        if (e.Channel.Id == Bot.BotSettings.AutocreateSloop) //Шлюп
+                        if (!Bot.ShipNamesStats.ContainsKey(generatedName)) // create a key-value pair for a new ship name
+                            Bot.ShipNamesStats[generatedName] = new[] {0, 0, 0};
+
+                        if (e.Channel.Id == Bot.BotSettings.AutocreateSloop)
+                        {
+                            Bot.ShipNamesStats[generatedName][0]++;
                             created = await e.Guild.CreateVoiceChannelAsync(
                                 channelName, autoCreateSloopCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 2);
-                        else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine) // Бригантина
+                        }
+                        else if (e.Channel.Id == Bot.BotSettings.AutocreateBrigantine)
+                        {
+                            Bot.ShipNamesStats[generatedName][1]++;
                             created = await e.Guild.CreateVoiceChannelAsync(
                                 channelName, autoCreateBrigantineCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 3);
-                        else // Галеон
+                        }
+                        else
+                        {
+                            Bot.ShipNamesStats[generatedName][2]++;
                             created = await e.Guild.CreateVoiceChannelAsync(
                                 channelName, autoCreateGalleongCategory,
                                 bitrate: Bot.BotSettings.Bitrate, user_limit: 4);
+                        }
+                        
+                        FastShipStats.WriteToFile(Bot.ShipNamesStats, "generated/stats/ship_names.csv");
 
                         await member.PlaceInAsync(created);
 
