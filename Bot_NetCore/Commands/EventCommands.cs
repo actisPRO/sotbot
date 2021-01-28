@@ -50,7 +50,7 @@ namespace Bot_NetCore.Commands
                         try
                         {
                             var member = await ctx.Guild.GetMemberAsync(message.Author.Id);
-                            await member.SendMessageAsync($"**Ваш скриншот будет автоматически удалён из канала** {ctx.Channel.Mention}.\n" +
+                            await member.SendMessageAsync($"**Ваш скриншот будет автоматически удалён из канала** <#{ctx.Channel.Id}>.\n" +
                                 "**Причина:** несоответствие с требованиями конкурса. \n" +
                                 "Внимательнее читайте условия в канале <#718099718369968199>.");
                         }
@@ -140,10 +140,15 @@ namespace Bot_NetCore.Commands
             //Check channel id in dev and main server
             if (e.Channel.Id == 803193543426441217 || e.Channel.Id == 801834857504178206)
             {
+                var dayTime = new DateTime(2021, 01, 29, 18, 0, 0);
+
                 var member = await e.Guild.GetMemberAsync(e.User.Id);
 
-                if (member.JoinedAt > new DateTime(2021, 01, 29, 18, 0, 0))
+                if (member.JoinedAt > new DateTime(2021, 01, 29, 18, 0, 0) ||
+                    new DateTime(2021, 01, 29).AddDays(-7) < member.CreationTimestamp)
+                {
                     await e.Message.DeleteReactionAsync(e.Emoji, e.User);
+                }
             }
         }
     }
