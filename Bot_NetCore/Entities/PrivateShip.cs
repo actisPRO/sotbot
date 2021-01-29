@@ -33,6 +33,9 @@ namespace Bot_NetCore.Entities
             _channel = channel;
         }
 
+        /// <summary>
+        ///     Creates a new private ship and adds it to the database.
+        /// </summary>
         public static PrivateShip Create(string name)
         {
             using (var connection = new MySqlConnection(Bot.ConnectionString))
@@ -49,6 +52,18 @@ namespace Bot_NetCore.Entities
                     return new PrivateShip(name, 0);
                 }
             }
+        }
+
+        /// <summary>
+        ///     Adds a new member to a private ship and saves him to the database.
+        /// </summary>
+        /// <param name="id">ID of a member</param>
+        /// <param name="role">Type of a member</param>
+        /// <param name="status">True will provide access to the private ship commands</param>
+        /// <returns></returns>
+        public PrivateShipMember AddMember(ulong id, PrivateShipMemberRole role, bool status)
+        {
+            return PrivateShipMember.Create(_name, id, role, status);
         }
     }
 }
