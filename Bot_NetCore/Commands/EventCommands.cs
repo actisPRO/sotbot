@@ -2,22 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bot_NetCore.Attributes;
+using Bot_NetCore.Listeners;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
 {
     [Group("event")]
     [RequireGuild]
-    [RequirePermissions(Permissions.Administrator)]
+    [RequireCustomRole(RoleType.Helper)]
     [Description("Команды для ивента с скриншотами")]
     public class EventCommands : BaseCommandModule
     {
         [Command("cleanup")]
+        [RequirePermissions(Permissions.Administrator)]
         [Description("Команда очистки скриншотов по реакциям. (Вводить в канале конкурса)")]
         public async Task EventCleanUp(CommandContext ctx)
         {
@@ -75,6 +79,7 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("createreactions")]
+        [RequirePermissions(Permissions.Administrator)]
         [Description("Создает реакции под сообщением (Вводить в канале конкурса)")]
         public async Task EventCreateReactions(CommandContext ctx, [RemainingText, Description("Реакции которые будут добавлены под каждым скриншотом (Через пробел)")] params DiscordEmoji[] emojis)
         {
@@ -106,9 +111,9 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        [Command("gettopvoted")]
+        [Command("top")]
         [Description("Отправляет в лс список топ 10 по голосам (Вводить в канале конкурса)")]
-        public async Task EventGetTopVoted(CommandContext ctx)
+        public async Task EventTop(CommandContext ctx, int number = 10)
         {
             await ctx.Message.DeleteAsync();
             await ctx.TriggerTypingAsync();
@@ -121,16 +126,62 @@ namespace Bot_NetCore.Commands
                 messages = await ctx.Channel.GetMessagesBeforeAsync(messages.Last().Id);
             }
 
-            var topMessages = allMessages.Where(x => x.Reactions.Count != 0).OrderByDescending(x => x.Reactions.FirstOrDefault().Count).Take(10);
+            var topMessages = allMessages.Where(x => x.Reactions.Count != 0).OrderByDescending(x => x.Reactions.FirstOrDefault().Count).Take(number);
 
-            var responce = "**Топ 10 скриншотов** \n";
+            var top = new List<string>();
             foreach (var topMessage in topMessages)
             {
                 var votes = topMessage.Reactions.FirstOrDefault().Count;
-                responce += $"Голосов: {votes} | https://discord.com/channels/{ctx.Guild.Id}/{ctx.Channel.Id}/{topMessage.Id} \n";
+                top.Add($"Голосов: **{votes}** | https://discord.com/channels/{ctx.Guild.Id}/{ctx.Channel.Id}/{topMessage.Id}");
             }
 
-            await ctx.Member.SendMessageAsync(responce);
+            var members_pagination = Utility.GeneratePagesInEmbeds(top, $"**Топ {number} скриншотов**");
+
+            var interactivity = ctx.Client.GetInteractivity();
+            if (members_pagination.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(await ctx.Member.CreateDmChannelAsync(), ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            else
+                await ctx.Member.SendMessageAsync(embed: members_pagination.First().Embed);
+        }
+
+        [Command("check")]
+        [Description("Отправляет в статистику по проголосовавшим \n" +
+            "(Вводить в канале конкурса) \n" +
+            "C - CreatedAt, J - JoinedAt, V - VoiceTime")]
+        public async Task EventCheck(CommandContext ctx, DiscordMessage message, DiscordEmoji reaction)
+        {
+            await ctx.Message.DeleteAsync();
+            await ctx.TriggerTypingAsync();
+
+            var allReactions = new List<DiscordUser>();
+            var reactions = await message.GetReactionsAsync(reaction);
+
+            while (reactions.Count() != 0)
+            {
+                allReactions.AddRange(reactions);
+                reactions = await message.GetReactionsAsync(reaction, after: reactions.Last().Id);
+            }
+
+            var allReactionsMembers = await Task.WhenAll(allReactions.Select(async x =>
+            {
+                try
+                {
+                    await Task.Delay(400);
+                    return await ctx.Guild.GetMemberAsync(x.Id);
+                } catch { }
+                return null;
+            }));
+
+            var reactionsList = allReactionsMembers.OrderByDescending(x => x.CreationTimestamp).Select(x => $"C: **{x.CreationTimestamp:dd.MM.yyyy}** J: **{x.JoinedAt:dd.MM.yyyy}** V: **{VoiceListener.GetUpdatedVoiceTime(x.Id)}** \n" +
+                                                                                                       $"{x.Username} ({x.Id})").ToList();
+
+            var members_pagination = Utility.GeneratePagesInEmbeds(reactionsList, $"Список проголосовавших (По дате создания аккаунта).");
+
+            var interactivity = ctx.Client.GetInteractivity();
+            if (members_pagination.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(await ctx.Member.CreateDmChannelAsync(), ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            else
+                await ctx.Member.SendMessageAsync(embed: members_pagination.First().Embed);
         }
 
         //Запихну сюда, так как это по любому временный код
