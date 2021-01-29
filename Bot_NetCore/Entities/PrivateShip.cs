@@ -53,6 +53,36 @@ namespace Bot_NetCore.Entities
                 }
             }
         }
+        
+        /// <summary>
+        ///     Returns a ship where the specified member is a captain or null if there is no ship, owned by the member.
+        /// </summary>
+        /// <returns>Owned ship or null</returns>
+        public static PrivateShip GetOwnedShip(ulong memberId)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = @"SELECT
+                                            s.ship_name, s.ship_channel
+                                        FROM
+                                            private_ship s
+                                            JOIN private_ship_members psm ON s.ship_name = psm.ship_name
+                                        WHERE psm.member_id = @memberId AND psm.member_type = 'Captain';
+                                        ";
+                    cmd.Parameters.AddWithValue("@memberId", memberId);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    if (!reader.Read())
+                        return null;
+                    else
+                        return new PrivateShip(reader.GetString(0), reader.GetUInt64(1));
+                }
+            }
+        }
 
         /// <summary>
         ///     Adds a new member to a private ship and saves him to the database.

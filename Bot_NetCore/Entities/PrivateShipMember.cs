@@ -47,7 +47,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = "INSERT INTO INSERT INTO private_ship_members(ship_name, member_id, member_type, " +
+                    cmd.CommandText = "INSERT INTO private_ship_members(ship_name, member_id, member_type, " +
                                       "member_status) VALUES (@ship_name, @member_id, @member_type, @member_status)";
                     cmd.Parameters.AddWithValue("@ship_name", ship);
                     cmd.Parameters.AddWithValue("@member_id", memberId);
@@ -83,6 +83,11 @@ namespace Bot_NetCore.Entities
         }
     }
 
+    /// <summary>
+    ///     Member - basic permissions,
+    ///     Officer - not implemented, permissions to invite and kick members
+    ///     Captain - owner. Full permissions.
+    /// </summary>
     public enum PrivateShipMemberRole
     {
         Member,
