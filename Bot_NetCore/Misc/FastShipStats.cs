@@ -26,7 +26,7 @@ namespace Bot_NetCore.Misc
                     {
                         var ret = Convert.ToInt32(fields[1]);
                     }
-                    catch (FormatException e)
+                    catch (FormatException)
                     {
                         // fields[1] cant be parsed correctly, so the line is a header line and we can skip it
                         continue;

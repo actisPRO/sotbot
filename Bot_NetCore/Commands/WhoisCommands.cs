@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
+using Bot_NetCore.Listeners;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -78,13 +79,13 @@ namespace Bot_NetCore.Commands
                     }
                     embed.NewInlineRow();
 
-                    //2 Row - Creation and join dates
+                    //2 Row - Creation and join dates, VoiceTime
                     embed.AddFieldOrDefault("Создан", user.CreationTimestamp.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
                     if (member != null)
                     {
                         embed.AddFieldOrDefault("Присоединился", member.JoinedAt.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
                     }
-                    embed.NewInlineRow();
+                    embed.AddFieldOrDefault("Время в каналах", VoiceListener.GetUpdatedVoiceTime(member.Id).ToString(), true);
 
                     //3 Row - WebUser info
                     if (webUser != null)

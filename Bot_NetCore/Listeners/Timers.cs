@@ -190,7 +190,11 @@ namespace Bot_NetCore.Listeners
                     ship.Delete();
                     ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-                    await channel.DeleteAsync();
+                    try
+                    {
+                        await channel.DeleteAsync();
+                    }
+                    catch (NullReferenceException) { } //Channel not found
 
                     var doc = XDocument.Load("data/actions.xml");
                     foreach (var action in doc.Element("actions").Elements("action"))

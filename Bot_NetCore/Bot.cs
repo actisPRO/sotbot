@@ -86,7 +86,6 @@ namespace Bot_NetCore
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
             Note.Read(BotSettings.NotesXML);
-            Donator.Read(BotSettings.DonatorXML);
             Subscriber.Read(BotSettings.SubscriberXML);
             ShipNames.Read(BotSettings.ShipNamesCSV);
             
