@@ -1,4 +1,6 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System;
+using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
 {
@@ -39,7 +41,7 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
-        /// Creates a new ship member and adds it to the database. Please use PrivateShip.AddMember() to avoid errors (eg. incorrect ship name).
+        /// Creates a new ship member and adds it to the database. Use PrivateShip.AddMember() to avoid errors (eg. incorrect ship name).
         /// </summary>
         public static PrivateShipMember Create(string ship, ulong memberId, PrivateShipMemberRole role, bool status)
         {
@@ -65,6 +67,34 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
+        ///     Gets members of the specified ship. Use PrivateShip.GetMembers() to avoid errors.
+        /// </summary>
+        /// <returns>Members of the specified ship</returns>
+        public static List<PrivateShipMember> GetShipMembers(string ship)
+        {
+            var result = new List<PrivateShipMember>();
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM private_ship_members WHERE ship_name = @ship";
+                    cmd.Parameters.AddWithValue("@ship", ship);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        result.Add(new PrivateShipMember(ship, reader.GetUInt64(1),
+                            StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active" ? true : false));
+                    }
+
+                    return result;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Converts PrivateShipMemberRole to a correct database enum (field member_type) string
         /// </summary>
         private static string RoleEnumToString(PrivateShipMemberRole role)
@@ -80,6 +110,25 @@ namespace Bot_NetCore.Entities
             }
 
             return "Member";
+        }
+
+        /// <summary>
+        ///     Converts an enum string to PrivateShipMemberRole.
+        /// </summary>
+        /// <exception cref="InvalidCastException">Invalid enum string</exception>
+        private static PrivateShipMemberRole StringEnumToRoleEnum(string role)
+        {
+            switch (role)
+            {
+                default:
+                    throw new InvalidCastException(role + "is an unknown enum value.");
+                case "Member":
+                    return PrivateShipMemberRole.Member;
+                case "Officer":
+                    return PrivateShipMemberRole.Officer;
+                case "Captain":
+                    return PrivateShipMemberRole.Captain;
+            }
         }
     }
 

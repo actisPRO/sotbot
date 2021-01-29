@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
 {
@@ -94,6 +95,14 @@ namespace Bot_NetCore.Entities
         public PrivateShipMember AddMember(ulong id, PrivateShipMemberRole role, bool status)
         {
             return PrivateShipMember.Create(_name, id, role, status);
+        }
+
+        /// <summary>
+        ///     Returns a list of members of the current ship
+        /// </summary>
+        public List<PrivateShipMember> GetMembers()
+        {
+            return PrivateShipMember.GetShipMembers(_name);
         }
     }
 }
