@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -26,41 +27,35 @@ namespace Bot_NetCore.Commands
         [Description("Отправляет запрос на создание приватного корабля.")]
         public async Task New(CommandContext ctx, [Description("Уникальное имя корабля")] [RemainingText] string name)
         {
-            var doc = XDocument.Load("data/actions.xml");
-            foreach (var action in doc.Element("actions").Elements("action"))
-                if (Convert.ToUInt64(action.Value) == ctx.Member.Id)
-                {
-                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не можете снова создать корабль!");
-                    return;
-                }
-
-            if(ShipList.Ships.ContainsKey(name))
+            // check if user already has a ship
+            if (PrivateShip.GetOwnedShip(ctx.Member.Id) != null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Корабль с таким названием уже существует!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты уже являешься владельцем корабля");
                 return;
             }
 
-            var message = await ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel)
-                .SendMessageAsync("**Запрос на создание корабля**\n\n" +
-                                  $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
-                                  $"**Название:** {name}\n" +
-                                  $"**Время:** {DateTime.Now}\n\n" +
-                                  $"Используйте реакцию для подтверждения, или для отказа.");
+            var requestTime = DateTime.Now;
+            
+            // create a request message
+            var requestsChannel = ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel);
+            
+            var embed = new DiscordEmbedBuilder();
+            embed.Title = "Запрос на создание корабля";
+            embed.Color = DiscordColor.Orange;
+            embed.WithAuthor(ctx.Member.DisplayName + "#" + ctx.Member.Discriminator, iconUrl: ctx.Member.AvatarUrl);
+            embed.AddField("Название", name);
+            embed.AddField("Время", requestTime.ToString(CultureInfo.CurrentCulture));
 
+            var message = await requestsChannel.SendMessageAsync(embed: embed.Build());
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
-            await Task.Delay(400);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
-            var ship = Ship.Create(name, 0, message.Id, DateTime.Now);
-            ship.AddMember(ctx.Member.Id, MemberType.Owner);
+            // create a new ship
+            var ship = PrivateShip.Create(name, requestTime, message.Id);
+            ship.AddMember(ctx.Member.Id, PrivateShipMemberRole.Captain, false);
 
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-
-            doc.Element("actions").Add(new XElement("action", ctx.Member.Id, new XAttribute("type", "ship")));
-            doc.Save("data/actions.xml");
-
-            await ctx.RespondAsync(
-                $"{Bot.BotSettings.OkEmoji} Успешно отправлен запрос на создание корабля **{name}**!");
+            // notify user
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Запрос успешно отправлен");
         }
 
         [Command("invite")]

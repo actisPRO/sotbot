@@ -140,8 +140,10 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"INSERT INTO private_ship(ship_name, ship_channel, request_message) VALUES (@name, 0, @message)";
+                    cmd.CommandText = $"INSERT INTO private_ship(ship_name, ship_channel, created_at, last_used, request_message) VALUES (@name, 0, @created, " +
+                                      $"@created, @message)";
                     cmd.Parameters.AddWithValue("@name", name);
+                    cmd.Parameters.AddWithValue("@created", createdAt);
                     cmd.Parameters.AddWithValue("@message", requestMessage);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
