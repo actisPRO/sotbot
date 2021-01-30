@@ -41,7 +41,7 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
-        /// Creates a new ship member and adds it to the database. Use PrivateShip.AddMember() to avoid errors (eg. incorrect ship name).
+        ///     Creates a new ship member and adds it to the database. Use PrivateShip.AddMember() to avoid errors (eg. incorrect ship name).
         /// </summary>
         public static PrivateShipMember Create(string ship, ulong memberId, PrivateShipMemberRole role, bool status)
         {
@@ -90,6 +90,26 @@ namespace Bot_NetCore.Entities
                     }
 
                     return result;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Removes the specified member from the specified ship.
+        /// </summary>
+        public static void Delete(string ship, ulong member)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = $"DELETE FROM private_ship_members WHERE ship_name = @ship AND member_id = @member";
+                    cmd.Parameters.AddWithValue("@ship", ship);
+                    cmd.Parameters.AddWithValue("@member", member);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+                    
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
