@@ -349,7 +349,46 @@ namespace Bot_NetCore.Listeners
                 await (await e.Guild.GetMemberAsync(discordUser.Id)).SendMessageAsync($"{Bot.BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
             }
 
-            //then check if it is a private ship confirmation message
+            // Private ship confirmation message
+            if (e.Channel.Id == Bot.BotSettings.PrivateRequestsChannel)
+            {
+                var ship = PrivateShip.GetByRequest(e.Message.Id);
+                if (ship != null && ship.Channel != 0)
+                {
+                    // Confirm
+                    if (e.Emoji == DiscordEmoji.FromName(client, ":white_check_mark:"))
+                    {
+                        var channel = await e.Guild.CreateChannelAsync($"☠{ship.Name}☠", ChannelType.Voice,
+                            e.Guild.GetChannel(Bot.BotSettings.PrivateCategory), bitrate: Bot.BotSettings.Bitrate);
+                        await channel.AddOverwriteAsync(e.Guild.GetRole(Bot.BotSettings.CodexRole),
+                            Permissions.AccessChannels);
+                        await channel.AddOverwriteAsync(e.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
+
+                        ship.Channel = channel.Id;
+                        var captain = (from member in ship.GetMembers()
+                            where member.Role == PrivateShipMemberRole.Captain
+                            select member).First();
+                        var captainMember = await e.Guild.GetMemberAsync(captain.MemberId);
+                        await channel.AddOverwriteAsync(captainMember, Permissions.UseVoice);
+                        captain.Status = true;
+
+                        await e.Channel.SendMessageAsync(
+                            $"{Bot.BotSettings.OkEmoji} Администратор {e.User.Mention} подтвердил запрос на создание " +
+                            $"корабля **{ship.Name}**.");
+                        try
+                        {
+                            await captainMember.SendMessageAsync(
+                                $"{Bot.BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** " +
+                                $"подтвердил твой запрос на создание корабля **{ship.Name}**.");
+                        }
+                        catch (UnauthorizedException)
+                        {
+                            
+                        }
+                    }
+                }
+            }
+            
             foreach (var ship in ShipList.Ships.Values)
             {
                 if (ship.Status) continue;
