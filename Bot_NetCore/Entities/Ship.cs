@@ -8,6 +8,7 @@ using Bot_NetCore.Exceptions;
 
 namespace Bot_NetCore.Entities
 {
+    [Obsolete]
     public class Ship
     {
         private Ship(string name, ulong channel, ulong creationMessage, DateTime lastUsed)

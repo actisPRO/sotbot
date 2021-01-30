@@ -1,5 +1,8 @@
-﻿namespace Bot_NetCore.Entities
+﻿using System;
+
+namespace Bot_NetCore.Entities
 {
+    [Obsolete]
     public class ShipMember
     {
         internal ShipMember(ulong id, MemberType type, bool status)

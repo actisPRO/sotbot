@@ -9,6 +9,8 @@ using Bot_NetCore.Exceptions;
 
 namespace Bot_NetCore.Entities
 {
+    
+    [Obsolete]
     public static class ShipList
     {
         public static Dictionary<string, Ship> Ships = new Dictionary<string, Ship>();
