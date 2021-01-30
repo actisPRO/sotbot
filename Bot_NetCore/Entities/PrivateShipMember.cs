@@ -17,7 +17,20 @@ namespace Bot_NetCore.Entities
             get => _role;
             set
             {
-                // mysql logic here
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship_members SET member_type = @value WHERE ship_name = @ship AND member_id = @member;";
+                        cmd.Parameters.AddWithValue("@ship", Ship);
+                        cmd.Parameters.AddWithValue("@member", MemberId);
+                        cmd.Parameters.AddWithValue("@value", RoleEnumToString(value));
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _role = value;
             }
         }
@@ -27,7 +40,20 @@ namespace Bot_NetCore.Entities
             get => _status;
             set
             {
-                // mysql logic here
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship_members SET member_type = @value WHERE ship_name = @ship AND member_id = @member;";
+                        cmd.Parameters.AddWithValue("@ship", Ship);
+                        cmd.Parameters.AddWithValue("@member", MemberId);
+                        cmd.Parameters.AddWithValue("@value", value ? "Active" : "Invited");
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _status = value;
             }
         }
