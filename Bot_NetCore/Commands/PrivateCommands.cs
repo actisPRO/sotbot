@@ -30,29 +30,34 @@ namespace Bot_NetCore.Commands
             // check if user already has a ship
             if (PrivateShip.GetOwnedShip(ctx.Member.Id) != null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты уже являешься владельцем корабля");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты уже являешься владельцем корабля.");
                 return;
             }
 
             var requestTime = DateTime.Now;
             
+            // check if there is a ship with the same name
+            if (PrivateShip.Get(name) != null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Корабль с таким именем уже существует.");
+                return;
+            }
+
+            // create a new ship
+            var ship = PrivateShip.Create(name, requestTime, 0);
+            ship.AddMember(ctx.Member.Id, PrivateShipMemberRole.Captain, false);
+            
             // create a request message
             var requestsChannel = ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel);
-            
-            var embed = new DiscordEmbedBuilder();
-            embed.Title = "Запрос на создание корабля";
-            embed.Color = DiscordColor.Orange;
-            embed.WithAuthor(ctx.Member.DisplayName + "#" + ctx.Member.Discriminator, iconUrl: ctx.Member.AvatarUrl);
-            embed.AddField("Название", name);
-            embed.AddField("Время", requestTime.ToString(CultureInfo.CurrentCulture));
-
-            var message = await requestsChannel.SendMessageAsync(embed: embed.Build());
+            var requestText = "**Запрос на создание корабля**\n\n" +
+                              $"**От:** {ctx.Member.Mention} ({ctx.Member.Id}\n" +
+                              $"**Название:** {name}\n" +
+                              $"**Время:** {DateTime.Now}";
+            var message = await requestsChannel.SendMessageAsync(requestText);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));
 
-            // create a new ship
-            var ship = PrivateShip.Create(name, requestTime, message.Id);
-            ship.AddMember(ctx.Member.Id, PrivateShipMemberRole.Captain, false);
+            ship.RequestMessage = message.Id;
 
             // notify user
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Запрос успешно отправлен");

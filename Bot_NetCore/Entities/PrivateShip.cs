@@ -166,7 +166,7 @@ namespace Bot_NetCore.Entities
                 using (var cmd = new MySqlCommand())
                 {
                     cmd.CommandText = @"SELECT
-                                            s.ship_name, s.ship_channel, s.request_message
+                                            s.*
                                         FROM
                                             private_ship s
                                             JOIN private_ship_members psm ON s.ship_name = psm.ship_name

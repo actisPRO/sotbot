@@ -62,8 +62,8 @@ namespace Bot_NetCore.Entities
         {
             Ship = ship;
             MemberId = memberId;
-            Role = role;
-            Status = status;
+            _role = role;
+            _status = status;
         }
 
         /// <summary>
