@@ -128,6 +128,7 @@ namespace Bot_NetCore.Entities
             _channel = channel;
             _createdAt = createdAt;
             _lastUsed = lastUsed;
+            _requestMessage = requestMessage;
         }
 
         /// <summary>
