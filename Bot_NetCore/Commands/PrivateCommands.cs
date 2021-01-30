@@ -50,9 +50,10 @@ namespace Bot_NetCore.Commands
             // create a request message
             var requestsChannel = ctx.Guild.GetChannel(Bot.BotSettings.PrivateRequestsChannel);
             var requestText = "**Запрос на создание корабля**\n\n" +
-                              $"**От:** {ctx.Member.Mention} ({ctx.Member.Id}\n" +
+                              $"**От:** {ctx.Member.Mention} ({ctx.Member.Id})\n" +
                               $"**Название:** {name}\n" +
-                              $"**Время:** {DateTime.Now}";
+                              $"**Время:** {DateTime.Now}\n\n" +
+                              $"Используйте :white_check_mark: для подтверждения или :no_entry: для отказа.";
             var message = await requestsChannel.SendMessageAsync(requestText);
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
             await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":no_entry:"));

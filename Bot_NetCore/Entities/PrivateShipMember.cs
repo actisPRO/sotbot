@@ -44,7 +44,7 @@ namespace Bot_NetCore.Entities
                 {
                     using (var cmd = new MySqlCommand())
                     {
-                        cmd.CommandText = $"UPDATE private_ship_members SET member_type = @value WHERE ship_name = @ship AND member_id = @member;";
+                        cmd.CommandText = "UPDATE private_ship_members SET member_status = @value WHERE ship_name = @ship AND member_id = @member;";
                         cmd.Parameters.AddWithValue("@ship", Ship);
                         cmd.Parameters.AddWithValue("@member", MemberId);
                         cmd.Parameters.AddWithValue("@value", value ? "Active" : "Invited");

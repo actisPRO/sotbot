@@ -246,7 +246,7 @@ namespace Bot_NetCore.Entities
             {
                 using (var cmd = new MySqlCommand())
                 {
-                    cmd.CommandText = $"DELETE FROM private_ship WHERE name = @name";
+                    cmd.CommandText = $"DELETE FROM private_ship WHERE ship_name = @name";
                     cmd.Parameters.AddWithValue("@name", name);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
