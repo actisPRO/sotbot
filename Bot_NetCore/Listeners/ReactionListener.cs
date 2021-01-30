@@ -386,6 +386,28 @@ namespace Bot_NetCore.Listeners
                             
                         }
                     }
+                    else if (e.Emoji == DiscordEmoji.FromName(client, ":no_entry:"))
+                    {
+                        var captain = (from member in ship.GetMembers()
+                            where member.Role == PrivateShipMemberRole.Captain
+                            select member).First();
+                        var captainMember = await e.Guild.GetMemberAsync(captain.MemberId);
+                        
+                        PrivateShip.Delete(ship.Name);
+                        await e.Channel.SendMessageAsync(
+                            $"{Bot.BotSettings.OkEmoji} Администратор {e.User.Mention} отклонил запрос на создание " +
+                            $"корабля **{ship.Name}**.");
+                        try
+                        {
+                            await captainMember.SendMessageAsync(
+                                $"{Bot.BotSettings.ErrorEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** " +
+                                $"отклонил твой запрос на создание корабля **{ship.Name}**.");
+                        }
+                        catch (UnauthorizedException)
+                        {
+                            
+                        }
+                    }
                 }
             }
             
