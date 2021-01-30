@@ -17,7 +17,19 @@ namespace Bot_NetCore.Entities
             get => _name;
             set
             {
-                // mysql logic here
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship SET ship_name = @new WHERE ship_name = @current;";
+                        cmd.Parameters.AddWithValue("@current", _name);
+                        cmd.Parameters.AddWithValue("@new", value);
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _name = value;
             }
         }
@@ -27,7 +39,19 @@ namespace Bot_NetCore.Entities
             get => _channel;
             set
             {
-                // mysql logic here
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship SET ship_channel = @value WHERE ship_name = @ship;";
+                        cmd.Parameters.AddWithValue("@ship", _name);
+                        cmd.Parameters.AddWithValue("@value", value);
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _channel = value;
             }
         }
@@ -37,7 +61,19 @@ namespace Bot_NetCore.Entities
             get => _requestMessage;
             set
             {
-                // mysql logic here
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship SET request_message = @value WHERE ship_name = @ship;";
+                        cmd.Parameters.AddWithValue("@ship", _name);
+                        cmd.Parameters.AddWithValue("@value", value);
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _requestMessage = value;
             }
         }
@@ -47,7 +83,19 @@ namespace Bot_NetCore.Entities
             get => _createdAt;
             set
             {
-                // mysql
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship SET created_at = @value WHERE ship_name = @ship;";
+                        cmd.Parameters.AddWithValue("@ship", _name);
+                        cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _createdAt = value;
             }
         }
@@ -57,7 +105,19 @@ namespace Bot_NetCore.Entities
             get => _lastUsed;
             set
             {
-                // mysql
+                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                {
+                    using (var cmd = new MySqlCommand())
+                    {
+                        cmd.CommandText = $"UPDATE private_ship SET last_used = @value WHERE ship_name = @ship;";
+                        cmd.Parameters.AddWithValue("@ship", _name);
+                        cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+                        cmd.Connection = connection;
+                        cmd.Connection.Open();
+                    
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 _lastUsed = value;
             }
         }
