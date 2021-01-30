@@ -77,6 +77,13 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+            if (ship.GetMembers().Any(m => m.MemberId == member.Id))
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Пользователь уже приглашен или является участником корабля.");
+                return;
+            }
+
             ship.AddMember(member.Id, PrivateShipMemberRole.Member, false);
             try
             {
@@ -155,41 +162,32 @@ namespace Bot_NetCore.Commands
         public async Task Yes(CommandContext ctx, [Description("Корабль")] [RemainingText]
             string name)
         {
-            Ship ship = null;
-            try
+            var ship = PrivateShip.Get(name);
+            if (ship == null)
             {
-                ship = ShipList.Ships[name];
-            }
-            catch (KeyNotFoundException)
-            {
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Корабль **{name}** не был найден! Проверьте правильность названия и попробуйте снова!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Этот корабль не был найден.");
                 return;
             }
 
-            if (!ship.IsInvited(ctx.Member.Id))
+            var selectedMembers = (from member in ship.GetMembers()
+                where member.MemberId == ctx.Member.Id
+                select member).ToList();
+            if (!selectedMembers.Any())
             {
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Вы не были приглашены присоединиться к этому кораблю!");
+                    $"{Bot.BotSettings.ErrorEmoji} Ты не был приглашён присоединиться к этому кораблю.");
                 return;
             }
 
-            var shipCount = 0;
-            foreach (var _ship in ShipList.Ships.Values)
-                foreach (var _member in _ship.Members.Values)
-                    if (_member.Id == ctx.Member.Id && _member.Status)
-                        ++shipCount;
-
-            if (shipCount >= Bot.BotSettings.MaxPrivateShips)
+            var shipMember = selectedMembers.First();
+            if (shipMember.Status)
             {
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} К сожалению, максимальное число приватных кораблей для вас - {Bot.BotSettings.MaxPrivateShips}");
+                    $"{Bot.BotSettings.ErrorEmoji} Ты уже являешься участником этого корабля.");
                 return;
             }
 
-
-            ship.SetMemberStatus(ctx.Member.Id, true);
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+            shipMember.Status = true;
 
             await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(ctx.Member, Permissions.UseVoice);
 
