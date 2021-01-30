@@ -364,6 +364,9 @@ namespace Bot_NetCore.Listeners
                         await channel.AddOverwriteAsync(e.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
 
                         ship.Channel = channel.Id;
+                        ship.CreatedAt = DateTime.Now;
+                        ship.LastUsed = DateTime.Now;
+
                         var captain = (from member in ship.GetMembers()
                             where member.Role == PrivateShipMemberRole.Captain
                             select member).First();

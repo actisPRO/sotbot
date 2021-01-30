@@ -69,36 +69,27 @@ namespace Bot_NetCore.Commands
         [Description("Приглашает участника на ваш корабль")]
         public async Task Invite(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
-            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
-            if (ship == null)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
-                return;
-            }
-
-            if (ctx.Member == member)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Нельзя пригласить самого себя!");
-                return;
-            }
-
-            try
-            {
-                ship.AddMember(member.Id);
-            }
-            catch (MemberExistsException)
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
+            if (ship == null || ship.GetCaptain().Status == false)
             {
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Участник уже был приглашен или является членом корабля!");
+                    $"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля или твой запрос ещё не был подтвержден.");
                 return;
             }
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-            await member.SendMessageAsync(
-                $"Вы были приглашены на корабль **{ship.Name}** участником **{ctx.Member.Username}**! Отправьте " +
-                $"`{Bot.BotSettings.Prefix}private yes {ship.Name}` для принятия приглашения, или `{Bot.BotSettings.Prefix}private no {ship.Name}` для отказа.");
-            await ctx.RespondAsync(
-                $"{Bot.BotSettings.OkEmoji} Успешно отправлено приглашение участнику {member.Username}!");
+            ship.AddMember(member.Id, PrivateShipMemberRole.Member, false);
+            try
+            {
+                await member.SendMessageAsync(
+                    $"Ты был приглашён присоединиться к кораблю **{ship.Name}**. Используй в канале для команд" +
+                    $"`!p yes {ship.Name}`, чтобы принять приглашение, или `!p no {ship.Name}`, чтобы отклонить его.");
+            }
+            catch
+            {
+                
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Приглашение успешно отправлено.");
         }
 
         [Command("list")]

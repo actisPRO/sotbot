@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
@@ -254,6 +255,15 @@ namespace Bot_NetCore.Entities
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+
+        /// <summary>
+        ///     Returns the captain of this ship.
+        /// </summary>
+        public PrivateShipMember GetCaptain()
+        {
+            return (from member in GetMembers() where member.Role == PrivateShipMemberRole.Captain select member)
+                .First();
         }
 
         /// <summary>
