@@ -88,7 +88,7 @@ namespace Bot_NetCore.Commands
             try
             {
                 await member.SendMessageAsync(
-                    $"Ты был приглашён присоединиться к кораблю **{ship.Name}**. Используй в канале для команд" +
+                    $"Ты был приглашён присоединиться к кораблю **{ship.Name}**. Используй в канале для команд " +
                     $"`!p yes {ship.Name}`, чтобы принять приглашение, или `!p no {ship.Name}`, чтобы отклонить его.");
             }
             catch
@@ -200,30 +200,26 @@ namespace Bot_NetCore.Commands
         public async Task No(CommandContext ctx, [Description("Корабль")] [RemainingText]
             string name)
         {
-            Ship ship = null;
-            try
+            var ship = PrivateShip.Get(name);
+            if (ship == null)
             {
-                ship = ShipList.Ships[name];
-            }
-            catch (KeyNotFoundException)
-            {
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Корабль **{name}** не был найден! Проверьте правильность названия и попробуйте снова!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Этот корабль не был найден.");
                 return;
             }
 
-            if (!ship.IsInvited(ctx.Member.Id))
+            var selectedMembers = (from member in ship.GetMembers()
+                where member.MemberId == ctx.Member.Id
+                select member).ToList();
+            if (!selectedMembers.Any())
             {
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Вы не были приглашены присоединиться к этому кораблю!");
+                    $"{Bot.BotSettings.ErrorEmoji} Ты не был приглашён присоединиться к этому кораблю.");
                 return;
             }
-
+            
             ship.RemoveMember(ctx.Member.Id);
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
-            await ctx.RespondAsync(
-                $"{Bot.BotSettings.OkEmoji} Вы успешно отклонили приглашение на корабль **{name}**!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты успешно отклонил приглашение.");
         }
 
         [Command("kick")]
