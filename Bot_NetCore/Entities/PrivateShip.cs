@@ -206,6 +206,14 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
+        ///     Removes the specified member from this ship.
+        /// </summary>
+        public void RemoveMember(ulong memberId)
+        {
+            PrivateShipMember.Delete(_name, memberId);
+        }
+
+        /// <summary>
         ///     Returns a list of members of the current ship
         /// </summary>
         public List<PrivateShipMember> GetMembers()
