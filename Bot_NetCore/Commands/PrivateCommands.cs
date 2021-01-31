@@ -367,7 +367,7 @@ namespace Bot_NetCore.Commands
             {
                 await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
             }
-            catch (NotFoundException e)
+            catch (NotFoundException)
             {
                 // channel not found
             }

@@ -304,14 +304,9 @@ namespace Bot_NetCore.Commands
 
             private static string GetPrivateShip(ulong userId)
             {
-                //Приватный корабль
-                foreach (var ship in ShipList.Ships.Values)
-                    foreach (var shipMember in ship.Members.Values)
-                        if (shipMember.Type == MemberType.Owner && shipMember.Id == userId)
-                        {
-                            return ship.Name;
-                        }
-                return null;
+                var ship = PrivateShip.GetOwnedShip(userId);
+                if (ship == null) return null;
+                else return ship.Name;
             }
 
             private static string GetCodexInfo(List<ReportSQL> reports, DiscordMember member)
