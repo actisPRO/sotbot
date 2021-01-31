@@ -256,32 +256,39 @@ namespace Bot_NetCore.Commands
         public async Task Leave(CommandContext ctx, [Description("Корабль")] [RemainingText]
             string name)
         {
-            if (!ShipList.Ships[name].Members.ContainsKey(ctx.Member.Id))
+            var ship = PrivateShip.Get(name);
+            if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь членом этого корабля!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Корабль не был найден.");
                 return;
             }
 
-            if (ShipList.Ships[name].Members[ctx.Member.Id].Type == MemberType.Owner)
+            var shipMember = ship.GetMembers().Find(m => m.MemberId == ctx.Member.Id);
+            if (shipMember == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься участником этого корабля.");
+                return;
+            }
+
+            if (shipMember.Role == PrivateShipMemberRole.Captain)
             {
                 await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Вы должны передать права владельца корабля прежде чем покинуть его!");
+                    $"{Bot.BotSettings.ErrorEmoji} Прежде чем покинуть корабль, передай полномочия " +
+                    $"капитана с помощью команды `!p transfer @участник`.");
                 return;
             }
 
-            if (!ShipList.Ships[name].Members[ctx.Member.Id].Status)
+            ship.RemoveMember(ctx.Member.Id);
+
+            if (shipMember.Status)
             {
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Чтобы отклонить приглашение используйте команду `{Bot.BotSettings.Prefix}private no`!");
-                return;
+                await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(ctx.Member);
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты покинул корабль **{ship.Name}**.");
             }
-
-            ShipList.Ships[name].RemoveMember(ctx.Member.Id);
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-
-            await ctx.Guild.GetChannel(ShipList.Ships[name].Channel).AddOverwriteAsync(ctx.Member);
-
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Вы покинули корабль **{name}**!");
+            else
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты успешно отклонил приглашение присоединиться к кораблю.");
+            }
         }
 
         [Command("rename")]
