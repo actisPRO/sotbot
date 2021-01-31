@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
+using Bot_NetCore.Listeners;
 using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -78,13 +79,13 @@ namespace Bot_NetCore.Commands
                     }
                     embed.NewInlineRow();
 
-                    //2 Row - Creation and join dates
+                    //2 Row - Creation and join dates, VoiceTime
                     embed.AddFieldOrDefault("Создан", user.CreationTimestamp.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
                     if (member != null)
                     {
                         embed.AddFieldOrDefault("Присоединился", member.JoinedAt.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
                     }
-                    embed.NewInlineRow();
+                    embed.AddFieldOrDefault("Время в каналах", VoiceListener.GetUpdatedVoiceTime(member.Id).ToString(), true);
 
                     //3 Row - WebUser info
                     if (webUser != null)
@@ -281,8 +282,9 @@ namespace Bot_NetCore.Commands
             private static string GetDonationInfo(ulong userId)
             {
                 //Донат
-                if (Donator.Donators.ContainsKey(userId)) 
-                    return Donator.Donators[userId].Balance.ToString();
+                var donator = DonatorSQL.GetById(userId);
+                if (donator != null)
+                    return donator.Balance.ToString();
                 return null;
             }
 
@@ -302,14 +304,9 @@ namespace Bot_NetCore.Commands
 
             private static string GetPrivateShip(ulong userId)
             {
-                //Приватный корабль
-                foreach (var ship in ShipList.Ships.Values)
-                    foreach (var shipMember in ship.Members.Values)
-                        if (shipMember.Type == MemberType.Owner && shipMember.Id == userId)
-                        {
-                            return ship.Name;
-                        }
-                return null;
+                var ship = PrivateShip.GetOwnedShip(userId);
+                if (ship == null) return null;
+                else return ship.Name;
             }
 
             private static string GetCodexInfo(List<ReportSQL> reports, DiscordMember member)

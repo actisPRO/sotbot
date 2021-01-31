@@ -177,7 +177,7 @@ namespace Bot_NetCore.Listeners
             //Выдача доступа к приватным кораблям
             try
             {
-                var ships = ShipList.Ships.Values.Where(x => x.Members.ContainsKey(e.Member.Id));
+                var ships = PrivateShip.GetUserShip(e.Member.Id);
                 foreach (var ship in ships)
                     await e.Guild.GetChannel(ship.Channel).AddOverwriteAsync(e.Member, Permissions.UseVoice);
             }

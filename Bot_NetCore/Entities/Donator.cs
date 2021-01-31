@@ -5,6 +5,7 @@ using System.Xml.Linq;
 
 namespace Bot_NetCore.Entities
 {
+    [Obsolete("Use DonatorSQL instead")]
     public class Donator
     {
         public static Dictionary<ulong, Donator> Donators = new Dictionary<ulong, Donator>();

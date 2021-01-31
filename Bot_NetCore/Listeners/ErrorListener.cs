@@ -85,7 +85,7 @@ namespace Bot_NetCore.Listeners
             //Не удалось найти пользователя
             if (e.Exception is NotFoundException || e.Exception is NullReferenceException)
             {
-                await e.Context.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден указанный пользователь.");
+                await e.Context.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден указанный пользователь или роль.");
                 return;
             }
 

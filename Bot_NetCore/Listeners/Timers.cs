@@ -57,10 +57,10 @@ namespace Bot_NetCore.Listeners
             deleteShips.AutoReset = true;
             deleteShips.Enabled = true;
 
-            var clearSubscriptions = new Timer(60000);
-            clearSubscriptions.Elapsed += ClearSubscriptionsOnElapsed;
-            clearSubscriptions.AutoReset = true;
-            clearSubscriptions.Enabled = true;
+            //var clearSubscriptions = new Timer(60000);
+            //clearSubscriptions.Elapsed += ClearSubscriptionsOnElapsed;
+            //clearSubscriptions.AutoReset = true;
+            //clearSubscriptions.Enabled = true;
 
             var updateVoiceTimes = new Timer(60000 * 5);
             updateVoiceTimes.Elapsed += UpdateVoiceTimesOnElapsedAsync;
@@ -115,94 +115,84 @@ namespace Bot_NetCore.Listeners
                 await Client.Guilds[Bot.BotSettings.Guild].GetChannel(435730405077811200).SendMessageAsync("**:christmas_tree: С Новым Годом, пираты! :christmas_tree:**");
         }
 
-        private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
-        {
-            Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearSubscriptionsOnElapsed running");
+        //private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
+        //{
+        //    Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearSubscriptionsOnElapsed running");
 
-            for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
-            {
-                var sub = Subscriber.Subscribers.Values.ToArray()[i];
-                if (DateTime.Now > sub.SubscriptionEnd)
-                {
-                    try
-                    {
-                        var guild = Client.Guilds[Bot.BotSettings.Guild];
-                        var member = await guild.GetMemberAsync(sub.Member);
-                        try
-                        {
-                            if (member != null)
-                            {
-                                await member.SendMessageAsync("Ваша подписка истекла :cry:");
-                            }
-                        }
-                        catch (NotFoundException) { }
-                        catch (ArgumentException) { }
+        //    for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
+        //    {
+        //        var sub = Subscriber.Subscribers.Values.ToArray()[i];
+        //        if (DateTime.Now > sub.SubscriptionEnd)
+        //        {
+        //            try
+        //            {
+        //                var guild = Client.Guilds[Bot.BotSettings.Guild];
+        //                var member = await guild.GetMemberAsync(sub.Member);
+        //                try
+        //                {
+        //                    if (member != null)
+        //                    {
+        //                        await member.SendMessageAsync("Ваша подписка истекла :cry:");
+        //                    }
+        //                }
+        //                catch (NotFoundException) { }
+        //                catch (ArgumentException) { }
 
-                        try
-                        {
-                            await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
-                        }
-                        catch (Exceptions.NotFoundException) { }
+        //                try
+        //                {
+        //                    await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
+        //                }
+        //                catch (Exceptions.NotFoundException) { }
 
-                        Subscriber.Subscribers.Remove(sub.Member);
-                        Subscriber.Save(Bot.BotSettings.SubscriberXML);
-                    }
-                    catch (Exception ex)
-                    {
-                        Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке подписок.");
-                    }
-                }
-            }
-        }
+        //                Subscriber.Subscribers.Remove(sub.Member);
+        //                Subscriber.Save(Bot.BotSettings.SubscriberXML);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке подписок.");
+        //            }
+        //        }
+        //    }
+        //}
 
         private static async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
         {
             Client.Logger.LogDebug(BotLoggerEvents.Timers, $"DeleteShipsOnElapsed running");
 
-            for (int i = 0; i < ShipList.Ships.Count; ++i)
+            foreach (var ship in PrivateShip.GetAll())
             {
-                var ship = ShipList.Ships.Values.ToArray()[i];
                 if ((DateTime.Now - ship.LastUsed).Days >= 3)
                 {
-                    var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(ship.Channel);
-
-                    ulong ownerId = 0;
-                    foreach (var member in ship.Members.Values)
-                        if (member.Type == MemberType.Owner)
-                        {
-                            ownerId = member.Id;
-                            break;
-                        }
-
-                    DiscordMember owner = null;
+                    var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
                     try
                     {
-                        owner = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(ownerId);
-                        await owner.SendMessageAsync(
-                            "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
-                            " не планируете пользоваться этой функцией**");
+                        var channel = guild.GetChannel(ship.Channel);
+                        await channel.DeleteAsync();
                     }
                     catch (NotFoundException)
                     {
-                        // ничего не делаем, владелец покинул сервер
+                        
                     }
 
-                    ship.Delete();
-                    ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+                    try
+                    {
+                        var member = await guild.GetMemberAsync(ship.GetCaptain().MemberId);
+                        await member.SendMessageAsync($"Твой корабль **{ship.Name}** был удалён из-за неактивности.");
+                    }
+                    catch (UnauthorizedException)
+                    {
 
-                    await channel.DeleteAsync();
-
-                    var doc = XDocument.Load("data/actions.xml");
-                    foreach (var action in doc.Element("actions").Elements("action"))
-                        if (Convert.ToUInt64(action.Value) == ownerId)
-                            action.Remove();
-                    doc.Save("data/actions.xml");
-
-                    await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                        "**Удаление корабля**\n\n" +
+                    }
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+                    
+                    PrivateShip.Delete(ship.Name);
+                    
+                    await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
                         $"**Модератор:** {Client.CurrentUser}\n" +
-                        $"**Корабль:** {ship.Name}\n" +
-                        $"**Владелец:** {owner}\n" +
+                        $"**Название:** {ship.Name}\n" +
                         $"**Дата:** {DateTime.Now}");
                 }
             }

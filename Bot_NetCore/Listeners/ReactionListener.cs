@@ -349,71 +349,71 @@ namespace Bot_NetCore.Listeners
                 await (await e.Guild.GetMemberAsync(discordUser.Id)).SendMessageAsync($"{Bot.BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
             }
 
-            //then check if it is a private ship confirmation message
-            foreach (var ship in ShipList.Ships.Values)
+            // Private ship confirmation message
+            if (e.Channel.Id == Bot.BotSettings.PrivateRequestsChannel)
             {
-                if (ship.Status) continue;
-
-                if (e.Message.Id == ship.CreationMessage)
+                var ship = PrivateShip.GetByRequest(e.Message.Id);
+                if (ship != null && ship.Channel == 0)
                 {
                     if (e.Emoji == DiscordEmoji.FromName(client, ":white_check_mark:"))
                     {
-                        var name = ship.Name;
-                        var channel = await e.Channel.Guild.CreateChannelAsync($"☠{name}☠", ChannelType.Voice,
-                            e.Channel.Guild.GetChannel(Bot.BotSettings.PrivateCategory), bitrate: Bot.BotSettings.Bitrate);
+                        var channel = await e.Guild.CreateChannelAsync($"☠{ship.Name}☠", ChannelType.Voice,
+                            e.Guild.GetChannel(Bot.BotSettings.PrivateCategory), bitrate: Bot.BotSettings.Bitrate);
+                        await channel.AddOverwriteAsync(e.Guild.GetRole(Bot.BotSettings.CodexRole),
+                            Permissions.AccessChannels);
+                        await channel.AddOverwriteAsync(e.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
 
-                        var member = await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
+                        ship.Channel = channel.Id;
+                        ship.CreatedAt = DateTime.Now;
+                        ship.LastUsed = DateTime.Now;
 
-                        await channel.AddOverwriteAsync(member, Permissions.UseVoice);
-                        await channel.AddOverwriteAsync(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole), Permissions.AccessChannels);
-                        await channel.AddOverwriteAsync(e.Channel.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
+                        var captain = (from member in ship.GetMembers()
+                            where member.Role == PrivateShipMemberRole.Captain
+                            select member).First();
+                        var captainMember = await e.Guild.GetMemberAsync(captain.MemberId);
+                        await channel.AddOverwriteAsync(captainMember, Permissions.UseVoice);
+                        captain.Status = true;
 
-                        ShipList.Ships[name].SetChannel(channel.Id);
-                        ShipList.Ships[name].SetStatus(true);
-                        ShipList.Ships[name].SetMemberStatus(member.Id, true);
-
-                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-
-                        await member.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был подтвержден администратором **{discordUser.Username}#{discordUser.Discriminator}**");
                         await e.Channel.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Администратор **{discordUser.Username}#{discordUser.Discriminator}** успешно подтвердил " +
-                            $"запрос на создание корабля **{name}**!");
-
-                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Администратор {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил создание приватного корабля {name}.",
-                            DateTime.Now);
+                            $"{Bot.BotSettings.OkEmoji} Администратор {e.User.Mention} подтвердил запрос на создание " +
+                            $"корабля **{ship.Name}**.");
+                        try
+                        {
+                            await captainMember.SendMessageAsync(
+                                $"{Bot.BotSettings.OkEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** " +
+                                $"подтвердил твой запрос на создание корабля **{ship.Name}**.");
+                        }
+                        catch (UnauthorizedException)
+                        {
+                            
+                        }
                     }
                     else if (e.Emoji == DiscordEmoji.FromName(client, ":no_entry:"))
                     {
-                        var name = ship.Name;
-                        var member =
-                            await e.Channel.Guild.GetMemberAsync(ShipList.Ships[name].Members.ToArray()[0].Value.Id);
-
-                        ShipList.Ships[name].Delete();
-                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-
-                        var doc = XDocument.Load("data/actions.xml");
-                        foreach (var action in doc.Element("actions").Elements("action"))
-                            if (Convert.ToUInt64(action.Value) == member.Id)
-                                action.Remove();
-                        doc.Save("data/actions.xml");
-
-                        await member.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Запрос на создание корабля **{name}** был отклонен администратором **{discordUser.Username}#{discordUser.Discriminator}**");
+                        var captain = (from member in ship.GetMembers()
+                            where member.Role == PrivateShipMemberRole.Captain
+                            select member).First();
+                        var captainMember = await e.Guild.GetMemberAsync(captain.MemberId);
+                        
+                        PrivateShip.Delete(ship.Name);
                         await e.Channel.SendMessageAsync(
-                            $"{Bot.BotSettings.OkEmoji} Администратор **{discordUser.Username}#{discordUser.Discriminator}** успешно отклонил запрос на " +
-                            $"создание корабля **{name}**!");
+                            $"{Bot.BotSettings.OkEmoji} Администратор {e.User.Mention} отклонил запрос на создание " +
+                            $"корабля **{ship.Name}**.");
+                        try
+                        {
+                            await captainMember.SendMessageAsync(
+                                $"{Bot.BotSettings.ErrorEmoji} Администратор **{e.User.Username}#{e.User.Discriminator}** " +
+                                $"отклонил твой запрос на создание корабля **{ship.Name}**.");
+                        }
+                        catch (UnauthorizedException)
+                        {
+                            
+                        }
+                    }
 
-                        client.Logger.LogInformation(BotLoggerEvents.Event, $"Администратор {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) отклонил создание приватного корабля {name}.",
-                            DateTime.Now);
-                    }
-                    else
-                    {
-                        return;
-                    }
+                    await e.Message.DeleteAllReactionsAsync();
                 }
             }
-
         }
     }
 }

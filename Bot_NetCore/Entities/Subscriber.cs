@@ -5,6 +5,7 @@ using System.Xml.Linq;
 
 namespace Bot_NetCore.Entities
 {
+    //[Obsolete("This is no longer compatible with DonatorSQL")]
     public class Subscriber
     {
         public static Dictionary<ulong, Subscriber> Subscribers = new Dictionary<ulong, Subscriber>();

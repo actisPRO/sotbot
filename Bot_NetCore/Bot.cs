@@ -69,10 +69,10 @@ namespace Bot_NetCore
             Console.WriteLine(@"   
                 ██████╗    ██╗ █████╗ 
                 ╚════██╗  ███║██╔══██╗
-                 █████╔╝  ╚██║╚█████╔╝
-                ██╔═══╝    ██║██╔══██╗
-                ███████╗██╗██║╚█████╔╝
-                ╚══════╝╚═╝╚═╝ ╚════╝                      
+                 █████╔╝  ╚██║╚██████║
+                ██╔═══╝    ██║ ╚═══██║
+                ███████╗██╗██║ █████╔╝
+                ╚══════╝╚═╝╚═╝ ╚════╝                 
             "); //Font Name: ANSI Shadow
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
@@ -80,13 +80,11 @@ namespace Bot_NetCore
             
             ReloadSettings(); // Загрузим настройки
 
-            ShipList.ReadFromXML(BotSettings.ShipXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
             Note.Read(BotSettings.NotesXML);
-            Donator.Read(BotSettings.DonatorXML);
             Subscriber.Read(BotSettings.SubscriberXML);
             ShipNames.Read(BotSettings.ShipNamesCSV);
             
