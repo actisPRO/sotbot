@@ -69,10 +69,10 @@ namespace Bot_NetCore
             Console.WriteLine(@"   
                 ██████╗    ██╗ █████╗ 
                 ╚════██╗  ███║██╔══██╗
-                 █████╔╝  ╚██║╚█████╔╝
-                ██╔═══╝    ██║██╔══██╗
-                ███████╗██╗██║╚█████╔╝
-                ╚══════╝╚═╝╚═╝ ╚════╝                      
+                 █████╔╝  ╚██║╚██████║
+                ██╔═══╝    ██║ ╚═══██║
+                ███████╗██╗██║ █████╔╝
+                ╚══════╝╚═╝╚═╝ ╚════╝                 
             "); //Font Name: ANSI Shadow
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
