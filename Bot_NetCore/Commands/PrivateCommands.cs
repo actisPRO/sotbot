@@ -238,8 +238,11 @@ namespace Bot_NetCore.Commands
             try
             {
                 if (selected.Status)
+                {
+                    await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(member);
                     await member.SendMessageAsync($"Капитан **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
                                                   $"выгнал тебя с корабля **{ship.Name}**");
+                }
                 else
                     await member.SendMessageAsync($"Капитан **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
                                                   $"отменил твоё приглашение на корабль **{ship.Name}**");
@@ -299,49 +302,56 @@ namespace Bot_NetCore.Commands
             var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
             if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля");
                 return;
             }
 
             ship.Name = name;
             name = "☠" + name + "☠";
             await ctx.Guild.GetChannel(ship.Channel).ModifyAsync(x => x.Name = name);
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль");
         }
 
-        [Command("prune")]
-        [Description("Очищает корабль от участников, покинувших сервер.")]
-        public async Task Prune(CommandContext ctx)
+        [Command("transfer")]
+        [Description("Передаёт права на корабль")]
+        public async Task Transfer(CommandContext ctx, [Description("Новый капитан")] DiscordMember member)
         {
-            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
             if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля");
                 return;
             }
 
-            var toBePruned = new List<ulong>();
-            foreach (var member in ship.Members)
-                try
-                {
-                    var m = await ctx.Guild.GetMemberAsync(member.Value.Id);
-                }
-                catch (Exceptions.NotFoundException)
-                {
-                    toBePruned.Add(member.Value.Id);
-                }
-
-            var i = 0;
-            foreach (var member in toBePruned)
+            if (ctx.Member == member)
             {
-                ship.RemoveMember(member);
-                ++i;
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Нельзя передать права самому себе");
+                return;
             }
 
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+            var members = ship.GetMembers();
+            var oldCaptain = members.Find(m => m.Role == PrivateShipMemberRole.Captain);
+            var newCaptain = members.Find(m => m.MemberId == member.Id);
 
-            await ctx.RespondAsync(
-                $"{Bot.BotSettings.OkEmoji} Успешно завершена очистка! Было удалено **{i}** человек.");
+            if (newCaptain == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Нельзя передать права пользователю, которого нет на твоём корабле");
+                return;
+            }
+
+            newCaptain.Role = PrivateShipMemberRole.Captain;
+            if (oldCaptain != null) oldCaptain.Role = PrivateShipMemberRole.Member;
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты успешно передал должность капитана");
+            try
+            {
+                await member.SendMessageAsync($"Ты был назначен капитаном корабля **{ship.Name}**");
+                return;
+            }
+            catch (UnauthorizedException)
+            {
+                
+            }
         }
 
         /* Секция для админ-команд */
