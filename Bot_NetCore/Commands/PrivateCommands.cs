@@ -335,6 +335,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
+
             newCaptain.Role = PrivateShipMemberRole.Captain;
             if (oldCaptain != null) oldCaptain.Role = PrivateShipMemberRole.Member;
 
