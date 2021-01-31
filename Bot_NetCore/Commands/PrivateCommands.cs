@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Bot_NetCore.Entities;
-using Bot_NetCore.Exceptions;
 using Bot_NetCore.Misc;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
@@ -13,7 +10,6 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
-using Microsoft.Extensions.Logging;
 using NotFoundException = DSharpPlus.Exceptions.NotFoundException;
 
 namespace Bot_NetCore.Commands
@@ -399,86 +395,6 @@ namespace Bot_NetCore.Commands
                 $"**Модератор:** {ctx.Member.Id}\n" +
                 $"**Название:** {ship.Name}\n" +
                 $"**Дата:** {DateTime.Now}");
-        }
-
-        [Command("shipinfo")]
-        [RequirePermissions(Permissions.KickMembers)]
-        public async Task ShipInfo(CommandContext ctx, [RemainingText] string name)
-        {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
-            if (!ShipList.Ships.ContainsKey(name))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не найден корабль с названием **{name}**!");
-                return;
-            }
-
-            //Get ship data
-            var ship = ShipList.Ships[name];
-
-            var embed = new DiscordEmbedBuilder();
-            embed.Title = ship.Name;
-
-            embed.AddField("Статус", ship.Status ? "Подтвержден" : "Не подтвержден");
-
-            //Канал
-            embed.AddField("Канал в памяти", ship.Channel.ToString(), true);
-            try
-            {
-                var channel = ctx.Channel.Guild.Channels.FirstOrDefault(x => x.Value.Id == ship.Channel);
-                embed.AddField("Канал", $"{channel.Value.Id} \n {channel.Value.Name}", true);
-            }
-            catch (NullReferenceException)
-            {
-                embed.AddField("Канал", "Не найден", true);
-            }
-
-            var msgContent = "";
-
-
-            embed.Color = new DiscordColor("#00FF00");
-
-            var message = await ctx.RespondAsync(content: msgContent, embed: embed.Build());
-
-            // first retrieve the interactivity module from the client
-            var interactivity = ctx.Client.GetInteractivity();
-
-            // list emoji
-            var listEmoji = DiscordEmoji.FromName(ctx.Client, ":scroll:");
-
-            await message.CreateReactionAsync(listEmoji);
-
-            // wait for a reaction
-            var em = await interactivity.WaitForReactionAsync(xe => xe.Emoji.Name == listEmoji.Name, message, ctx.User, TimeSpan.FromSeconds(30));
-
-            try
-            {
-                //Чистим реакции, они больше не кликабельны
-                await message.DeleteAllReactionsAsync();
-
-                //Список пользователей
-                if (em.Result.Emoji.Name == listEmoji.Name)
-                {
-                    List<string> members = new List<string>();
-                    await ctx.Channel.TriggerTypingAsync();
-                    ship.Members.ToList().ForEach(m => members.Add($"<@{m.Value.Id}> | {m.Value.Type} | {m.Value.Status}"));
-
-                    var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа.");
-
-                    if (members_pagination.Count() > 1)
-                        await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
-                    else
-                        await ctx.RespondAsync(embed: members_pagination.First().Embed);
-                }
-            }
-            catch
-            {
-                await message.DeleteAllReactionsAsync();
-            }
         }
     }
 }
