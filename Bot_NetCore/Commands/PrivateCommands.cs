@@ -392,7 +392,7 @@ namespace Bot_NetCore.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Корабль успешно удалён");
 
             await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
-                $"**Модератор:** {ctx.Member.Id}\n" +
+                $"**Модератор:** {ctx.Member}\n" +
                 $"**Название:** {ship.Name}\n" +
                 $"**Дата:** {DateTime.Now}");
         }

@@ -214,6 +214,34 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
+        ///     Returns all private ships from the database.
+        /// </summary>
+        /// <returns></returns>
+        public static List<PrivateShip> GetAll()
+        {
+            var result = new List<PrivateShip>();
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM private_ship";
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        result.Add(new PrivateShip(reader.GetString(0), 
+                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                            reader.GetUInt64(4)));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         ///     Returns a ship with the specified request message ID or null, if nothing is found.
         /// </summary>
         public static PrivateShip GetByRequest(ulong request)
@@ -224,6 +252,31 @@ namespace Bot_NetCore.Entities
                 {
                     cmd.CommandText = "SELECT * FROM private_ship WHERE request_message = @request";
                     cmd.Parameters.AddWithValue("@request", request);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    if (!reader.Read())
+                        return null;
+                    else
+                        return new PrivateShip(reader.GetString(0), 
+                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                            reader.GetUInt64(4));
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Gets a ship by its channel ID.
+        /// </summary>
+        public static PrivateShip GetByChannel(ulong channel)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM private_ship WHERE ship_channel = @channel";
+                    cmd.Parameters.AddWithValue("@channel", channel);
                     cmd.Connection = connection;
                     cmd.Connection.Open();
 

@@ -159,54 +159,40 @@ namespace Bot_NetCore.Listeners
         {
             Client.Logger.LogDebug(BotLoggerEvents.Timers, $"DeleteShipsOnElapsed running");
 
-            for (int i = 0; i < ShipList.Ships.Count; ++i)
+            foreach (var ship in PrivateShip.GetAll())
             {
-                var ship = ShipList.Ships.Values.ToArray()[i];
                 if ((DateTime.Now - ship.LastUsed).Days >= 3)
                 {
-                    var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(ship.Channel);
-
-                    ulong ownerId = 0;
-                    foreach (var member in ship.Members.Values)
-                        if (member.Type == MemberType.Owner)
-                        {
-                            ownerId = member.Id;
-                            break;
-                        }
-
-                    DiscordMember owner = null;
+                    var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
                     try
                     {
-                        owner = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(ownerId);
-                        await owner.SendMessageAsync(
-                            "Ваш приватный корабль был неактивен долгое время и поэтому он был удалён. \n**Пожалуйста, не отправляйте новый запрос на создание, если" +
-                            " не планируете пользоваться этой функцией**");
+                        var channel = guild.GetChannel(ship.Channel);
+                        await channel.DeleteAsync();
                     }
                     catch (NotFoundException)
                     {
-                        // ничего не делаем, владелец покинул сервер
+                        
                     }
-
-                    ship.Delete();
-                    ShipList.SaveToXML(Bot.BotSettings.ShipXML);
 
                     try
                     {
-                        await channel.DeleteAsync();
+                        var member = await guild.GetMemberAsync(ship.GetCaptain().MemberId);
+                        await member.SendMessageAsync($"Твой корабль **{ship.Name}** был удалён из-за неактивности.");
                     }
-                    catch (NullReferenceException) { } //Channel not found
+                    catch (UnauthorizedException)
+                    {
 
-                    var doc = XDocument.Load("data/actions.xml");
-                    foreach (var action in doc.Element("actions").Elements("action"))
-                        if (Convert.ToUInt64(action.Value) == ownerId)
-                            action.Remove();
-                    doc.Save("data/actions.xml");
-
-                    await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                        "**Удаление корабля**\n\n" +
+                    }
+                    catch (NotFoundException)
+                    {
+                        
+                    }
+                    
+                    PrivateShip.Delete(ship.Name);
+                    
+                    await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
                         $"**Модератор:** {Client.CurrentUser}\n" +
-                        $"**Корабль:** {ship.Name}\n" +
-                        $"**Владелец:** {owner}\n" +
+                        $"**Название:** {ship.Name}\n" +
                         $"**Дата:** {DateTime.Now}");
                 }
             }

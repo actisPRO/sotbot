@@ -176,13 +176,10 @@ namespace Bot_NetCore.Listeners
         {
             if (e.Channel != null &&
                 e.Channel.ParentId == Bot.BotSettings.PrivateCategory)
-                foreach (var ship in ShipList.Ships.Values)
-                    if (ship.Channel == e.Channel.Id)
-                    {
-                        ship.SetLastUsed(DateTime.Now);
-                        ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-                        break;
-                    }
+            {
+                var ship = PrivateShip.GetByChannel(e.Channel.Id);
+                if (ship != null) ship.LastUsed = DateTime.Now;
+            }
             await Task.CompletedTask;
         }
 
