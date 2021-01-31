@@ -80,7 +80,6 @@ namespace Bot_NetCore
             
             ReloadSettings(); // Загрузим настройки
 
-            ShipList.ReadFromXML(BotSettings.ShipXML);
             InviterList.ReadFromXML(BotSettings.InviterXML);
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
             PriceList.ReadFromXML(BotSettings.PriceListXML);
