@@ -356,58 +356,48 @@ namespace Bot_NetCore.Commands
 
         /* Секция для админ-команд */
 
-        [Command("adelete")]
-        [RequirePermissions(Permissions.Administrator)]
-        public async Task ADelete(CommandContext ctx, [RemainingText] string name)
+        [Command("fdelete")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task FDelete(CommandContext ctx, [RemainingText] string name)
         {
-            if (!ShipList.Ships.ContainsKey(name))
+            var ship = PrivateShip.Get(name);
+            if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не найден корабль с названием **{name}**!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден корабль с указанным именем");
                 return;
             }
 
-            var ship = ShipList.Ships[name];
-
-            var channel = ctx.Guild.GetChannel(ship.Channel);
-
-            ulong owner = 0;
-            foreach (var member in ship.Members.Values)
-                if (member.Type == MemberType.Owner)
-                {
-                    owner = member.Id;
-                    break;
-                }
-
-            ship.Delete();
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
+            try
+            {
+                await ctx.Guild.GetChannel(ship.Channel).DeleteAsync();
+            }
+            catch (NotFoundException e)
+            {
+                // channel not found
+            }
 
             try
             {
-                await channel.DeleteAsync();
-            }
-            catch (DSharpPlus.Exceptions.NotFoundException) { await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден канал для удаления..."); }
-            catch (NullReferenceException) { await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не был найден канал для удаления..."); }
-
-            var doc = XDocument.Load("data/actions.xml");
-            foreach (var action in doc.Element("actions").Elements("action"))
-                if (owner != 0 && Convert.ToUInt64(action.Value) == owner)
-                    action.Remove();
-            doc.Save("data/actions.xml");
-
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален корабль!");
-
-            DiscordUser user = null;
-            try
+                var owner = await ctx.Guild.GetMemberAsync(ship.GetCaptain().MemberId);
+                await owner.SendMessageAsync(
+                    $"Твой корабль **{ship.Name}** был удалён модератором **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}**");
+            }    
+            catch (NotFoundException)
             {
-                user = await ctx.Client.GetUserAsync(owner);
-            }
-            catch (DSharpPlus.Exceptions.NotFoundException) { }
 
-            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
-                "**Удаление корабля**\n\n" +
-                $"**Модератор:** {ctx.Member}\n" +
-                $"**Корабль:** {name}\n" +
-                $"**Владелец:** {user}\n" +
+            }
+            catch (UnauthorizedException)
+            {
+                
+            }
+            
+            PrivateShip.Delete(ship.Name);
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Корабль успешно удалён");
+
+            await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
+                $"**Модератор:** {ctx.Member.Id}\n" +
+                $"**Название:** {ship.Name}\n" +
                 $"**Дата:** {DateTime.Now}");
         }
 
@@ -490,39 +480,5 @@ namespace Bot_NetCore.Commands
                 await message.DeleteAllReactionsAsync();
             }
         }
-
-        [Command("usershipinfo")]
-        [RequirePermissions(Permissions.KickMembers)]
-        public async Task UserShipInfo(CommandContext ctx, DiscordMember member)
-        {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
-            //Get ship data
-            var ownedShips = ShipList.Ships.Values.Where(s => s.Members.Values.Any(m => m.Type == MemberType.Owner && m.Id == member.Id));
-
-            if (ownedShips.Count() == 0)
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось найти корабли во владении!");
-
-                //Не найдены приватные корабли, пробуем почистить список в actions.xml
-                var doc = XDocument.Load("data/actions.xml");
-                foreach (var action in doc.Element("actions").Elements("action"))
-                    if (Convert.ToUInt64(action.Value) == member.Id && action.Attribute("type").Value == "ship")
-                        action.Remove();
-                doc.Save("data/actions.xml");
-
-                return;
-            }
-            else
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У пользователя есть корабль во владении! \n" +
-                                       $"Название корабля: {ownedShips.FirstOrDefault().Name}");
-            }
-        }
-
     }
 }
