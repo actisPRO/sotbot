@@ -296,21 +296,16 @@ namespace Bot_NetCore.Commands
         public async Task Rename(CommandContext ctx, [RemainingText] [Description("Новое название")]
             string name)
         {
-            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
             if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля!");
                 return;
             }
 
-            ship.Rename(name);
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-            ShipList.ReadFromXML(Bot.BotSettings.ShipXML); //костыль адовый
-
+            ship.Name = name;
             name = "☠" + name + "☠";
-
             await ctx.Guild.GetChannel(ship.Channel).ModifyAsync(x => x.Name = name);
-
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно переименован корабль!");
         }
 
