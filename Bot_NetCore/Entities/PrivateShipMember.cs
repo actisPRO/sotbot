@@ -157,6 +157,24 @@ namespace Bot_NetCore.Entities
 
             return "Member";
         }
+        
+        /// <summary>
+        ///     Converts PrivateShipMemberRole to it's string analog in Russian.
+        /// </summary>
+        public static string RoleEnumToStringRu(PrivateShipMemberRole role)
+        {
+            switch (role)
+            {
+                case PrivateShipMemberRole.Member:
+                    return "Матрос";
+                case PrivateShipMemberRole.Officer:
+                    return "Офицер";
+                case PrivateShipMemberRole.Captain:
+                    return "Капитан";
+            }
+
+            return "Матрос";
+        }
 
         /// <summary>
         ///     Converts an enum string to PrivateShipMemberRole.

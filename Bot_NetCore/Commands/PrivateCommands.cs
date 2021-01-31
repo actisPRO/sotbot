@@ -14,6 +14,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
 using Microsoft.Extensions.Logging;
+using NotFoundException = DSharpPlus.Exceptions.NotFoundException;
 
 namespace Bot_NetCore.Commands
 {
@@ -103,64 +104,49 @@ namespace Bot_NetCore.Commands
         [Description("Отправляет список членов вашего корабля")]
         public async Task List(CommandContext ctx)
         {
-            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
             if (ship == null)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
                 return;
             }
 
-            List<string> members = new List<string>();
-            var interactivity = ctx.Client.GetInteractivity();
+            var members = ship.GetMembers().OrderByDescending(m => m.Role).ToList();
 
             await ctx.Channel.TriggerTypingAsync();
 
-            foreach (var member in ship.Members.Values)
+            var memberList = new List<string>();
+            foreach (var member in members)
             {
-                var type = "";
-
                 DiscordMember discordMember = null;
                 try
                 {
-                    discordMember = await ctx.Guild.GetMemberAsync(member.Id);
+                    discordMember = await ctx.Guild.GetMemberAsync(member.MemberId);
                 }
-                catch (DSharpPlus.Exceptions.NotFoundException)
+                catch (NotFoundException)
                 {
                     continue;
                 }
 
-                var status = "";
+                var type = PrivateShipMember.RoleEnumToStringRu(member.Role);
 
-                if (!member.Status)
-                    status = "приглашён";
-                else
-                    status = "член экипажа";
-                switch (member.Type)
-                {
-                    case MemberType.Owner:
-                        type = "Капитан";
-                        break;
-                    case MemberType.Member:
-                        type = "Матрос";
-                        break;
-                }
-
-                members.Add($"{type} {discordMember.DisplayName}#{discordMember.Discriminator}. Статус: {status}.");
+                memberList.Add($"{type} {discordMember.DisplayName}#{discordMember.Discriminator}.");
             }
 
-            var members_pagination = Utility.GeneratePagesInEmbeds(members, $"Список членов экипажа вашего корабля.");
+            var interactivity = ctx.Client.GetInteractivity();
+            var membersPagination = Utility.GeneratePagesInEmbeds(memberList, $"Список членов экипажа вашего корабля.");
 
-            if (members_pagination.Count() > 1)
-                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+            if (memberList.Count() > 1)
+                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, membersPagination, timeoutoverride: TimeSpan.FromMinutes(5));
             else
-                await ctx.RespondAsync(embed: members_pagination.First().Embed);
+                await ctx.RespondAsync(embed: membersPagination.First().Embed);
         }
 
         [Command("yes")]
         [Aliases("y")]
         [Description("Принимает приглашение на корабль")]
         public async Task Yes(CommandContext ctx, [Description("Корабль")] [RemainingText]
-            string name)
+                string name)
         {
             var ship = PrivateShip.Get(name);
             if (ship == null)
