@@ -92,7 +92,7 @@ namespace Bot_NetCore.Commands
                     $"Ты был приглашён присоединиться к кораблю **{ship.Name}**. Используй в канале для команд " +
                     $"`!p yes {ship.Name}`, чтобы принять приглашение, или `!p no {ship.Name}`, чтобы отклонить его.");
             }
-            catch
+            catch (UnauthorizedException)
             {
                 
             }
@@ -212,43 +212,42 @@ namespace Bot_NetCore.Commands
         [Description("Выгоняет участника с корабля")]
         public async Task Kick(CommandContext ctx, [Description("Участник")] DiscordMember member)
         {
-            var ship = ShipList.GetOwnedShip(ctx.Member.Id);
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
             if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля.");
                 return;
             }
 
             if (ctx.Member == member)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Нельзя выгнать самого себя!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Нельзя выгнать самого себя.");
                 return;
             }
 
-            if (!ship.Members.ContainsKey(member.Id))
+            var members = ship.GetMembers();
+            var selected = members.Find(m => m.MemberId == member.Id);
+            if (selected == null)
             {
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Этот участник не является членом вашего корабля!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Этого участника нет на корабле.");
                 return;
             }
 
-            if (!ship.Members[member.Id].Status)
+            ship.RemoveMember(selected.MemberId);
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты успешно выгнал участника с корабля.");
+            try
             {
-                ship.RemoveMember(member.Id);
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.OkEmoji} Вы выгнали участника **{member.Username}** с корабля **{ship.Name}**!");
-                return;
+                if (selected.Status)
+                    await member.SendMessageAsync($"Капитан **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
+                                                  $"выгнал тебя с корабля **{ship.Name}**");
+                else
+                    await member.SendMessageAsync($"Капитан **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
+                                                  $"отменил твоё приглашение на корабль **{ship.Name}**");
             }
-
-            ship.RemoveMember(member.Id);
-
-            await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(member);
-
-            ShipList.SaveToXML(Bot.BotSettings.ShipXML);
-
-            await ctx.RespondAsync(
-                $"{Bot.BotSettings.OkEmoji} Вы выгнали участника **{member.Username}** с корабля **{ship.Name}**!");
-            await member.SendMessageAsync($"Капитан **{ctx.Member.Username}** выгнал вас с корабля **{ship.Name}**!");
+            catch (UnauthorizedException)
+            {
+                
+            }
         }
 
         [Command("leave")]
