@@ -189,6 +189,38 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
+        ///     Returns a list of ship where the specified member is at least a participant.
+        /// </summary>
+        public static List<PrivateShip> GetUserShip(ulong memberId)
+        {
+            var result = new List<PrivateShip>();
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = @"SELECT s.*
+                                        FROM
+                                            private_ship s
+                                            JOIN private_ship_members psm on s.ship_name = psm.ship_name
+                                        WHERE psm.member_id = @memberId";
+                    cmd.Parameters.AddWithValue("@memberId", memberId);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        result.Add(new PrivateShip(reader.GetString(0), 
+                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                            reader.GetUInt64(4)));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
         ///     Returns a ship with the specified name or null, if nothing is found.
         /// </summary>
         public static PrivateShip Get(string name)
