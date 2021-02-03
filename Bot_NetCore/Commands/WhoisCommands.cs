@@ -46,6 +46,7 @@ namespace Bot_NetCore.Commands
                     var warnings = WarnSQL.GetForUser(user.Id).Count;
                     var reports = ReportSQL.GetForUser(user.Id);
                     var webUser = WebUser.GetByDiscordId(user.Id);
+                    var voiceTime = VoiceListener.GetUpdatedVoiceTime(member.Id);
 
                     //Создание эмбеда
                     var embed = new DiscordEmbedBuilder();
@@ -85,7 +86,7 @@ namespace Bot_NetCore.Commands
                     {
                         embed.AddFieldOrDefault("Присоединился", member.JoinedAt.ToString("HH:mm:ss \n dd.MM.yyyy"), true);
                     }
-                    embed.AddFieldOrDefault("Время в каналах", VoiceListener.GetUpdatedVoiceTime(member.Id).ToString(), true);
+                    embed.AddFieldOrDefault("Время в каналах", $"{(voiceTime.Days * 24) + voiceTime.Hours}:{voiceTime.Minutes}", true);
 
                     //3 Row - WebUser info
                     if (webUser != null)

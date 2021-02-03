@@ -505,7 +505,7 @@ namespace Bot_NetCore.Listeners
                         var oldEmbed = message.Embeds.FirstOrDefault();
 
                         //Проверка времени
-                        if ((morningTime.Year + morningTime.Day) > (oldEmbed.Timestamp.Value.Year + oldEmbed.Timestamp.Value.Day))
+                        if (morningTime.Date > oldEmbed.Timestamp.Value.Date)
                         {
                             var embed = new DiscordEmbedBuilder(oldEmbed);
 
