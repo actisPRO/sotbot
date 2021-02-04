@@ -134,7 +134,7 @@ namespace Bot_NetCore.Commands
 
                 var type = PrivateShipMember.RoleEnumToStringRu(member.Role);
 
-                memberList.Add($"{type} {discordMember.DisplayName}#{discordMember.Discriminator}.");
+                memberList.Add($"{type} {discordMember.DisplayName}#{discordMember.Discriminator}." + (member.Status ? null : " Приглашён."));
             }
 
             var interactivity = ctx.Client.GetInteractivity();
