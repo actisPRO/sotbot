@@ -366,7 +366,7 @@ namespace Bot_NetCore.Commands
             var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
             if (ship == null)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном корабля");
                 return;
             }
 
@@ -388,7 +388,7 @@ namespace Bot_NetCore.Commands
             shipMember.Role = PrivateShipMemberRole.Officer;
             try
             {
-                await member.SendMessageAsync($":pilot: Ты был назначен офицером на корабле **{ship.Name}**");
+                await member.SendMessageAsync($":arrow_up: Ты был назначен офицером на корабле **{ship.Name}**");
             }
             catch (UnauthorizedException)
             {
@@ -396,6 +396,45 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Участник был успешно назначен офицером");
+        }
+        
+        [Command("demote")]
+        [Description("Назначает пользователя офицером")]
+        public async Task Demote(CommandContext ctx, [Description("Офицер")] DiscordMember member)
+        {
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном корабля");
+                return;
+            }
+
+            // check if the specified member is a ship member
+            var shipMember = ship.GetMember(member.Id);
+            if (shipMember == null || !shipMember.Status)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Этого участника нет на корабле");
+                return;
+            }
+            
+            // check if the specified member is not an officer 
+            if (shipMember.Role != PrivateShipMemberRole.Officer)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Участник не является офицером");
+                return;
+            }
+
+            shipMember.Role = PrivateShipMemberRole.Officer;
+            try
+            {
+                await member.SendMessageAsync($":arrow_down: Ты был снят с должности офицера на корабле **{ship.Name}**");
+            }
+            catch (UnauthorizedException)
+            {
+                
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Участник был снят с должности офицера");
         }
         
         /* Секция для админ-команд */
