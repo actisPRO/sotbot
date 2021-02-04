@@ -93,6 +93,31 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
+        ///     Gets a ship member with the specified ID.
+        /// </summary>
+        public static PrivateShipMember Get(string ship, ulong memberId)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "SELECT * FROM private_ship WHERE ship_name = @ship AND member_id = @member";
+                    cmd.Parameters.AddWithValue("@ship", ship);
+                    cmd.Parameters.AddWithValue("@member", memberId);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    var reader = cmd.ExecuteReader();
+                    if (!reader.Read())
+                        return null;
+                    else
+                        return new PrivateShipMember(ship, reader.GetUInt64(1),
+                            StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active");
+                }
+            }
+        }
+
+        /// <summary>
         ///     Gets members of the specified ship. Use PrivateShip.GetMembers() to avoid errors.
         /// </summary>
         /// <returns>Members of the specified ship</returns>
@@ -112,7 +137,7 @@ namespace Bot_NetCore.Entities
                     while (reader.Read())
                     {
                         result.Add(new PrivateShipMember(ship, reader.GetUInt64(1),
-                            StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active" ? true : false));
+                            StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active"));
                     }
 
                     return result;
