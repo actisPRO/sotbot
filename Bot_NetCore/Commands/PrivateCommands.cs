@@ -72,16 +72,30 @@ namespace Bot_NetCore.Commands
         [Command("invite")]
         [Aliases("i")]
         [Description("Приглашает участника на ваш корабль")]
-        public async Task Invite(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        public async Task Invite(CommandContext ctx, [Description("Участник")] DiscordMember member, [Description("Корабль (необязательно для капитанов)")]
+            [RemainingText] string shipName)
         {
-            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
-            if (ship == null || ship.GetCaptain().Status == false)
+            PrivateShip ship = null;
+            if (string.IsNullOrEmpty(shipName))
             {
-                await ctx.RespondAsync(
-                    $"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля или твой запрос ещё не был подтвержден.");
-                return;
+                ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
+                if (ship == null)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном. Офицеры могут использовать команду " +
+                                           $"`!p invite участник название корабля`");
+                    return;
+                }
             }
-
+            else
+            {
+                ship = PrivateShip.Get(shipName);
+                if (ship == null)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Указанный корабль не был найден!");
+                    return;
+                }
+            }
+            
             if (ship.GetMembers().Any(m => m.MemberId == member.Id))
             {
                 await ctx.RespondAsync(
@@ -114,7 +128,8 @@ namespace Bot_NetCore.Commands
                 ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
                 if (ship == null)
                 {
-                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном");
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном. Офицеры могут использовать команду " +
+                                           $"`!p list название корабля`");
                     return;
                 }
             }
@@ -235,12 +250,34 @@ namespace Bot_NetCore.Commands
 
         [Command("kick")]
         [Description("Выгоняет участника с корабля")]
-        public async Task Kick(CommandContext ctx, [Description("Участник")] DiscordMember member)
+        public async Task Kick(CommandContext ctx, [Description("Участник")] DiscordMember member, [RemainingText] [Description("Название корабля (необязательно для капитанов)")] string shipName)
         {
-            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
-            if (ship == null)
+            PrivateShip ship = null;
+            if (string.IsNullOrEmpty(shipName))
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля.");
+                ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
+                if (ship == null)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном. Офицеры могут использовать команду " +
+                                           $"`!p kick участник название корабля`");
+                    return;
+                }
+            }
+            else
+            {
+                ship = PrivateShip.Get(shipName);
+                if (ship == null)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Указанный корабль не был найден!");
+                    return;
+                }
+            }
+
+            var requesterMember = ship.GetMember(ctx.Member.Id);
+            if (requesterMember == null ||
+                (requesterMember.Role != PrivateShipMemberRole.Officer && requesterMember.Role != PrivateShipMemberRole.Captain))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься офицером или капитаном на данном корабле");
                 return;
             }
 
@@ -262,14 +299,15 @@ namespace Bot_NetCore.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты успешно выгнал участника с корабля.");
             try
             {
+                string title = requesterMember.Role == PrivateShipMemberRole.Captain ? "Капитан" : "Офицер";
                 if (selected.Status)
                 {
                     await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(member);
-                    await member.SendMessageAsync($"Капитан **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
+                    await member.SendMessageAsync($"{title} **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
                                                   $"выгнал тебя с корабля **{ship.Name}**");
                 }
                 else
-                    await member.SendMessageAsync($"Капитан **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
+                    await member.SendMessageAsync($"{title} **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
                                                   $"отменил твоё приглашение на корабль **{ship.Name}**");
             }
             catch (UnauthorizedException)
