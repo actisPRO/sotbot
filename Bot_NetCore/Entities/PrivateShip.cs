@@ -352,6 +352,14 @@ namespace Bot_NetCore.Entities
         }
 
         /// <summary>
+        ///     Returns a member with the specified ID or null.
+        /// </summary>
+        public PrivateShipMember GetMember(ulong memberId)
+        {
+            return PrivateShipMember.Get(_name, memberId);
+        }
+
+        /// <summary>
         ///     Adds a new member to a private ship and saves him to the database.
         /// </summary>
         /// <param name="id">ID of a member</param>
