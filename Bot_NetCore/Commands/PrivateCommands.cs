@@ -106,12 +106,33 @@ namespace Bot_NetCore.Commands
 
         [Command("list")]
         [Description("Отправляет список членов вашего корабля")]
-        public async Task List(CommandContext ctx)
+        public async Task List(CommandContext ctx, [Description("Название корабля (необязательно для капитанов)")][RemainingText] string shipName = null)
         {
-            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
-            if (ship == null)
+            PrivateShip ship = null;
+            if (string.IsNullOrEmpty(shipName))
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь владельцем корабля!");
+                ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
+                if (ship == null)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься капитаном");
+                    return;
+                }
+            }
+            else
+            {
+                ship = PrivateShip.Get(shipName);
+                if (ship == null)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Указанный корабль не был найден!");
+                    return;
+                }
+            }
+
+            var requesterMember = ship.GetMember(ctx.Member.Id);
+            if (requesterMember == null ||
+                (requesterMember.Role != PrivateShipMemberRole.Officer && requesterMember.Role != PrivateShipMemberRole.Captain))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься офицером или капитаном на данном корабле");
                 return;
             }
 
