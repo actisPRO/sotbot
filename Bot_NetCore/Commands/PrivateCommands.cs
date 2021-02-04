@@ -107,7 +107,7 @@ namespace Bot_NetCore.Commands
             try
             {
                 await member.SendMessageAsync(
-                    $"Ты был приглашён присоединиться к кораблю **{ship.Name}**. Используй в канале для команд " +
+                    $":envelope: Ты был приглашён присоединиться к кораблю **{ship.Name}**. Используй в канале для команд " +
                     $"`!p yes {ship.Name}`, чтобы принять приглашение, или `!p no {ship.Name}`, чтобы отклонить его.");
             }
             catch (UnauthorizedException)
@@ -303,11 +303,11 @@ namespace Bot_NetCore.Commands
                 if (selected.Status)
                 {
                     await ctx.Guild.GetChannel(ship.Channel).AddOverwriteAsync(member);
-                    await member.SendMessageAsync($"{title} **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
+                    await member.SendMessageAsync($":right_facing_fist: {title} **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
                                                   $"выгнал тебя с корабля **{ship.Name}**");
                 }
                 else
-                    await member.SendMessageAsync($"{title} **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
+                    await member.SendMessageAsync($":right_facing_fist: {title} **{ctx.Member.DisplayName}#{ctx.Member.Discriminator}** " +
                                                   $"отменил твоё приглашение на корабль **{ship.Name}**");
             }
             catch (UnauthorizedException)
@@ -409,7 +409,7 @@ namespace Bot_NetCore.Commands
             await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Ты успешно передал должность капитана");
             try
             {
-                await member.SendMessageAsync($"Ты был назначен капитаном корабля **{ship.Name}**");
+                await member.SendMessageAsync($":crown: Ты был назначен капитаном корабля **{ship.Name}**");
                 return;
             }
             catch (UnauthorizedException)
