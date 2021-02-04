@@ -424,7 +424,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            shipMember.Role = PrivateShipMemberRole.Officer;
+            shipMember.Role = PrivateShipMemberRole.Member;
             try
             {
                 await member.SendMessageAsync($":arrow_down: Ты был снят с должности офицера на корабле **{ship.Name}**");
