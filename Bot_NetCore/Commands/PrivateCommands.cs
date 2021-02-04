@@ -359,6 +359,45 @@ namespace Bot_NetCore.Commands
             }
         }
 
+        [Command("promote")]
+        [Description("Назначает пользователя офицером")]
+        public async Task Promote(CommandContext ctx, [Description("Новый офицер")] DiscordMember member)
+        {
+            var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
+            if (ship == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься владельцем корабля");
+                return;
+            }
+
+            // check if the specified member is a ship member
+            var shipMember = ship.GetMember(member.Id);
+            if (shipMember == null || !shipMember.Status)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Нельзя назначить офицером пользователя, которого нет на корабле");
+                return;
+            }
+            
+            // check if the specified member is not an officer already
+            if (shipMember.Role == PrivateShipMemberRole.Officer)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Пользователь уже является офицером");
+                return;
+            }
+
+            shipMember.Role = PrivateShipMemberRole.Officer;
+            try
+            {
+                await member.SendMessageAsync($":pilot: Ты был назначен офицером на корабле **{ship.Name}**");
+            }
+            catch (UnauthorizedException)
+            {
+                
+            }
+
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Участник был успешно назначен офицером");
+        }
+        
         /* Секция для админ-команд */
 
         [Command("fdelete")]
