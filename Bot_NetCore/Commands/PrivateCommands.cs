@@ -96,6 +96,14 @@ namespace Bot_NetCore.Commands
                 }
             }
             
+            var requesterMember = ship.GetMember(ctx.Member.Id);
+            if (requesterMember == null ||
+                (requesterMember.Role != PrivateShipMemberRole.Officer && requesterMember.Role != PrivateShipMemberRole.Captain))
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ты не являешься офицером или капитаном на данном корабле");
+                return;
+            }
+            
             if (ship.GetMembers().Any(m => m.MemberId == member.Id))
             {
                 await ctx.RespondAsync(
