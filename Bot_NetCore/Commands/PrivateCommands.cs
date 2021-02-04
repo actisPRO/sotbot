@@ -32,6 +32,14 @@ namespace Bot_NetCore.Commands
             }
 
             var requestTime = DateTime.Now;
+
+            // check if the ship name is not set
+            if (string.IsNullOrEmpty(name))
+            {
+                await ctx.RespondAsync(
+                    $"{Bot.BotSettings.ErrorEmoji} Ты не указал имя корабля: `!p new название корабля`");
+                return;
+            }
             
             // check if there is a ship with the same name
             if (PrivateShip.Get(name) != null)
