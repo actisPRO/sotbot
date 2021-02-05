@@ -3,7 +3,7 @@ using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
 {
-    public class RulesTest
+    public static class RulesTest
     {
         /// <summary>
         ///     Check if user with the specified ID must be tested for rules knowledge. 
@@ -22,6 +22,25 @@ namespace Bot_NetCore.Entities
                     var reader = cmd.ExecuteReader();
                     if (reader.Read()) return true;
                     else return false;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Adds user with the specified ID to the testing list.
+        /// </summary>
+        public static void AddUserToTesting(ulong memberId)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using (var cmd = new MySqlCommand())
+                {
+                    cmd.CommandText = "DELETE FROM rules_test_users WHERE member_id = @member";
+                    cmd.Parameters.AddWithValue("@member", memberId);
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
