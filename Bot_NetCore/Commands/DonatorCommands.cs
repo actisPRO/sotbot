@@ -150,7 +150,7 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен баланс: **{donator.Balance}**!"); //Уже существующий донатер
         }
 
-        //[Command("addsub")]
+        /*//[Command("addsub")]
         //[RequirePermissions(Permissions.Administrator)]
         //public async Task AddSubscriber(CommandContext ctx, DiscordMember member, string time)
         //{
@@ -238,7 +238,7 @@ namespace Bot_NetCore.Commands
 
         //    Donator.Save(Bot.BotSettings.DonatorXML);
         //    await member.SendMessageAsync(message);
-        //}
+        //}*/
 
         [Command("remove")]
         [Aliases("rm")]
@@ -594,7 +594,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            if (donator.GetFriends().Count == 5)
+            if (donator.GetFriends().Count >= donator.Balance / 100)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
                 return;
@@ -660,9 +660,7 @@ namespace Bot_NetCore.Commands
         public async Task Unfriend(CommandContext ctx, DiscordMember member)
         {
             var donator = DonatorSQL.GetById(ctx.Member.Id);
-            donator.GetFriends();
             var friendDonator = DonatorSQL.GetById(member.Id);
-            donator.GetFriends();
 
             if (friendDonator != null && friendDonator.PrivateRole != 0)
             {
@@ -736,7 +734,8 @@ namespace Bot_NetCore.Commands
 
             var i = 0;
             var friendsMsg = "";
-            foreach (var friend in donator.GetFriends())
+            var friends = donator.GetFriends();
+            foreach (var friend in friends)
             {
                 DiscordUser discordMember = null;
                 try
@@ -750,7 +749,7 @@ namespace Bot_NetCore.Commands
                 i++;
                 friendsMsg += $"**{i}**. {discordMember.Username}#{discordMember.Discriminator} \n";
             }
-            await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
+            await ctx.RespondAsync($"**Друзья с твой ролью ({friends.Count}/{donator.Balance / 100})**\n\n" +
                                    $"{friendsMsg}");
 
             //if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))

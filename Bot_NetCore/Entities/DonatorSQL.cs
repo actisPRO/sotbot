@@ -130,7 +130,7 @@ namespace Bot_NetCore.Entities
             cmd.Connection.Open();
 
             var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            if (reader.Read())
             {
                 return new DonatorSQL(
                     reader.GetUInt64("user_id"),
