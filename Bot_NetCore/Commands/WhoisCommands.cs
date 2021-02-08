@@ -46,7 +46,7 @@ namespace Bot_NetCore.Commands
                     var warnings = WarnSQL.GetForUser(user.Id).Count;
                     var reports = ReportSQL.GetForUser(user.Id);
                     var webUser = WebUser.GetByDiscordId(user.Id);
-                    var voiceTime = VoiceListener.GetUpdatedVoiceTime(member.Id);
+                    var voiceTime = VoiceListener.GetUpdatedVoiceTime(user.Id);
 
                     //Создание эмбеда
                     var embed = new DiscordEmbedBuilder();
