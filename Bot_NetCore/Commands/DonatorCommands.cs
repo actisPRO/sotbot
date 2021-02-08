@@ -749,7 +749,7 @@ namespace Bot_NetCore.Commands
                 i++;
                 friendsMsg += $"**{i}**. {discordMember.Username}#{discordMember.Discriminator} \n";
             }
-            await ctx.RespondAsync($"**Друзья с твой ролью ({friends.Count}/{donator.Balance / 100})**\n\n" +
+            await ctx.RespondAsync($"**Друзья с твоей ролью ({friends.Count}/{donator.Balance / 100})**\n\n" +
                                    $"{friendsMsg}");
 
             //if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
