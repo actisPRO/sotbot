@@ -341,5 +341,27 @@ namespace Bot_NetCore.Commands
 
             Bot.EditSettings("FleetVotingMessage", msg.Id.ToString());
         }
+
+        [Command("sudo")]
+        [Description("Выполняет команду за пользователя.")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Sudo(CommandContext ctx, [Description("Пользователь")] DiscordMember member, [RemainingText, Description("Команда для выполнения")] string command)
+        {
+            //Взято с примеров команд 
+
+            await ctx.TriggerTypingAsync();
+
+            // get the command service, we need this for sudo purposes
+            var cmds = ctx.CommandsNext;
+
+            // retrieve the command and its arguments from the given string
+            var cmd = cmds.FindCommand(command, out var customArgs);
+
+            // create a fake CommandContext
+            var fakeContext = cmds.CreateFakeContext(member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
+
+            // and perform the sudo
+            await cmds.ExecuteCommandAsync(fakeContext);
+        }
     }
 }
