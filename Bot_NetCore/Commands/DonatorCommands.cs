@@ -96,7 +96,8 @@ namespace Bot_NetCore.Commands
                     ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Deleting donator role {donator.PrivateRole}");
                     await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
                 }
-                catch (Exceptions.NotFoundException) { }
+                catch (NotFoundException) { }
+                catch (NullReferenceException) { }
 
                 donator.PrivateRole = 0;
             }
@@ -117,6 +118,7 @@ namespace Bot_NetCore.Commands
 
                 if (donator.PrivateRole == 0)
                 {
+                    //TODO: Restore this, after major 
                     //ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Creating new donator role");
                     //var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
                     //await member.GrantRoleAsync(role);
@@ -300,16 +302,27 @@ namespace Bot_NetCore.Commands
                 {
                     if (role.Name.ToLower() == color.ToLower())
                     {
+                        var isSameRole = false;
                         foreach (var memberRole in ctx.Member.Roles)
                             if (avaliableRoles.Contains(memberRole))
                             {
+                                if (role.Id == memberRole.Id)
+                                    isSameRole = true;
+
                                 await ctx.Member.RevokeRoleAsync(memberRole);
                                 break;
                             }
 
-                        await ctx.Member.GrantRoleAsync(role);
-                        await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
-                        await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                        if (!isSameRole)
+                        {
+                            await ctx.Member.GrantRoleAsync(role);
+                            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
+                            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                        }
+                        else
+                        {
+                            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён цвет!");
+                        }
                         return;
                     }
                 }
@@ -1048,7 +1061,7 @@ namespace Bot_NetCore.Commands
             File.WriteAllLines($"errored_{filePath}", errored);
         }
 
-            private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
+        private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
         {
             if (!File.Exists("generated/color_roles.txt"))
                 return null;
