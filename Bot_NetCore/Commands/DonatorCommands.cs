@@ -434,7 +434,8 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.RespondWithFileAsync("generated/colors.jpeg",
-                "Используйте `!d color название цвета`, чтобы получить цвет.");
+                "Используйте `!d color название цвета`, чтобы получить цвет.\n" +
+                "Для удаления цвета, повторно введите `!d color название цвета`.");
         }
 
         [Command("generatecolors")]
