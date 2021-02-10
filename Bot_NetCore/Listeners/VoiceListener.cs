@@ -325,8 +325,11 @@ namespace Bot_NetCore.Listeners
                                             .Where(x => x.Users.Count() > 0)
                                             .Count() == 0;
 
+                    //Проверка если каналы рейдов были недавно созданы (5 минут и более)
+                    var isNotNew = DateTime.Now - leftChannel.Parent.CreationTimestamp > TimeSpan.FromMinutes(5);
+
                     //Удаляем каналы и категорию
-                    if (fleetIsEmpty)
+                    if (fleetIsEmpty && isNotNew)
                     {
                         await FleetLogging.LogFleetDeletionAsync(client, e.Guild, leftChannel.Parent);
 
