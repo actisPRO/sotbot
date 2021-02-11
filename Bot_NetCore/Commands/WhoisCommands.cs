@@ -289,7 +289,6 @@ namespace Bot_NetCore.Commands
                 return null;
             }
 
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0071:Simplify interpolation", Justification = "<Pending>")]
             private static string GetSubscriptionInfo(ulong userId)
             {
                 //Подписка
