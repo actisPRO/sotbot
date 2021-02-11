@@ -47,35 +47,35 @@ namespace Bot_NetCore.Entities
         {
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
-                using (var cmd = new MySqlCommand())
+                using var cmd = new MySqlCommand();
+                cmd.CommandText = "SELECT * FROM users WHERE userid = @discordId;";
+
+                cmd.Parameters.AddWithValue("@discordId", discordId);
+
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                var reader = cmd.ExecuteReader();
+                if (reader.Read())
                 {
-                    cmd.CommandText = "SELECT * FROM users WHERE userid = @discordId;";
-                    cmd.Parameters.AddWithValue("@discordId", discordId);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+                    var userid = reader.GetUInt64("userid");
+                    var registeredOn = reader.GetDateTime("registered_on");
+                    var lastLogin = reader.GetDateTime("last_login");
+                    var username = reader.GetString("username");
+                    var avatarUrl = reader.GetString("avatarurl");
+                    var xbox = reader.GetString("xbox");
+                    var lastIp = reader.GetString("ip");
+                    var accessToken = reader.GetString("access_token");
+                    var refreshToken = reader.GetString("refresh_token");
+                    var accessTokenExpiration = reader.GetDateTime("access_token_expiration");
 
-                    var reader = cmd.ExecuteReader();
-                    if (reader.Read())
-                    {
-                        var userid = reader.GetUInt64("userid");
-                        var registeredOn = reader.GetDateTime("registered_on");
-                        var lastLogin = reader.GetDateTime("last_login");
-                        var username = reader.GetString("username");
-                        var avatarUrl = reader.GetString("avatarurl");
-                        var xbox = reader.GetString("xbox");
-                        var lastIp = reader.GetString("ip");
-                        var accessToken = reader.GetString("access_token");
-                        var refreshToken = reader.GetString("refresh_token");
-                        var accessTokenExpiration = reader.GetDateTime("access_token_expiration");
+                    var ips = GetIpsByUid(discordId);
+                    if (!ips.Contains(lastIp)) ips.Add(lastIp);
+                    var xboxes = GetXboxesByUid(discordId);
+                    if (!xboxes.Contains(xbox)) xboxes.Add(xbox);
 
-                        var ips = GetIpsByUid(discordId);
-                        if (!ips.Contains(lastIp)) ips.Add(lastIp);
-                        var xboxes = GetXboxesByUid(discordId);
-                        if (!xboxes.Contains(xbox)) xboxes.Add(xbox);
-                        
-                        return new WebUser(userid, registeredOn, lastLogin, username, avatarUrl, xbox, lastIp, 
-                            accessToken, refreshToken, accessTokenExpiration, ips, xboxes);
-                    }
+                    return new WebUser(userid, registeredOn, lastLogin, username, avatarUrl, xbox, lastIp,
+                        accessToken, refreshToken, accessTokenExpiration, ips, xboxes);
                 }
             }
 
@@ -88,32 +88,30 @@ namespace Bot_NetCore.Entities
             
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
-                using (var cmd = new MySqlCommand())
+                using var cmd = new MySqlCommand();
+                cmd.CommandText = "SELECT * FROM users;";
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
                 {
-                    cmd.CommandText = "SELECT * FROM users;";
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+                    var userid = reader.GetUInt64("userid");
+                    var registeredOn = reader.GetDateTime("registered_on");
+                    var lastLogin = reader.GetDateTime("last_login");
+                    var username = reader.GetString("username");
+                    var avatarUrl = reader.GetString("avatarurl");
+                    var xbox = reader.GetString("xbox");
+                    var lastIp = reader.GetString("ip");
+                    var accessToken = reader.GetString("access_token");
+                    var refreshToken = reader.GetString("refresh_token");
+                    var accessTokenExpiration = reader.GetDateTime("access_token_expiration");
 
-                    var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        var userid = reader.GetUInt64("userid");
-                        var registeredOn = reader.GetDateTime("registered_on");
-                        var lastLogin = reader.GetDateTime("last_login");
-                        var username = reader.GetString("username");
-                        var avatarUrl = reader.GetString("avatarurl");
-                        var xbox = reader.GetString("xbox");
-                        var lastIp = reader.GetString("ip");
-                        var accessToken = reader.GetString("access_token");
-                        var refreshToken = reader.GetString("refresh_token");
-                        var accessTokenExpiration = reader.GetDateTime("access_token_expiration");
+                    var ips = GetIpsByUid(userid);
+                    var xboxes = GetXboxesByUid(userid);
 
-                        var ips = GetIpsByUid(userid);
-                        var xboxes = GetXboxesByUid(userid);
-                        
-                        result.Add(new WebUser(userid, registeredOn, lastLogin, username, avatarUrl, xbox, lastIp, 
-                            accessToken, refreshToken, accessTokenExpiration, ips, xboxes));
-                    }
+                    result.Add(new WebUser(userid, registeredOn, lastLogin, username, avatarUrl, xbox, lastIp,
+                        accessToken, refreshToken, accessTokenExpiration, ips, xboxes));
                 }
             }
 
@@ -122,98 +120,90 @@ namespace Bot_NetCore.Entities
 
         public static List<string> GetIpsByUid(ulong userid)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT ip FROM ips WHERE userid = @userid";
+
+            cmd.Parameters.AddWithValue("@userid", userid);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            var ips = new List<string>();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT ip FROM ips WHERE userid = @userid";
-                    cmd.Parameters.AddWithValue("@userid", userid);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-                    var ips = new List<string>();
-                    while (reader.Read())
-                    {
-                        ips.Add(reader.GetString("ip"));
-                    }
-
-                    return ips;
-                }
+                ips.Add(reader.GetString("ip"));
             }
+
+            return ips;
         }
 
         public static List<WebUser> GetUsersByIp(string ip)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT userid FROM ips WHERE ip = @ip";
+
+            cmd.Parameters.AddWithValue("@ip", ip);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            var result = new List<WebUser>();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT userid FROM ips WHERE ip = @ip";
-                    cmd.Parameters.AddWithValue("@ip", ip);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-                    var result = new List<WebUser>();
-                    while (reader.Read())
-                    {
-                        var userid = reader.GetUInt64("userid");
-                        var user = WebUser.GetByDiscordId(userid);
-                        result.Add(user);
-                    }
-
-                    return result;
-                }
+                var userid = reader.GetUInt64("userid");
+                var user = WebUser.GetByDiscordId(userid);
+                result.Add(user);
             }
+
+            return result;
         }
         
         public static List<WebUser> GetUsersByXbox(string xbox)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT userid FROM xboxes WHERE xbox = @xbox";
+
+            cmd.Parameters.AddWithValue("@xbox", xbox);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            var result = new List<WebUser>();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT userid FROM xboxes WHERE xbox = @xbox";
-                    cmd.Parameters.AddWithValue("@xbox", xbox);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-                    var result = new List<WebUser>();
-                    while (reader.Read())
-                    {
-                        var userid = reader.GetUInt64("userid");
-                        var user = WebUser.GetByDiscordId(userid);
-                        result.Add(user);
-                    }
-
-                    return result;
-                }
+                var userid = reader.GetUInt64("userid");
+                var user = WebUser.GetByDiscordId(userid);
+                result.Add(user);
             }
+
+            return result;
         }
 
         public static List<string> GetXboxesByUid(ulong userid)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT xbox FROM xboxes WHERE userid = @userid";
+
+            cmd.Parameters.AddWithValue("@userid", userid);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            var xboxes = new List<string>();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT xbox FROM xboxes WHERE userid = @userid";
-                    cmd.Parameters.AddWithValue("@userid", userid);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-                    var xboxes = new List<string>();
-                    while (reader.Read())
-                    {
-                        xboxes.Add(reader.GetString("xbox"));
-                    }
-
-                    return xboxes;
-                }
+                xboxes.Add(reader.GetString("xbox"));
             }
+
+            return xboxes;
         }
 
         public ulong UserId => _userId;
