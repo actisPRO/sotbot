@@ -19,17 +19,17 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = $"UPDATE private_ship_members SET member_type = @value WHERE ship_name = @ship AND member_id = @member;";
-                        cmd.Parameters.AddWithValue("@ship", Ship);
-                        cmd.Parameters.AddWithValue("@member", MemberId);
-                        cmd.Parameters.AddWithValue("@value", RoleEnumToString(value));
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = $"UPDATE private_ship_members SET member_type = @value WHERE ship_name = @ship AND member_id = @member;";
+
+                    cmd.Parameters.AddWithValue("@ship", Ship);
+                    cmd.Parameters.AddWithValue("@member", MemberId);
+                    cmd.Parameters.AddWithValue("@value", RoleEnumToString(value));
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _role = value;
             }
@@ -42,17 +42,17 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = "UPDATE private_ship_members SET member_status = @value WHERE ship_name = @ship AND member_id = @member;";
-                        cmd.Parameters.AddWithValue("@ship", Ship);
-                        cmd.Parameters.AddWithValue("@member", MemberId);
-                        cmd.Parameters.AddWithValue("@value", value ? "Active" : "Invited");
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = "UPDATE private_ship_members SET member_status = @value WHERE ship_name = @ship AND member_id = @member;";
+
+                    cmd.Parameters.AddWithValue("@ship", Ship);
+                    cmd.Parameters.AddWithValue("@member", MemberId);
+                    cmd.Parameters.AddWithValue("@value", value ? "Active" : "Invited");
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _status = value;
             }
@@ -71,25 +71,22 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static PrivateShipMember Create(string ship, ulong memberId, PrivateShipMemberRole role, bool status)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "INSERT INTO private_ship_members(ship_name, member_id, member_type, " +
-                                      "member_status) VALUES (@ship_name, @member_id, @member_type, @member_status)";
-                    cmd.Parameters.AddWithValue("@ship_name", ship);
-                    cmd.Parameters.AddWithValue("@member_id", memberId);
-                    cmd.Parameters.AddWithValue("@member_type", RoleEnumToString(role));
-                    cmd.Parameters.AddWithValue("@member_status", status ? "Active" : "Invited");
-                    
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-                    
-                    cmd.ExecuteNonQuery();
-                    
-                    return new PrivateShipMember(ship, memberId, role, status);
-                }
-            }
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "INSERT INTO private_ship_members(ship_name, member_id, member_type, " +
+                              "member_status) VALUES (@ship_name, @member_id, @member_type, @member_status)";
+
+            cmd.Parameters.AddWithValue("@ship_name", ship);
+            cmd.Parameters.AddWithValue("@member_id", memberId);
+            cmd.Parameters.AddWithValue("@member_type", RoleEnumToString(role));
+            cmd.Parameters.AddWithValue("@member_status", status ? "Active" : "Invited");
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            return new PrivateShipMember(ship, memberId, role, status);
         }
 
         /// <summary>
@@ -97,24 +94,22 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static PrivateShipMember Get(string ship, ulong memberId)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT * FROM private_ship_members WHERE ship_name = @ship AND member_id = @member;";
-                    cmd.Parameters.AddWithValue("@ship", ship);
-                    cmd.Parameters.AddWithValue("@member", memberId);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM private_ship_members WHERE ship_name = @ship AND member_id = @member;";
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                        return null;
-                    else
-                        return new PrivateShipMember(ship, reader.GetUInt64(1),
-                            StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active");
-                }
-            }
+            cmd.Parameters.AddWithValue("@ship", ship);
+            cmd.Parameters.AddWithValue("@member", memberId);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+            else
+                return new PrivateShipMember(ship, reader.GetUInt64(1),
+                    StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active");
         }
 
         /// <summary>
@@ -124,25 +119,23 @@ namespace Bot_NetCore.Entities
         public static List<PrivateShipMember> GetShipMembers(string ship)
         {
             var result = new List<PrivateShipMember>();
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM private_ship_members WHERE ship_name = @ship";
+
+            cmd.Parameters.AddWithValue("@ship", ship);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT * FROM private_ship_members WHERE ship_name = @ship";
-                    cmd.Parameters.AddWithValue("@ship", ship);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        result.Add(new PrivateShipMember(ship, reader.GetUInt64(1),
-                            StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active"));
-                    }
-
-                    return result;
-                }
+                result.Add(new PrivateShipMember(ship, reader.GetUInt64(1),
+                    StringEnumToRoleEnum(reader.GetString(2)), reader.GetString(3) == "Active"));
             }
+
+            return result;
         }
 
         /// <summary>
@@ -150,19 +143,17 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static void Delete(string ship, ulong member)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = $"DELETE FROM private_ship_members WHERE ship_name = @ship AND member_id = @member";
-                    cmd.Parameters.AddWithValue("@ship", ship);
-                    cmd.Parameters.AddWithValue("@member", member);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-                    
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "DELETE FROM private_ship_members WHERE ship_name = @ship AND member_id = @member";
+
+            cmd.Parameters.AddWithValue("@ship", ship);
+            cmd.Parameters.AddWithValue("@member", member);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
         }
 
         /// <summary>

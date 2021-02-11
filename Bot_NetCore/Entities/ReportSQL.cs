@@ -21,20 +21,20 @@ namespace Bot_NetCore.Entities
             get => _user;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE reports SET userid = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE reports SET userid = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _user = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _user = value;
             }
         }
 
@@ -43,20 +43,20 @@ namespace Bot_NetCore.Entities
             get => _moderator;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE reports SET moderator = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE reports SET moderator = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _moderator = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _moderator = value;
             }
         }
 
@@ -65,20 +65,20 @@ namespace Bot_NetCore.Entities
             get => _reason;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE reports SET reason = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE reports SET reason = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _reason = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _reason = value;
             }
         }
 
@@ -87,20 +87,20 @@ namespace Bot_NetCore.Entities
             get => _reportStart;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE reports SET report_start = '{value:yyyy-MM-dd HH:mm:ss}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE reports SET report_start = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _reportStart = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _reportStart = value;
             }
         }
 
@@ -109,20 +109,20 @@ namespace Bot_NetCore.Entities
             get => _reportEnd;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE reports SET report_end = '{value:yyyy-MM-dd HH:mm:ss}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE reports SET report_end = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _reportEnd = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _reportEnd = value;
             }
         }
 
@@ -137,29 +137,29 @@ namespace Bot_NetCore.Entities
             get => _reportType;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var type = value switch
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var type = value switch
-                        {
-                            ReportType.Mute => "mute",
-                            ReportType.VoiceMute => "voicemute",
-                            ReportType.FleetPurge => "fleetpurge",
-                            ReportType.CodexPurge => "codexpurge",
-                            _ => ""
-                        };
-                        
-                        var statement = $"UPDATE reports SET report_type = '{type}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                    ReportType.Mute => "mute",
+                    ReportType.VoiceMute => "voicemute",
+                    ReportType.FleetPurge => "fleetpurge",
+                    ReportType.CodexPurge => "codexpurge",
+                    _ => ""
+                };
 
-                        cmd.ExecuteNonQuery();
+                var statement = "UPDATE reports SET report_type = @type WHERE id = @id";
 
-                        _reportType = value;
-                    }
-                }
+                cmd.Parameters.AddWithValue("@type", type);
+                cmd.Parameters.AddWithValue("@id", Id);
+
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _reportType = value;
             }
         }
 
@@ -179,183 +179,183 @@ namespace Bot_NetCore.Entities
         public static ReportSQL Create(string id, ulong user, ulong moderator, string reason, DateTime reportStart,
             DateTime reportEnd, ReportType reportType)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var type = reportType switch
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    var type = reportType switch
-                    {
-                        ReportType.Mute => "mute",
-                        ReportType.VoiceMute => "voicemute",
-                        ReportType.FleetPurge => "fleetpurge",
-                        ReportType.CodexPurge => "codexpurge",
-                        _ => ""
-                    };
-                    var statement =
-                        $"INSERT INTO reports(id, userid, moderator, reason, report_start, report_end, report_type) VALUES ('{id}', '{user}', '{moderator}', '{reason}', " +
-                        $"'{reportStart:yyyy-MM-dd HH:mm:ss}', '{reportEnd:yyyy-MM-dd HH:mm:ss}', '{type}');";
-                    
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+                ReportType.Mute => "mute",
+                ReportType.VoiceMute => "voicemute",
+                ReportType.FleetPurge => "fleetpurge",
+                ReportType.CodexPurge => "codexpurge",
+                _ => ""
+            };
+            var statement =
+                "INSERT INTO reports(id, userid, moderator, reason, report_start, report_end, report_type) VALUES (@id, @user, @moderator, @reason, " +
+                "@reportStart, @reportEnd, @type);";
 
-                    cmd.ExecuteNonQuery();
-                    
-                    return new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType);
-                }
-            }
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@user", user);
+            cmd.Parameters.AddWithValue("@moderator", moderator);
+            cmd.Parameters.AddWithValue("@reason", reason);
+            cmd.Parameters.AddWithValue("@reportStart", reportStart.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@reportEnd", reportEnd.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@type", type);
+
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            return new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType);
         }
 
         public static void Delete(string id)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                   
-                    var statement = $"DELETE FROM reports WHERE id = '{id}'";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var statement = "DELETE FROM reports WHERE id = @id";
 
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            cmd.Parameters.AddWithValue("@id", id);
+
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
         }
 
         public static ReportSQL Get(string id)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = $"SELECT * FROM reports WHERE id='{id}';";
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM reports WHERE id=@id;";
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        var user = reader.GetUInt64("userid");
-                        var moderator = reader.GetUInt64("moderator");
-                        var reason = reader.GetString("reason");
-                        var reportStart = reader.GetDateTime("report_start");
-                        var reportEnd = reader.GetDateTime("report_end");
-                        var type = reader.GetString("report_type");
-                        var reportType = type switch
-                        {
-                            "mute" => ReportType.Mute,
-                            "voicemute" => ReportType.VoiceMute,
-                            "fleetpurge" => ReportType.FleetPurge,
-                            "codexpurge" => ReportType.CodexPurge,
-                            _ => throw new Exception("Unable to get ReportType")
-                        };
-                        
-                        return new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType);
-                    }
-                }
+            cmd.Parameters.AddWithValue("@id", id);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+            {
+                return null;
+            }
+            else
+            {
+                var user = reader.GetUInt64("userid");
+                var moderator = reader.GetUInt64("moderator");
+                var reason = reader.GetString("reason");
+                var reportStart = reader.GetDateTime("report_start");
+                var reportEnd = reader.GetDateTime("report_end");
+                var type = reader.GetString("report_type");
+                var reportType = type switch
+                {
+                    "mute" => ReportType.Mute,
+                    "voicemute" => ReportType.VoiceMute,
+                    "fleetpurge" => ReportType.FleetPurge,
+                    "codexpurge" => ReportType.CodexPurge,
+                    _ => throw new Exception("Unable to get ReportType")
+                };
+
+                return new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType);
             }
         }
 
         public static List<ReportSQL> GetForUser(ulong userid, ReportType filter = ReportType.All)
         {
             var reports = new List<ReportSQL>();
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            if (filter == ReportType.All)
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    if (filter == ReportType.All)
-                    {
-                        cmd.CommandText = $"SELECT * FROM reports WHERE userid='{userid}';";
-                    }
-                    else
-                    {
-                        var filterStr = filter switch
-                        {
-                            ReportType.Mute => "mute",
-                            ReportType.CodexPurge => "codexpurge",
-                            ReportType.FleetPurge => "fleetpurge",
-                            ReportType.VoiceMute => "voicemute",
-                            _ => throw new Exception("That exception won't be thrown. Well, I hope so.")
-                        };
-                        cmd.CommandText = $"SELECT * FROM reports WHERE userid='{userid}' AND report_type='{filterStr}';";
-                    }
-                    
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+                cmd.CommandText = "SELECT * FROM reports WHERE userid = @userid;";
 
-                    var reader = cmd.ExecuteReader(); 
-                    while (reader.Read())
-                    {
-                        var id = reader.GetString("id");
-                        var user = reader.GetUInt64("userid");
-                        var moderator = reader.GetUInt64("moderator");
-                        var reason = reader.GetString("reason");
-                        var reportStart = reader.GetDateTime("report_start");
-                        var reportEnd = reader.GetDateTime("report_end");
-                        var type = reader.GetString("report_type");
-                        var reportType = type switch
-                        {
-                            "mute" => ReportType.Mute,
-                            "voicemute" => ReportType.VoiceMute,
-                            "fleetpurge" => ReportType.FleetPurge,
-                            "codexpurge" => ReportType.CodexPurge,
-                            _ => throw new Exception("Unable to get ReportType")
-                        };
-                        
-                        reports.Add(new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType));
-                    }
-
-                    return reports;
-                }
+                cmd.Parameters.AddWithValue("@userid", userid);
             }
+            else
+            {
+                var filterStr = filter switch
+                {
+                    ReportType.Mute => "mute",
+                    ReportType.CodexPurge => "codexpurge",
+                    ReportType.FleetPurge => "fleetpurge",
+                    ReportType.VoiceMute => "voicemute",
+                    _ => throw new Exception("That exception won't be thrown. Well, I hope so.")
+                };
+                cmd.CommandText = "SELECT * FROM reports WHERE userid = @userid AND report_type = filterStr;";
+
+                cmd.Parameters.AddWithValue("@userid", userid);
+                cmd.Parameters.AddWithValue("@filterStr", filterStr);
+            }
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var id = reader.GetString("id");
+                var user = reader.GetUInt64("userid");
+                var moderator = reader.GetUInt64("moderator");
+                var reason = reader.GetString("reason");
+                var reportStart = reader.GetDateTime("report_start");
+                var reportEnd = reader.GetDateTime("report_end");
+                var type = reader.GetString("report_type");
+                var reportType = type switch
+                {
+                    "mute" => ReportType.Mute,
+                    "voicemute" => ReportType.VoiceMute,
+                    "fleetpurge" => ReportType.FleetPurge,
+                    "codexpurge" => ReportType.CodexPurge,
+                    _ => throw new Exception("Unable to get ReportType")
+                };
+
+                reports.Add(new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType));
+            }
+
+            return reports;
         }
 
         public static List<ReportSQL> GetExpiredReports()
         {
             var reports = new List<ReportSQL>();
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            //Проверяет только самое последнее предупреждение на 
+            cmd.CommandText = $"SELECT * FROM reports " +
+                $"INNER JOIN(SELECT userid, report_type, MAX(report_start) as max_report_start FROM reports GROUP BY userid, report_type) groupedR " +
+                $"ON reports.userid = groupedR.userid AND reports.report_type = groupedR.report_type AND report_start = max_report_start " +
+                $"WHERE report_end <= @currentDate";
+
+            cmd.Parameters.AddWithValue("@currentDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
+                var id = reader.GetString("id");
+                var user = reader.GetUInt64("userid");
+                var moderator = reader.GetUInt64("moderator");
+                var reason = reader.GetString("reason");
+                var reportStart = reader.GetDateTime("report_start");
+                var reportEnd = reader.GetDateTime("report_end");
+                var type = reader.GetString("report_type");
+                var reportType = type switch
                 {
-                    //Проверяет только самое последнее предупреждение на 
-                    cmd.CommandText = $"SELECT * FROM reports " +
-                        $"INNER JOIN(SELECT userid, report_type, MAX(report_start) as max_report_start FROM reports GROUP BY userid, report_type) groupedR " +
-                        $"ON reports.userid = groupedR.userid AND reports.report_type = groupedR.report_type AND report_start = max_report_start " +
-                        $"WHERE report_end <= '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'";
-                    
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+                    "mute" => ReportType.Mute,
+                    "voicemute" => ReportType.VoiceMute,
+                    "fleetpurge" => ReportType.FleetPurge,
+                    "codexpurge" => ReportType.CodexPurge,
+                    _ => throw new Exception("Unable to get ReportType")
+                };
 
-                    var reader = cmd.ExecuteReader(); 
-                    while (reader.Read())
-                    {
-                        var id = reader.GetString("id");
-                        var user = reader.GetUInt64("userid");
-                        var moderator = reader.GetUInt64("moderator");
-                        var reason = reader.GetString("reason");
-                        var reportStart = reader.GetDateTime("report_start");
-                        var reportEnd = reader.GetDateTime("report_end");
-                        var type = reader.GetString("report_type");
-                        var reportType = type switch
-                        {
-                            "mute" => ReportType.Mute,
-                            "voicemute" => ReportType.VoiceMute,
-                            "fleetpurge" => ReportType.FleetPurge,
-                            "codexpurge" => ReportType.CodexPurge,
-                            _ => throw new Exception("Unable to get ReportType")
-                        };
-                        
-                        reports.Add(new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType));
-                    }
-
-                    return reports;
-                }
+                reports.Add(new ReportSQL(id, user, moderator, reason, reportStart, reportEnd, reportType));
             }
+
+            return reports;
         }
 
         public override string ToString()
