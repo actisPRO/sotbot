@@ -142,7 +142,7 @@ namespace Bot_NetCore.Commands
         [Aliases("y")]
         [Description("Принимает приглашение на корабль")]
         public async Task Yes(CommandContext ctx, [Description("Корабль")] [RemainingText]
-                string name)
+            string name)
         {
             var ship = PrivateShip.Get(name);
             if (ship == null)
