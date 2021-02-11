@@ -304,6 +304,7 @@ namespace Bot_NetCore.Commands
 
             private static string GetPrivateShip(ulong userId)
             {
+                //Приватный корабль
                 var ship = PrivateShip.GetOwnedShip(userId);
                 if (ship == null) return null;
                 else return ship.Name;
