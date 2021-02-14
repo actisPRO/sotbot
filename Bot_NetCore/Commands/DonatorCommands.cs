@@ -424,6 +424,48 @@ namespace Bot_NetCore.Commands
                 "Используйте `!d color название цвета`, чтобы получить цвет.");
         }
 
+        [Command("colorrm")]
+        [Description("Удаляет донатерский цвет. Временно недоступно для владельцев приватных ролей.")]
+        public async Task ColorRm(CommandContext ctx)
+        {
+            var donator = DonatorSQL.GetById(ctx.Member.Id);
+            if (donator == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
+                return;
+            }
+
+            var prices = PriceList.Prices[PriceList.GetLastDate(donator.Date)];
+
+            if (donator.Balance < prices.ColorPrice)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+            }
+            else if (donator.Balance >= prices.ColorPrice && donator.Balance < prices.RolePrice)
+            {
+                var avaliableRoles = GetColorRolesIds(ctx.Guild);
+                if (avaliableRoles == null)
+                {
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Не заданы цветные роли! Обратитесь к администратору для решения проблемы.");
+                    return;
+                }
+
+                foreach (var memberRole in ctx.Member.Roles)
+                    if (avaliableRoles.Contains(memberRole))
+                    {
+                        await ctx.Member.RevokeRoleAsync(memberRole);
+                        break;
+                    }
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет!");
+            }
+            else if (donator.Balance >= prices.RolePrice)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Данная функция временно недоступна для владельцев приватных ролей.");
+            }
+        }
+
         [Command("generatecolors")]
         [RequirePermissions(Permissions.Administrator)]
         public async Task GenerateColors(CommandContext ctx)
