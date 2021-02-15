@@ -278,7 +278,7 @@ namespace Bot_NetCore.Commands
         {
             [Command("change")]
             [Description("Меняет категорию тикета. Лимит испоьзования: 2 раза в 10 минут")]
-            [Cooldown(2, 600, CooldownBucketType.Channel)] //Апи дискорда ограничивает обюновление данных канала 2 раза в 10 минут. (Тупость такой большой рейтлимит ставить)
+            [Cooldown(2, 600, CooldownBucketType.Channel)] //Discord API ограничивает обновление данных канала 2 раза в 10 минут. (Тупость такой большой рейтлимит ставить)
             public async Task Change(CommandContext ctx)
             {
                 if(ctx.Channel.Parent.Id != Bot.BotSettings.SupportCategory)
