@@ -439,7 +439,7 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("colorrm")]
-        [Description("Удаляет донатерский цвет. Временно недоступно для владельцев приватных ролей.")]
+        [Description("Удаляет донатерский цвет/роль.")]
         public async Task ColorRm(CommandContext ctx)
         {
             var donator = DonatorSQL.GetById(ctx.Member.Id);
@@ -476,7 +476,22 @@ namespace Bot_NetCore.Commands
             }
             else if (donator.Balance >= prices.RolePrice)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Данная функция временно недоступна для владельцев приватных ролей.");
+                if (donator.PrivateRole == 0)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет приватной роли.");
+                }
+                else
+                {
+                    var role = await GetDonatorRoleOrCreate(ctx.Guild, ctx.Member, donator);
+                    foreach (var memberRole in ctx.Member.Roles)
+                        if (role == memberRole)
+                        {
+                            await ctx.Member.RevokeRoleAsync(role);
+                            break;
+                        }
+
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалена приватная роль!");
+                }
             }
         }
 
