@@ -11,7 +11,7 @@ namespace Bot_NetCore.Attributes
     /// Defines that usage of this command is restricted to members with specified permissions. This check also verifies that the bot has the same permissions.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-    public sealed class RequireCustomRole : CheckBaseAttribute
+    public sealed class RequireCustomRoleAttribute : CheckBaseAttribute
     {
         /// <summary>
         /// Gets the role required by this attribute
@@ -23,7 +23,7 @@ namespace Bot_NetCore.Attributes
         /// Defines that usage of this command is restricted to members with specified permissions. This check also verifies that the bot has the same permissions.
         /// </summary>
         /// <param name="roleType">Role required to execute this command.</param>
-        public RequireCustomRole(RoleType roleType)
+        public RequireCustomRoleAttribute(RoleType roleType)
         {
             this.SpecifiedRole = roleType;
         }
