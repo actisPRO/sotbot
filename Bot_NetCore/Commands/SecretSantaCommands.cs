@@ -15,7 +15,7 @@ namespace Bot_NetCore.Commands
     public class SecretSantaCommands : BaseCommandModule
     {
         [Command("join")]
-        [RequireDirectMessage]
+        [Attributes.RequireDirectMessage]
         [Description("Добавляет вас в список участников Секретного Санты")]
         public async Task Join(CommandContext ctx, [RemainingText] string args = "NONE_")
         {
@@ -74,7 +74,7 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("edit")]
-        [RequireDirectMessage]
+        [Attributes.RequireDirectMessage]
         [Description("Изменяет адрес")]
         public async Task Edit(CommandContext ctx, [RemainingText] string address = "none")
         {
@@ -97,7 +97,7 @@ namespace Bot_NetCore.Commands
         }
 
         [Command("cancel")]
-        [RequireDirectMessage]
+        [Attributes.RequireDirectMessage]
         [Description("Удаляет вас из списка участников")]
         public async Task Delete(CommandContext ctx)
         {
