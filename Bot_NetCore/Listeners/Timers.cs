@@ -493,9 +493,9 @@ namespace Bot_NetCore.Listeners
 
             try
             {
-                var morningTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 8, 0, 0);
+                var fleetPollResetTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 12, 0, 0);
 
-                if (DateTime.Now > morningTime)
+                if (DateTime.Now > fleetPollResetTime)
                 {
                     var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.FleetCreationChannel)
                         .GetMessageAsync(Bot.BotSettings.FleetVotingMessage);
@@ -504,23 +504,28 @@ namespace Bot_NetCore.Listeners
                     {
                         var oldEmbed = message.Embeds.FirstOrDefault();
 
-                        //Проверка времени
-                        if (morningTime.Date > oldEmbed.Timestamp.Value.Date)
-                        {
-                            var embed = new DiscordEmbedBuilder(oldEmbed);
+                        var messageTime = message.EditedTimestamp != null ? message.EditedTimestamp : message.CreationTimestamp;
 
-                            if (embed.Fields.Count < 3)
-                            {
-                                embed.AddFieldOrEmpty("\u200B\nРезультаты:", "");
-                            }
-                            embed.Fields[2].Value = "\u200B";
+                        //Проверка времени
+                        if (fleetPollResetTime >= oldEmbed.Timestamp)
+                        {
+                            var embed = new DiscordEmbedBuilder(oldEmbed)
+                                .WithDescription($"Вы можете проголосовать за тип рейда который вас интересует больше всего **{fleetPollResetTime.AddDays(2):dd/MM}**.\n\n" +
+                                                "Таким образом капитанам рейда будет легче узнать какой тип рейда больше всего востребован.\n")
+                                .WithTimestamp(fleetPollResetTime.AddDays(1));
+
                             foreach (var reaction in message.Reactions)
                             {
-                                if (reaction.Emoji.GetDiscordName() != ":black_small_square:")
-                                    embed.Fields[2].Value += $"{reaction.Emoji} - **{reaction.Count - 1}**; ";
-                            }
+                                var fieldId = reaction.Emoji.GetDiscordName() switch
+                                {
+                                    ":one:" => 0,
+                                    ":two:" => 1,
+                                    ":three:" => 2,
+                                    _ => 0
+                                };
 
-                            embed.WithTimestamp(DateTime.Now);
+                                embed.Fields[fieldId].Value = $":black_circle: **{reaction.Count - 1}**";
+                            }
 
                             await message.ModifyAsync(embed: embed.Build());
 
@@ -528,12 +533,9 @@ namespace Bot_NetCore.Listeners
 
                             var emojis = new DiscordEmoji[]
                             {
-                                    DiscordEmoji.FromName(Client, ":one:"),
-                                    DiscordEmoji.FromName(Client, ":two:"),
-                                    DiscordEmoji.FromName(Client, ":three:"),
-                                    DiscordEmoji.FromName(Client, ":black_small_square:"),
-                                    DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.BrigEmoji),
-                                    DiscordEmoji.FromGuildEmote(Client, Bot.BotSettings.GalleonEmoji)
+                                DiscordEmoji.FromName(Client, ":one:"),
+                                DiscordEmoji.FromName(Client, ":two:"),
+                                DiscordEmoji.FromName(Client, ":three:")
                             };
 
                             foreach (var emoji in emojis)
