@@ -230,7 +230,11 @@ namespace StatsBot
             }
             result.ExportToFile("global_stats_full.csv");
 
-            await ctx.RespondWithFileAsync("global_stats_full.csv", "Сгенерирован обновленный файл **global_stats_full.csv**!");
+            var message = new DiscordMessageBuilder()
+                .WithContent("Сгенерирован обновленный файл **global_stats_full.csv**!")
+                .WithFile("global_stats_full.csv");
+
+            await ctx.RespondAsync(message);
         }
 
         [Command("get")]

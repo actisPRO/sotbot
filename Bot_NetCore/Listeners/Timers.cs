@@ -251,7 +251,12 @@ namespace Bot_NetCore.Listeners
                                 doc.Save($"generated/voters-{vote.Id}.xml");
 
                                 var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
-                                await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
+
+                                var newMessage = new DiscordMessageBuilder()
+                                    .WithFile($"generated/voters-{vote.Id}.xml")
+                                    .WithEmbed(embed);
+
+                                await channel.SendMessageAsync($"generated/voters-{vote.Id}.xml", embed: embed);
 
                                 await message.DeleteAsync();
 
