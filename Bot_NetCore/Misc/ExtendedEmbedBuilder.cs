@@ -7,20 +7,21 @@ namespace Bot_NetCore.Misc
         /// <summary>
         /// Добавляет пустое поле 
         /// </summary>
-        public static void AddEmptyField(this DiscordEmbedBuilder embed)
+        public static DiscordEmbedBuilder AddEmptyField(this DiscordEmbedBuilder embed)
         {
-             embed.AddField("\u200B", "\u200B", true);
+             return embed.AddField("\u200B", "\u200B", true);
         }
 
         /// <summary>
         /// Добавляет в конец строки пустые ячейки, для заполнения строки
         /// </summary>
-        public static void NewInlineRow(this DiscordEmbedBuilder embed)
+        public static DiscordEmbedBuilder NewInlineRow(this DiscordEmbedBuilder embed)
         {
             for(int i = 0; i < embed.Fields.Count % 3; i++)
             {
                 embed.AddField("\u200B", "\u200B", true);
             }
+            return embed;
         }
 
         /// <summary>
@@ -29,9 +30,9 @@ namespace Bot_NetCore.Misc
         /// <param name="name"></param>
         /// <param name="value"></param>
         /// <param name="inline"></param>
-        public static void AddFieldOrEmpty(this DiscordEmbedBuilder embed, string name, string value, bool inline = false)
+        public static DiscordEmbedBuilder AddFieldOrEmpty(this DiscordEmbedBuilder embed, string name, string value, bool inline = false)
         {
-            embed.AddField(string.IsNullOrEmpty(name) ? "\u200B" : name, string.IsNullOrEmpty(value) ? "\u200B" : value, inline);
+            return embed.AddField(string.IsNullOrEmpty(name) ? "\u200B" : name, string.IsNullOrEmpty(value) ? "\u200B" : value, inline);
         }
 
         /// <summary>
@@ -40,10 +41,11 @@ namespace Bot_NetCore.Misc
         /// <param name="name"></param>
         /// <param name="value"></param>
         /// <param name="inline"></param>
-        public static void AddFieldOrEmptyField(this DiscordEmbedBuilder embed, string name, string value, bool inline = false)
+        public static DiscordEmbedBuilder AddFieldOrEmptyField(this DiscordEmbedBuilder embed, string name, string value, bool inline = false)
         {
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value))
                 embed.AddField("\u200B", "\u200B", true);
+            return embed;
         }
 
         /// <summary>
@@ -52,10 +54,11 @@ namespace Bot_NetCore.Misc
         /// <param name="name"></param>
         /// <param name="value"></param>
         /// <param name="inline"></param>
-        public static void AddFieldOrDefault(this DiscordEmbedBuilder embed, string name, string value, bool inline = false)
+        public static DiscordEmbedBuilder AddFieldOrDefault(this DiscordEmbedBuilder embed, string name, string value, bool inline = false)
         {
             if(!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(value))
                 embed.AddField(string.IsNullOrEmpty(name) ? "\u200B" : name, string.IsNullOrEmpty(value) ? "\u200B" : value, inline);
+            return embed;
         }
 
         /// <summary>
@@ -65,10 +68,11 @@ namespace Bot_NetCore.Misc
         /// <param name="value"></param>
         /// <param name="replace"></param>
         /// <param name="inline"></param>
-        public static void AddFieldOrReplace(this DiscordEmbedBuilder embed, string name, string value, string replace, bool inline = false)
+        public static DiscordEmbedBuilder AddFieldOrReplace(this DiscordEmbedBuilder embed, string name, string value, string replace, bool inline = false)
         {
             if (!string.IsNullOrEmpty(name))
                 embed.AddField(string.IsNullOrEmpty(name) ? "\u200B" : name, string.IsNullOrEmpty(value) ? replace : value, inline);
+            return embed;
         }
     }
 }
