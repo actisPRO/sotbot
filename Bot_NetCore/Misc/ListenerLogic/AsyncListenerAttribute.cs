@@ -74,9 +74,6 @@ namespace Bot_NetCore.Misc
                 case EventTypes.ChannelCreated:
                     client.ChannelCreated += OnEventWithArgs;
                     break;
-                case EventTypes.DmChannelCreated:
-                    client.DmChannelCreated += OnEventWithArgs;
-                    break;
                 case EventTypes.ChannelUpdated:
                     client.ChannelUpdated += OnEventWithArgs;
                     break;
