@@ -10,6 +10,7 @@
         Ready, // AsyncEventHandler<ReadyEventArgs>
         Resumed, // AsyncEventHandler<ReadyEventArgs>
         ChannelCreated, // AsyncEventHandler<ChannelCreateEventArgs>
+        DmChannelCreated, // AsyncEventHandler<DmChannelCreateEventArgs>
         ChannelUpdated, // AsyncEventHandler<ChannelUpdateEventArgs>
         ChannelDeleted, // AsyncEventHandler<ChannelDeleteEventArgs>
         DmChannelDeleted, // AsyncEventHandler<DmChannelDeleteEventArgs>
