@@ -104,7 +104,7 @@ namespace Bot_NetCore.Listeners
                         msg += "\n Команда для приватных сообщений.";
                     else if (check is RequireGuildAttribute)
                         msg += "\n Использование команды доступно только на сервере.";
-                    else if (check is Attributes.RequireDirectMessageAttribute)
+                    else if (check is RequireDirectMessageAttribute)
                         msg += "\n Использование команды доступно только в личных сообщениях.";
                     else if (check is RequireNsfwAttribute)
                         msg += "\n Команда для использования только в NSFW канале.";
@@ -116,7 +116,7 @@ namespace Bot_NetCore.Listeners
                         msg += "\n Команда работает только с определённым префиксом.";
                     else if (check is RequireRolesAttribute)
                         msg += "\n У вас нет доступа к этой команде!";
-                    else if (check is RequireCustomRoleAttribute)
+                    else if (check is RequireCustomRole)
                         msg += "\n У вас нет доступа к этой команде!";
                     else if (check is RequireUserPermissionsAttribute)
                         msg += "\n У вас нет доступа к этой команде!";

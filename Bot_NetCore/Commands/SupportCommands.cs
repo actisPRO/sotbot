@@ -38,7 +38,7 @@ namespace Bot_NetCore.Commands
 
         [Command("support")]
         [Description("Создает запрос тикета")]
-        [Attributes.RequireDirectMessage]
+        [RequireDirectMessage]
         [Cooldown(1, 30, CooldownBucketType.User)]
         public async Task Support(CommandContext ctx)
         {
