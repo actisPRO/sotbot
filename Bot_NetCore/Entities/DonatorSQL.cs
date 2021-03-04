@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Xml.Linq;
 using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Entities
@@ -10,20 +8,81 @@ namespace Bot_NetCore.Entities
     {
         public readonly ulong UserId;
 
-        public int Balance { get; set; }
-        public ulong PrivateRole { get; set; }
-        public DateTime Date { get; set; }
-        public bool IsHidden { get; set; }
+        private DateTime _date;
+        private int _balance;
+        private DateTime _subEnd;
+        private ulong _privateRole;
+        private bool _isHidden;
 
         private List<ulong> _friends = new List<ulong>();
 
-        public DonatorSQL(ulong userId, int balance, ulong privateRole, DateTime date, bool isHidden = false)
+        public DateTime Date {
+            get { return _date; }
+            set 
+            {
+                if(value != _date)
+                {
+                    UpdateDbColumn("date", value);
+                    _date = value;
+                }
+            }
+        }
+
+        public int Balance {
+            get { return _balance; }
+            set
+            {
+                if (value != _balance)
+                {
+                    UpdateDbColumn("balance", value, true);
+                    _balance = value;
+                }
+            }
+        }
+
+        public DateTime subEnd {
+            get { return _subEnd; }
+            set
+            {
+                if (value != _subEnd)
+                {
+                    UpdateDbColumn("sub_end", value, true);
+                    _subEnd = value;
+                }
+            }
+        }
+
+        public ulong PrivateRole {
+            get { return _privateRole; }
+            set
+            {
+                if (value != _privateRole)
+                {
+                    UpdateDbColumn("private_role", value);
+                    _privateRole = value;
+                }
+            }
+        }
+        public bool IsHidden {
+            get { return _isHidden; }
+            set
+            {
+                if (value != _isHidden)
+                {
+                    UpdateDbColumn("is_hidden", value);
+                    _isHidden = value;
+                }
+            }
+        }
+
+        public DonatorSQL(ulong userId, DateTime date, int balance, DateTime subEnd, ulong privateRole, bool isHidden = false)
         {
             UserId = userId;
-            Balance = balance;
-            PrivateRole = privateRole;
-            Date = date;
-            IsHidden = isHidden;
+            _date = date;
+            _balance = balance;
+            _subEnd = subEnd;
+            _privateRole = privateRole;
+            _isHidden = isHidden;
         }
 
         public List<ulong> GetFriends()
@@ -56,8 +115,6 @@ namespace Bot_NetCore.Entities
         {
             if (!_friends.Contains(friendId))
             {
-                _friends.Add(friendId);
-
                 using var connection = new MySqlConnection(Bot.ConnectionString);
                 using (var cmd = new MySqlCommand())
                 {
@@ -71,6 +128,8 @@ namespace Bot_NetCore.Entities
 
                     var reader = cmd.ExecuteNonQuery();
                 }
+
+                _friends.Add(friendId);
                 return true;
             }
             return false;
@@ -80,8 +139,6 @@ namespace Bot_NetCore.Entities
         {
             if (_friends.Contains(friendId))
             {
-                _friends.Remove(friendId);
-
                 using var connection = new MySqlConnection(Bot.ConnectionString);
                 using (var cmd = new MySqlCommand())
                 {
@@ -95,33 +152,16 @@ namespace Bot_NetCore.Entities
 
                     var reader = cmd.ExecuteNonQuery();
                 }
+
+                _friends.Remove(friendId);
                 return true;
             }
             return false;
         }
 
-        public DonatorSQL SaveAndUpdate()
+        public bool IsSubscriber()
         {
-            using var connection = new MySqlConnection(Bot.ConnectionString);
-            using (var cmd = new MySqlCommand())
-            {
-                cmd.CommandText = "INSERT INTO donators(user_id, balance, private_role, date, is_hidden) " +
-                    "VALUES(@UserId, @Balance, @PrivateRole, @Date, @IsHidden)" +
-                    "ON DUPLICATE KEY UPDATE balance = @Balance, private_role = @PrivateRole, is_hidden = @IsHidden;";
-
-                cmd.Parameters.AddWithValue("@UserId", UserId);
-                cmd.Parameters.AddWithValue("@Balance", Balance);
-                cmd.Parameters.AddWithValue("@PrivateRole", PrivateRole);
-                cmd.Parameters.AddWithValue("@Date", Date.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@IsHidden", IsHidden);
-
-                cmd.Connection = connection;
-                cmd.Connection.Open();
-
-                var reader = cmd.ExecuteNonQuery();
-            }
-
-            return GetById(UserId);
+            return _subEnd > DateTime.Now;
         }
 
         public static void RemoveDonator(ulong userId)
@@ -138,6 +178,60 @@ namespace Bot_NetCore.Entities
             cmd.Connection.Open();
 
             var reader = cmd.ExecuteNonQuery();
+        }
+
+        private void UpdateDbColumn(string columnName, object value, bool updateDate = false)
+        {
+            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            {
+                using var cmd = new MySqlCommand();
+
+                var statement = $"UPDATE donators SET {columnName} = @value WHERE id = @userId";
+
+                //Обновляем время доната, в случае обновления баланса или подписки
+                if (updateDate)
+                {
+                    statement = $"UPDATE donators SET {columnName} = @value, date = @date WHERE id = @userId";
+                    cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    _date = DateTime.Now;
+                }                    
+
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@userId", UserId);
+
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private static DonatorSQL GetOrCreate(ulong userId, DateTime date, int balance = 0, DateTime subEnd = new DateTime(), ulong privateRole = 0, bool isHidden = false)
+        {
+            var donator = GetById(userId);
+            if (donator != null)
+                return donator;
+
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using (var cmd = new MySqlCommand())
+            {
+                cmd.CommandText = "INSERT INTO donators(user_id, date, balance, sub_end, private_role, is_hidden) " +
+                    "VALUES(@userId, @date, @balance, @subEnd, @privateRole, @isHidden);";
+
+                cmd.Parameters.AddWithValue("@userId", userId);
+                cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@balance", balance);
+                cmd.Parameters.AddWithValue("@subEnd", subEnd);
+                cmd.Parameters.AddWithValue("@privateRole", privateRole);
+                cmd.Parameters.AddWithValue("@isHidden", isHidden);
+
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+                var reader = cmd.ExecuteNonQuery();
+
+                return new DonatorSQL(userId, date, balance, subEnd, privateRole, isHidden);
+            }
         }
 
         public static DonatorSQL GetById(ulong userId)
@@ -158,9 +252,10 @@ namespace Bot_NetCore.Entities
             {
                 return new DonatorSQL(
                     reader.GetUInt64("user_id"),
-                    reader.GetInt32("balance"),
-                    reader.GetUInt64("private_role"),
                     reader.GetDateTime("date"),
+                    reader.GetInt32("balance"),
+                    reader.GetDateTime("sub_end"),
+                    reader.GetUInt64("private_role"),
                     reader.GetBoolean("is_hidden"));
             }
             return null;
@@ -184,9 +279,10 @@ namespace Bot_NetCore.Entities
             {
                 donators.Add(new DonatorSQL(
                     reader.GetUInt64("user_id"),
-                    reader.GetInt32("balance"),
-                    reader.GetUInt64("private_role"),
                     reader.GetDateTime("date"),
+                    reader.GetInt32("balance"),
+                    reader.GetDateTime("sub_end"),
+                    reader.GetUInt64("private_role"),
                     reader.GetBoolean("is_hidden")));
             }
 
