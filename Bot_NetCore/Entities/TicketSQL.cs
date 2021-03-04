@@ -108,7 +108,7 @@ namespace Bot_NetCore.Entities
             text = text.Replace("'", "''");
 
             var statement = "INSERT INTO tickets(channel, user, dm_channel, dm_message, message, text, created_at, category, status) " +
-                            "VALUES (@channelId}', @userId, @dmChannelId, @dmMessageId, @messageId, @text, @createdAt, @category, @status);";
+                            "VALUES (@channelId, @userId, @dmChannelId, @dmMessageId, @messageId, @text, @createdAt, @category, @status);";
 
             cmd.Parameters.AddWithValue("@channelId", channelId);
             cmd.Parameters.AddWithValue("@userId", userId);
