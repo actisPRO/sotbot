@@ -419,7 +419,8 @@ namespace Bot_NetCore.Commands
             {
                 var rootFleetCategory = ctx.Guild.GetChannel(Bot.BotSettings.FleetCategory);
 
-                var fleetCategory = await rootFleetCategory.CloneAsync(); 
+                var fleetCategory = await rootFleetCategory.CloneAsync();
+                await fleetCategory.AddOverwriteAsync(ctx.Guild.EveryoneRole, deny: Permissions.AccessChannels);
 
                 await fleetCategory.ModifyAsync(x =>
                 {
