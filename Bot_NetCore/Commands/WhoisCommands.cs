@@ -102,7 +102,7 @@ namespace Bot_NetCore.Commands
 
                     //4 Row - Donate info
                     embed.AddFieldOrReplace("Донат", GetDonationInfo(user.Id), "Нет", true);
-                    embed.AddFieldOrReplace("Подписка", GetSubscriptionInfo(user.Id), "Нет", true);
+                    //embed.AddFieldOrReplace("Подписка", GetSubscriptionInfo(user.Id), "Нет", true);
                     embed.AddFieldOrReplace("Приватный корабль", GetPrivateShip(user.Id), "Нет", true);
                     embed.NewInlineRow();
 
@@ -289,18 +289,18 @@ namespace Bot_NetCore.Commands
                 return null;
             }
 
-            private static string GetSubscriptionInfo(ulong userId)
-            {
-                //Подписка
-                if (Subscriber.Subscribers.ContainsKey(userId))
-                {
-                    var subscriber = Subscriber.Subscribers[userId];
-                    var length = subscriber.SubscriptionEnd - DateTime.Now;
+            //private static string GetSubscriptionInfo(ulong userId)
+            //{
+            //    //Подписка
+            //    if (Subscriber.Subscribers.ContainsKey(userId))
+            //    {
+            //        var subscriber = Subscriber.Subscribers[userId];
+            //        var length = subscriber.SubscriptionEnd - DateTime.Now;
 
-                    return $"{subscriber.SubscriptionEnd:HH:mm:ss \n dd.MM.yyyy} ({Utility.ToCorrectCase(length, Utility.TimeUnit.Days)})";
-                }
-                return null;
-            }
+            //        return $"{subscriber.SubscriptionEnd:HH:mm:ss \n dd.MM.yyyy} ({Utility.ToCorrectCase(length, Utility.TimeUnit.Days)})";
+            //    }
+            //    return null;
+            //}
 
             private static string GetPrivateShip(ulong userId)
             {

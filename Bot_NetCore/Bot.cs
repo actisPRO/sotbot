@@ -82,10 +82,8 @@ namespace Bot_NetCore
 
             InviterList.ReadFromXML(BotSettings.InviterXML);
             UsersLeftList.ReadFromXML(BotSettings.UsersLeftXML);
-            PriceList.ReadFromXML(BotSettings.PriceListXML);
             Vote.Read(BotSettings.VotesXML);
             Note.Read(BotSettings.NotesXML);
-            Subscriber.Read(BotSettings.SubscriberXML);
             ShipNames.Read(BotSettings.ShipNamesCSV);
             
             bot.RunBotAsync().GetAwaiter().GetResult();
