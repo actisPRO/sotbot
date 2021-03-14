@@ -260,8 +260,8 @@ namespace Bot_NetCore.Commands
             var durationTimeSpan = Utility.TimeSpanParse(duration);
             var id = RandomString.NextString(6);
 
-            if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
-                durationTimeSpan = new TimeSpan(3, 0, 0, 0);
+            if (durationTimeSpan.TotalDays > 31 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(31, 0, 0, 0);
 
             var reportEnd = DateTime.Now + durationTimeSpan;
 
@@ -332,8 +332,8 @@ namespace Bot_NetCore.Commands
             var durationTimeSpan = Utility.TimeSpanParse(duration);
             var id = RandomString.NextString(6);
 
-            if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
-                durationTimeSpan = new TimeSpan(3, 0, 0, 0);
+            if (durationTimeSpan.TotalDays > 31 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(31, 0, 0, 0);
 
             var reportEnd = DateTime.Now + durationTimeSpan;
 
