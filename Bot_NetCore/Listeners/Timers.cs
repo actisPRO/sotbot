@@ -445,8 +445,14 @@ namespace Bot_NetCore.Listeners
 
                 //Clear old values
                 VoiceListener.VoiceTimeCounters.Clear();
+
                 var guild = Client.Guilds[Bot.BotSettings.Guild];
-                foreach (var entry in guild.VoiceStates.Where(x => x.Value.Channel != null && x.Value.Channel.Id != guild.AfkChannel.Id && x.Value.Channel.Id != Bot.BotSettings.WaitingRoom).ToList())
+                foreach (var entry in guild.VoiceStates.Where(
+                                        x => x.Value.Channel != null && 
+                                            x.Value.Channel.Id != guild.AfkChannel.Id && 
+                                            x.Value.Channel.Id != Bot.BotSettings.WaitingRoom &&
+                                            x.Value.Channel.Users.Count() < 2)
+                                        .ToList())
                 {
                     if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
                         VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
