@@ -184,6 +184,7 @@ namespace Bot_NetCore.Commands
                                         await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.ModeratorsRole), Permissions.AccessChannels);
                                         break;
                                     case SupportType.FleetCaptain:
+                                        await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.ModeratorsRole), Permissions.AccessChannels);
                                         await supportChannel.AddOverwriteAsync(guild.GetRole(Bot.BotSettings.FleetCaptainRole), Permissions.AccessChannels);
                                         break;
                                 }
@@ -401,7 +402,8 @@ namespace Bot_NetCore.Commands
                 }
 
                 //Убираем у пользователя возможность писать в данном канале.
-                var overwritesToBeBlocked = ctx.Channel.PermissionOverwrites.Where(x => x.Type == OverwriteType.Member);
+                var overwritesToBeBlocked = ctx.Channel.PermissionOverwrites.Where(x => x.Type == OverwriteType.Member).ToList();
+
                 foreach (var overwrite in overwritesToBeBlocked)
                     await overwrite.UpdateAsync(deny: Permissions.SendMessages, reason: "закрытие тикета");
 
