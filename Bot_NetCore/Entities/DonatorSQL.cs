@@ -6,6 +6,7 @@ namespace Bot_NetCore.Entities
 {
     public class DonatorSQL
     {
+
         public readonly ulong UserId;
 
         private DateTime _date;
@@ -186,12 +187,12 @@ namespace Bot_NetCore.Entities
             {
                 using var cmd = new MySqlCommand();
 
-                var statement = $"UPDATE donators SET {columnName} = @value WHERE id = @userId";
+                var statement = $"UPDATE donators SET {columnName} = @value WHERE user_id = @userId";
 
                 //Обновляем время доната, в случае обновления баланса или подписки
                 if (updateDate)
                 {
-                    statement = $"UPDATE donators SET {columnName} = @value, date = @date WHERE id = @userId";
+                    statement = $"UPDATE donators SET {columnName} = @value, date = @date WHERE user_id = @userId";
                     cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                     _date = DateTime.Now;
                 }                    
@@ -207,12 +208,8 @@ namespace Bot_NetCore.Entities
             }
         }
 
-        private static DonatorSQL GetOrCreate(ulong userId, DateTime date, int balance = 0, DateTime subEnd = new DateTime(), ulong privateRole = 0, bool isHidden = false)
+        public static DonatorSQL Create(ulong userId, DateTime date, int balance = 0, DateTime subEnd = new DateTime(), ulong privateRole = 0, bool isHidden = false)
         {
-            var donator = GetById(userId);
-            if (donator != null)
-                return donator;
-
             using var connection = new MySqlConnection(Bot.ConnectionString);
             using (var cmd = new MySqlCommand())
             {
