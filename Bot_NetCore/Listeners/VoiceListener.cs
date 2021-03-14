@@ -223,12 +223,9 @@ namespace Bot_NetCore.Listeners
                 e.After != null && e.After.Channel != null &&
                 e.Before.Channel.Id != e.After.Channel.Id)
             {
-                if (e.Before.Channel.Id == e.Guild.AfkChannel.Id)
-                {
-                    VoiceTimeCounters[e.User.Id] = DateTime.Now;
-                }
-                else if (e.After.Channel.Id == e.Guild.AfkChannel.Id ||
-                        e.After.Channel.Id == Bot.BotSettings.WaitingRoom)
+                if (e.After.Channel.Id == e.Guild.AfkChannel.Id ||
+                    e.After.Channel.Id == Bot.BotSettings.WaitingRoom ||
+                    e.After.Channel.Users.Count() < 2)
                 {
                     if (VoiceTimeCounters.ContainsKey(e.User.Id))
                     {
@@ -236,12 +233,19 @@ namespace Bot_NetCore.Listeners
                         VoiceTimeSQL.AddForUser(e.User.Id, time);
                         VoiceTimeCounters.Remove(e.User.Id);
                     }
+                } else if (e.Before.Channel.Id == e.Guild.AfkChannel.Id ||
+                           e.Before.Channel.Users.Count() < 2)
+                {
+                    VoiceTimeCounters[e.User.Id] = DateTime.Now;
                 }
+               
             }
+
             //User left from voice
             else if (e.Before != null && e.Before.Channel != null &&
                      e.Before.Channel.Id != e.Guild.AfkChannel.Id &&
-                     e.Before.Channel.Id != Bot.BotSettings.WaitingRoom)
+                     e.Before.Channel.Id != Bot.BotSettings.WaitingRoom &&
+                     e.Before.Channel.Users.Count() > 1)
             {
                 if (VoiceTimeCounters.ContainsKey(e.User.Id))
                 {
@@ -253,7 +257,8 @@ namespace Bot_NetCore.Listeners
             //User joined to server voice
             else if (e.After != null && e.After.Channel != null &&
                      e.After.Channel.Id != e.Guild.AfkChannel.Id &&
-                     e.After.Channel.Id != Bot.BotSettings.WaitingRoom)
+                     e.After.Channel.Id != Bot.BotSettings.WaitingRoom &&
+                     e.After.Channel.Users.Count() > 1)
             {
                 VoiceTimeCounters[e.User.Id] = DateTime.Now;
             }
