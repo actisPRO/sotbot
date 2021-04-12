@@ -88,10 +88,12 @@ namespace Bot_NetCore.Listeners
                 //TODO: REMOVE THIS -> Автобан за гифку
                 if (e.Message.Content == "https://media.discordapp.net/attachments/741675549612572793/782183382850600960/not_spoiler.gif" ||
                         e.Message.Content.Contains("https://media.discordapp.net/attachments/741675549612572793/782183382850600960/not_spoiler.gif") ||
-                        e.Message.Content.Contains("not_spoiler.gif"))
+                        e.Message.Content.Contains("not_spoiler.gif") ||
+                        e.Message.Content.Contains("giant.gfycat.com/NeatPhonyAcornweevil.mp4") ||
+                        e.Message.Content.Contains("tornadus.net/orange"))
                 {
                     var member = await e.Guild.GetMemberAsync(e.Author.Id);
-                    await member.BanAsync(1);
+                    await member.BanAsync(1, "Forbidden content");
                 }
 
                 if (e.Channel.Id == Bot.BotSettings.CodexReserveChannel)
