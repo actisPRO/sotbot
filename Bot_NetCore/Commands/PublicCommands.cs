@@ -326,7 +326,7 @@ namespace Bot_NetCore.Commands
         {
             notes = notes.Substring(0, Math.Min(notes.Length, 25));
 
-            if (nShips < 1 || nShips > 5 ||
+            if (nShips < 1 || nShips > 6 ||
                 slots < 2 || slots > 25)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Недопустимые параметры рейда!");
