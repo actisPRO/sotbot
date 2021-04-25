@@ -283,7 +283,7 @@ namespace Bot_NetCore.Entities
                     ReportType.VoiceMute => "voicemute",
                     _ => throw new Exception("That exception won't be thrown. Well, I hope so.")
                 };
-                cmd.CommandText = "SELECT * FROM reports WHERE userid = @userid AND report_type = filterStr;";
+                cmd.CommandText = "SELECT * FROM reports WHERE userid = @userid AND report_type = @filterStr;";
 
                 cmd.Parameters.AddWithValue("@userid", userid);
                 cmd.Parameters.AddWithValue("@filterStr", filterStr);

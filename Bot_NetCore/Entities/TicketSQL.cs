@@ -118,7 +118,15 @@ namespace Bot_NetCore.Entities
             cmd.Parameters.AddWithValue("@text", text);
             cmd.Parameters.AddWithValue("@createdAt", createdAt.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@category", category);
-            cmd.Parameters.AddWithValue("@status", status);
+
+            var statusStr = status switch
+            {
+                TicketStatus.Open => "Open",
+                TicketStatus.Closed => "Closed",
+                TicketStatus.Deleted => "Deleted",
+                _ => "Unknown"
+            };
+            cmd.Parameters.AddWithValue("@status", statusStr);
 
 
             cmd.CommandText = statement;
