@@ -66,13 +66,13 @@ namespace Bot_NetCore
         {
             var bot = new Bot();
 
-            Console.WriteLine(@"   
-                ██████╗    ██╗ █████╗ 
-                ╚════██╗  ███║██╔══██╗
-                 █████╔╝  ╚██║╚██████║
-                ██╔═══╝    ██║ ╚═══██║
-                ███████╗██╗██║ █████╔╝
-                ╚══════╝╚═╝╚═╝ ╚════╝                 
+            Console.WriteLine(@"
+                ██████╗    ██████╗  ██████╗ 
+                ╚════██╗   ╚════██╗██╔═████╗
+                 █████╔╝    █████╔╝██║██╔██║
+                ██╔═══╝    ██╔═══╝ ████╔╝██║
+                ███████╗██╗███████╗╚██████╔╝
+                ╚══════╝╚═╝╚══════╝ ╚═════╝                                       
             "); //Font Name: ANSI Shadow
             
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("ru-RU");
