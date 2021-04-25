@@ -20,16 +20,16 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = $"UPDATE private_ship SET ship_name = @new WHERE ship_name = @current;";
-                        cmd.Parameters.AddWithValue("@current", _name);
-                        cmd.Parameters.AddWithValue("@new", value);
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = "UPDATE private_ship SET ship_name = @new WHERE ship_name = @current;";
+
+                    cmd.Parameters.AddWithValue("@current", _name);
+                    cmd.Parameters.AddWithValue("@new", value);
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _name = value;
             }
@@ -42,16 +42,16 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = $"UPDATE private_ship SET ship_channel = @value WHERE ship_name = @ship;";
-                        cmd.Parameters.AddWithValue("@ship", _name);
-                        cmd.Parameters.AddWithValue("@value", value);
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = "UPDATE private_ship SET ship_channel = @value WHERE ship_name = @ship;";
+
+                    cmd.Parameters.AddWithValue("@ship", _name);
+                    cmd.Parameters.AddWithValue("@value", value);
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _channel = value;
             }
@@ -64,16 +64,16 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = $"UPDATE private_ship SET request_message = @value WHERE ship_name = @ship;";
-                        cmd.Parameters.AddWithValue("@ship", _name);
-                        cmd.Parameters.AddWithValue("@value", value);
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = "UPDATE private_ship SET request_message = @value WHERE ship_name = @ship;";
+
+                    cmd.Parameters.AddWithValue("@ship", _name);
+                    cmd.Parameters.AddWithValue("@value", value);
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _requestMessage = value;
             }
@@ -86,16 +86,16 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = $"UPDATE private_ship SET created_at = @value WHERE ship_name = @ship;";
-                        cmd.Parameters.AddWithValue("@ship", _name);
-                        cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = "UPDATE private_ship SET created_at = @value WHERE ship_name = @ship;";
+
+                    cmd.Parameters.AddWithValue("@ship", _name);
+                    cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _createdAt = value;
             }
@@ -108,16 +108,16 @@ namespace Bot_NetCore.Entities
             {
                 using (var connection = new MySqlConnection(Bot.ConnectionString))
                 {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        cmd.CommandText = $"UPDATE private_ship SET last_used = @value WHERE ship_name = @ship;";
-                        cmd.Parameters.AddWithValue("@ship", _name);
-                        cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
-                    
-                        cmd.ExecuteNonQuery();
-                    }
+                    using var cmd = new MySqlCommand();
+                    cmd.CommandText = "UPDATE private_ship SET last_used = @value WHERE ship_name = @ship;";
+
+                    cmd.Parameters.AddWithValue("@ship", _name);
+                    cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                    cmd.Connection = connection;
+                    cmd.Connection.Open();
+
+                    cmd.ExecuteNonQuery();
                 }
                 _lastUsed = value;
             }
@@ -137,23 +137,21 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static PrivateShip Create(string name, DateTime createdAt, ulong requestMessage)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = $"INSERT INTO private_ship(ship_name, ship_channel, created_at, last_used, request_message) VALUES (@name, 0, @created, " +
-                                      $"@created, @message)";
-                    cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Parameters.AddWithValue("@created", createdAt);
-                    cmd.Parameters.AddWithValue("@message", requestMessage);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-                    
-                    cmd.ExecuteNonQuery();
-                    
-                    return new PrivateShip(name, 0, createdAt, createdAt, requestMessage);
-                }
-            }
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "INSERT INTO private_ship(ship_name, ship_channel, created_at, last_used, request_message) VALUES (@name, 0, @created, " +
+                              "@created, @message)";
+
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@created", createdAt);
+            cmd.Parameters.AddWithValue("@message", requestMessage);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            return new PrivateShip(name, 0, createdAt, createdAt, requestMessage);
         }
         
         /// <summary>
@@ -162,30 +160,28 @@ namespace Bot_NetCore.Entities
         /// <returns>Owned ship or null</returns>
         public static PrivateShip GetOwnedShip(ulong memberId)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = @"SELECT
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = @"SELECT
                                             s.*
                                         FROM
                                             private_ship s
                                             JOIN private_ship_members psm ON s.ship_name = psm.ship_name
                                         WHERE psm.member_id = @memberId AND psm.member_type = 'Captain';
                                         ";
-                    cmd.Parameters.AddWithValue("@memberId", memberId);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                        return null;
-                    else
-                        return new PrivateShip(reader.GetString(0), 
-                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
-                            reader.GetUInt64(4));
-                }
-            }
+            cmd.Parameters.AddWithValue("@memberId", memberId);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+            else
+                return new PrivateShip(reader.GetString(0),
+                    reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                    reader.GetUInt64(4));
         }
 
         /// <summary>
@@ -196,24 +192,24 @@ namespace Bot_NetCore.Entities
             var result = new List<PrivateShip>();
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = @"SELECT s.*
+                using var cmd = new MySqlCommand();
+                cmd.CommandText = @"SELECT s.*
                                         FROM
                                             private_ship s
                                             JOIN private_ship_members psm on s.ship_name = psm.ship_name
                                         WHERE psm.member_id = @memberId";
-                    cmd.Parameters.AddWithValue("@memberId", memberId);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
 
-                    var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        result.Add(new PrivateShip(reader.GetString(0), 
-                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
-                            reader.GetUInt64(4)));
-                    }
+                cmd.Parameters.AddWithValue("@memberId", memberId);
+
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result.Add(new PrivateShip(reader.GetString(0),
+                        reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                        reader.GetUInt64(4)));
                 }
             }
 
@@ -225,24 +221,22 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static PrivateShip Get(string name)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT * FROM private_ship WHERE ship_name = @name";
-                    cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM private_ship WHERE ship_name = @name";
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                        return null;
-                    else
-                        return new PrivateShip(reader.GetString(0), 
-                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
-                            reader.GetUInt64(4));
-                }
-            }
+            cmd.Parameters.AddWithValue("@name", name);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+            else
+                return new PrivateShip(reader.GetString(0),
+                    reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                    reader.GetUInt64(4));
         }
 
         /// <summary>
@@ -254,19 +248,17 @@ namespace Bot_NetCore.Entities
             var result = new List<PrivateShip>();
             using (var connection = new MySqlConnection(Bot.ConnectionString))
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT * FROM private_ship";
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+                using var cmd = new MySqlCommand();
+                cmd.CommandText = "SELECT * FROM private_ship";
+                cmd.Connection = connection;
+                cmd.Connection.Open();
 
-                    var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        result.Add(new PrivateShip(reader.GetString(0), 
-                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
-                            reader.GetUInt64(4)));
-                    }
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result.Add(new PrivateShip(reader.GetString(0),
+                        reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                        reader.GetUInt64(4)));
                 }
             }
 
@@ -278,24 +270,22 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static PrivateShip GetByRequest(ulong request)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT * FROM private_ship WHERE request_message = @request";
-                    cmd.Parameters.AddWithValue("@request", request);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM private_ship WHERE request_message = @request";
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                        return null;
-                    else
-                        return new PrivateShip(reader.GetString(0), 
-                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
-                            reader.GetUInt64(4));
-                }
-            }
+            cmd.Parameters.AddWithValue("@request", request);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+            else
+                return new PrivateShip(reader.GetString(0),
+                    reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                    reader.GetUInt64(4));
         }
 
         /// <summary>
@@ -303,24 +293,22 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static PrivateShip GetByChannel(ulong channel)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = "SELECT * FROM private_ship WHERE ship_channel = @channel";
-                    cmd.Parameters.AddWithValue("@channel", channel);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM private_ship WHERE ship_channel = @channel";
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                        return null;
-                    else
-                        return new PrivateShip(reader.GetString(0), 
-                            reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
-                            reader.GetUInt64(4));
-                }
-            }
+            cmd.Parameters.AddWithValue("@channel", channel);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+                return null;
+            else
+                return new PrivateShip(reader.GetString(0),
+                    reader.GetUInt64(1), reader.GetDateTime(2), reader.GetDateTime(3),
+                    reader.GetUInt64(4));
         }
 
         /// <summary>
@@ -328,18 +316,16 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static void Delete(string name)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = $"DELETE FROM private_ship WHERE ship_name = @name";
-                    cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-                    
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "DELETE FROM private_ship WHERE ship_name = @name";
+
+            cmd.Parameters.AddWithValue("@name", name);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -349,6 +335,14 @@ namespace Bot_NetCore.Entities
         {
             return (from member in GetMembers() where member.Role == PrivateShipMemberRole.Captain select member)
                 .First();
+        }
+
+        /// <summary>
+        ///     Returns a member with the specified ID or null.
+        /// </summary>
+        public PrivateShipMember GetMember(ulong memberId)
+        {
+            return PrivateShipMember.Get(_name, memberId);
         }
 
         /// <summary>

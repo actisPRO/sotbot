@@ -223,7 +223,8 @@ namespace Bot_NetCore.Listeners
                     }
 
                 //Чистка сообщений в канале поиска игроков
-                if (e.Channel.Id == Bot.BotSettings.FindChannel && e.Message.Embeds.Count() == 0 && !e.Message.Pinned)
+                if (e.Channel.Id == Bot.BotSettings.FindChannel && 
+                    !VoiceListener.FindChannelInvites.ContainsValue(e.Message.Id)) //Защита от любой другой команды
                 {
                     //Проверка если сообщение содержит команду, если нет то отправляем инструкцию в лс.
                     if(!e.Message.Content.StartsWith(Bot.BotSettings.Prefix) && !e.Author.IsBot)

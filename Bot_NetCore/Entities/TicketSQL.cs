@@ -23,20 +23,20 @@ namespace Bot_NetCore.Entities
             get => _messageId;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE tickets SET message = '{value}' WHERE channel = '{ChannelId}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE tickets SET message = @value WHERE channel = @ChannelId";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@ChannelId", ChannelId);
 
-                        _messageId = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _messageId = value;
             }
         }
 
@@ -45,20 +45,20 @@ namespace Bot_NetCore.Entities
             get => _category;
             set 
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE tickets SET category = '{value}' WHERE channel = '{ChannelId}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE tickets SET category = @value WHERE channel = @ChannelId";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@ChannelId", ChannelId);
 
-                        _category = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _category = value;
             }
         }
         public TicketStatus Status
@@ -66,20 +66,20 @@ namespace Bot_NetCore.Entities
             get => _status;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE tickets SET status = '{value}' WHERE channel = '{ChannelId}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE tickets SET status = @value WHERE channel = @ChannelId";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@ChannelId", ChannelId);
 
-                        _status = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _status = value;
             }
         }
 
@@ -103,23 +103,31 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static TicketSQL Create(ulong channelId, ulong userId, ulong dmChannelId, ulong dmMessageId, string text, DateTime createdAt, string category, ulong messageId = 0, TicketStatus status = TicketStatus.Open)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    text = text.Replace("'", "''");
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            text = text.Replace("'", "''");
 
-                    var statement = $"INSERT INTO tickets(channel, user, dm_channel, dm_message, message, text, created_at, category, status) " +
-                                    $"VALUES ('{channelId}', '{userId}', '{dmChannelId}', '{dmMessageId}', '{messageId}', '{text}', '{createdAt:yyyy-MM-dd HH:mm:ss}', '{category}', '{status}');";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            var statement = "INSERT INTO tickets(channel, user, dm_channel, dm_message, message, text, created_at, category, status) " +
+                            "VALUES (@channelId, @userId, @dmChannelId, @dmMessageId, @messageId, @text, @createdAt, @category, @status);";
 
-                    cmd.ExecuteNonQuery();
+            cmd.Parameters.AddWithValue("@channelId", channelId);
+            cmd.Parameters.AddWithValue("@userId", userId);
+            cmd.Parameters.AddWithValue("@dmChannelId", dmChannelId);
+            cmd.Parameters.AddWithValue("@dmMessageId", dmMessageId);
+            cmd.Parameters.AddWithValue("@messageId", messageId);
+            cmd.Parameters.AddWithValue("@text", text);
+            cmd.Parameters.AddWithValue("@createdAt", createdAt.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@category", category);
+            cmd.Parameters.AddWithValue("@status", status);
 
-                    return new TicketSQL(channelId, userId, dmChannelId, dmMessageId, text, createdAt, category, messageId, status, DateTime.Now);
-                }
-            }
+
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            return new TicketSQL(channelId, userId, dmChannelId, dmMessageId, text, createdAt, category, messageId, status, DateTime.Now);
         }
 
         /// <summary>
@@ -130,83 +138,75 @@ namespace Bot_NetCore.Entities
         /// <returns>Тикет или null, если не существует</returns>
         public static TicketSQL Get(ulong id)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = $"SELECT * FROM tickets WHERE channel='{id}';";
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = $"SELECT * FROM tickets WHERE channel='{id}';";
+            cmd.Connection = connection;
+            cmd.Connection.Open();
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+            {
+                return null;
+            }
+            else
+            {
+                //ulong channelId, ulong userId, ulong dmChannelId, ulong dmMessageId, string text, DateTime createdAt, string category, ulong messageId, TicketStatus status)
+                var ret = new TicketSQL(
+                    reader.GetUInt64("channel"),
+                    reader.GetUInt64("user"),
+                    reader.GetUInt64("dm_channel"),
+                    reader.GetUInt64("dm_message"),
+                    reader.GetString("text"),
+                    reader.GetDateTime("created_at"),
+                    reader.GetString("category"),
+                    reader.GetUInt64("message"),
+                    reader.GetString("status").ToLower() switch
                     {
-                        return null;
-                    }
-                    else
-                    {
-                        //ulong channelId, ulong userId, ulong dmChannelId, ulong dmMessageId, string text, DateTime createdAt, string category, ulong messageId, TicketStatus status)
-                        var ret = new TicketSQL(
-                            reader.GetUInt64("channel"),
-                            reader.GetUInt64("user"),
-                            reader.GetUInt64("dm_channel"),
-                            reader.GetUInt64("dm_message"),
-                            reader.GetString("text"),
-                            reader.GetDateTime("created_at"),
-                            reader.GetString("category"),
-                            reader.GetUInt64("message"),
-                            reader.GetString("status").ToLower() switch 
-                            {
-                                "open" => TicketStatus.Open,
-                                "closed" => TicketStatus.Closed,
-                                "deleted" => TicketStatus.Deleted,
-                                _ => throw new Exception("Unable to get TicketStatus")
-                            },
-                            reader.GetDateTime("last_updated"));
-                        return ret;
-                    }
-                }
+                        "open" => TicketStatus.Open,
+                        "closed" => TicketStatus.Closed,
+                        "deleted" => TicketStatus.Deleted,
+                        _ => throw new Exception("Unable to get TicketStatus")
+                    },
+                    reader.GetDateTime("last_updated"));
+                return ret;
             }
         }
 
         public static List<TicketSQL> GetClosedFor(TimeSpan time)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var statement = $"SELECT * FROM tickets WHERE status = 'Closed' AND TIMEDIFF(current_timestamp, last_updated) > '{time}';";
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+
+            var tickets = new List<TicketSQL>();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    var statement = $"SELECT * FROM tickets WHERE status = 'Closed' AND TIMEDIFF(current_timestamp, last_updated) > '{time}';";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-
-                    var tickets = new List<TicketSQL>();
-                    while (reader.Read())
+                tickets.Add(new TicketSQL(
+                    reader.GetUInt64("channel"),
+                    reader.GetUInt64("user"),
+                    reader.GetUInt64("dm_channel"),
+                    reader.GetUInt64("dm_message"),
+                    reader.GetString("text"),
+                    reader.GetDateTime("created_at"),
+                    reader.GetString("category"),
+                    reader.GetUInt64("message"),
+                    reader.GetString("status").ToLower() switch
                     {
-                        tickets.Add(new TicketSQL(
-                            reader.GetUInt64("channel"),
-                            reader.GetUInt64("user"),
-                            reader.GetUInt64("dm_channel"),
-                            reader.GetUInt64("dm_message"),
-                            reader.GetString("text"),
-                            reader.GetDateTime("created_at"),
-                            reader.GetString("category"),
-                            reader.GetUInt64("message"),
-                            reader.GetString("status").ToLower() switch
-                            {
-                                "open" => TicketStatus.Open,
-                                "closed" => TicketStatus.Closed,
-                                "deleted" => TicketStatus.Deleted,
-                                _ => throw new Exception("Unable to get TicketStatus")
-                            },
-                            reader.GetDateTime("last_updated")));
-                    }
-
-                    return tickets;
-                }
+                        "open" => TicketStatus.Open,
+                        "closed" => TicketStatus.Closed,
+                        "deleted" => TicketStatus.Deleted,
+                        _ => throw new Exception("Unable to get TicketStatus")
+                    },
+                    reader.GetDateTime("last_updated")));
             }
+
+            return tickets;
         }
 
         /// <summary>
@@ -214,18 +214,14 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static void Delete(ulong id)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    var statement = $"DELETE FROM tickets WHERE channel = '{id}';";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var statement = $"DELETE FROM tickets WHERE channel = '{id}';";
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
 
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            cmd.ExecuteNonQuery();
         }
 
         public enum TicketStatus

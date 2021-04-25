@@ -310,28 +310,31 @@ namespace Bot_NetCore.Commands
         {
             await ctx.Message.DeleteAsync();
 
+            var fleetPollResetTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 12, 0, 0);
+
+            var embed = new DiscordEmbedBuilder
+            {
+                Color = new DiscordColor(0x58FF9B),
+                Title = "Голосование за рейд",
+                Description = $"Вы можете проголосовать за тип рейда который пройдёт **{fleetPollResetTime.AddDays(2):dd/MM}**.\n\n" +
+                    "Таким образом капитанам рейда будет легче узнать какой тип рейда больше всего востребован.\n‎"
+
+            }
+            .WithThumbnail("https://cdn.discordapp.com/attachments/772989975301324890/772990308052107284/RAID.gif")
+            .WithFooter($"Обновление голосования")
+            .WithTimestamp(fleetPollResetTime.AddDays(1))
+            .AddField(":one: Эмиссарский", ":black_circle: **0**", true)
+            .AddField(":two: FOTD", ":black_circle: **0**", true)
+            .AddField(":three: Меги", ":black_circle: **0**", true);
+
+            var msg = await ctx.RespondAsync(embed: embed.Build());
+
             var emojis = new DiscordEmoji[]
             {
                 DiscordEmoji.FromName(ctx.Client, ":one:"),
                 DiscordEmoji.FromName(ctx.Client, ":two:"),
-                DiscordEmoji.FromName(ctx.Client, ":three:"),
-                DiscordEmoji.FromName(ctx.Client, ":black_small_square:"),
-                DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.BrigEmoji),
-                DiscordEmoji.FromGuildEmote(ctx.Client, Bot.BotSettings.GalleonEmoji)
+                DiscordEmoji.FromName(ctx.Client, ":three:")
             };
-            
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle("Голосование за следующий рейд")
-                .WithDescription("Оставьте реакцию под этим сообщением за тот тип рейда который хотите чтобы **завтра** был у нас на сервере.\n\n" +
-                                 "Таким образом капитанам рейда будет легче узнать какой тип рейда больше всего востребован.\n‎")
-                .WithColor(new DiscordColor(0x58FF9B))
-                .WithThumbnail("https://cdn.discordapp.com/attachments/772989975301324890/772990308052107284/RAID.gif")
-                .WithTimestamp(DateTime.Now)
-                .WithFooter("‎\nПо результатам голосования капитаны смогут подобрать рейд")
-                .AddField("Тип Рейда:", "\n:one: **Эмиссарский**\n:two: **ФОТД** \n:three: **Меги**", true)
-                .AddField("Тип Корабля:", $"\n{emojis[4]} **Brigantine**\n{emojis[5]} **Galleon**", true);
-
-            var msg = await ctx.RespondAsync(embed: embed.Build());
 
             foreach (var emoji in emojis)
             {
@@ -340,6 +343,28 @@ namespace Bot_NetCore.Commands
             }
 
             Bot.EditSettings("FleetVotingMessage", msg.Id.ToString());
+        }
+
+        [Command("sudo")]
+        [Description("Выполняет команду за пользователя.")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Sudo(CommandContext ctx, [Description("Пользователь")] DiscordMember member, [RemainingText, Description("Команда для выполнения")] string command)
+        {
+            //Взято с примеров команд 
+
+            await ctx.TriggerTypingAsync();
+
+            // get the command service, we need this for sudo purposes
+            var cmds = ctx.CommandsNext;
+
+            // retrieve the command and its arguments from the given string
+            var cmd = cmds.FindCommand(command, out var customArgs);
+
+            // create a fake CommandContext
+            var fakeContext = cmds.CreateFakeContext(member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
+
+            // and perform the sudo
+            await cmds.ExecuteCommandAsync(fakeContext);
         }
     }
 }

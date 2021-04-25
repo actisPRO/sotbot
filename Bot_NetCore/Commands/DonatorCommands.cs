@@ -96,7 +96,8 @@ namespace Bot_NetCore.Commands
                     ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Deleting donator role {donator.PrivateRole}");
                     await ctx.Guild.GetRole(donator.PrivateRole).DeleteAsync();
                 }
-                catch (Exceptions.NotFoundException) { }
+                catch (NotFoundException) { }
+                catch (NullReferenceException) { }
 
                 donator.PrivateRole = 0;
             }
@@ -117,6 +118,7 @@ namespace Bot_NetCore.Commands
 
                 if (donator.PrivateRole == 0)
                 {
+                    //TODO: Restore this, after major 
                     //ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Creating new donator role");
                     //var role = await ctx.Guild.CreateRoleAsync($"{member.DisplayName} Style");
                     //await member.GrantRoleAsync(role);
@@ -150,7 +152,7 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменен баланс: **{donator.Balance}**!"); //Уже существующий донатер
         }
 
-        //[Command("addsub")]
+        /*//[Command("addsub")]
         //[RequirePermissions(Permissions.Administrator)]
         //public async Task AddSubscriber(CommandContext ctx, DiscordMember member, string time)
         //{
@@ -238,7 +240,7 @@ namespace Bot_NetCore.Commands
 
         //    Donator.Save(Bot.BotSettings.DonatorXML);
         //    await member.SendMessageAsync(message);
-        //}
+        //}*/
 
         [Command("remove")]
         [Aliases("rm")]
@@ -300,16 +302,27 @@ namespace Bot_NetCore.Commands
                 {
                     if (role.Name.ToLower() == color.ToLower())
                     {
+                        var isSameRole = false;
                         foreach (var memberRole in ctx.Member.Roles)
                             if (avaliableRoles.Contains(memberRole))
                             {
+                                if (role.Id == memberRole.Id)
+                                    isSameRole = true;
+
                                 await ctx.Member.RevokeRoleAsync(memberRole);
                                 break;
                             }
 
-                        await ctx.Member.GrantRoleAsync(role);
-                        await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
-                        await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                        if (!isSameRole)
+                        {
+                            await ctx.Member.GrantRoleAsync(role);
+                            await role.ModifyPositionAsync(ctx.Guild.GetRole(Bot.BotSettings.ColorSpacerRole).Position - 1); // костыльное решение невозможности нормально перенести роли
+                            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно изменён цвет!");
+                        }
+                        else
+                        {
+                            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён цвет!");
+                        }
                         return;
                     }
                 }
@@ -421,7 +434,65 @@ namespace Bot_NetCore.Commands
             }
 
             await ctx.RespondWithFileAsync("generated/colors.jpeg",
-                "Используйте `!d color название цвета`, чтобы получить цвет.");
+                "Используйте `!d color название цвета`, чтобы получить цвет.\n" +
+                "Для удаления цвета, повторно введите `!d color название цвета`.");
+        }
+
+        [Command("colorrm")]
+        [Description("Удаляет донатерский цвет/роль.")]
+        public async Task ColorRm(CommandContext ctx)
+        {
+            var donator = DonatorSQL.GetById(ctx.Member.Id);
+            if (donator == null)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы не являетесь донатером!");
+                return;
+            }
+
+            var prices = PriceList.Prices[PriceList.GetLastDate(donator.Date)];
+
+            if (donator.Balance < prices.ColorPrice)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} К сожалению, эта функция недоступна вам из-за низкого баланса.");
+            }
+            else if (donator.Balance >= prices.ColorPrice && donator.Balance < prices.RolePrice)
+            {
+                var avaliableRoles = GetColorRolesIds(ctx.Guild);
+                if (avaliableRoles == null)
+                {
+                    await ctx.RespondAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Не заданы цветные роли! Обратитесь к администратору для решения проблемы.");
+                    return;
+                }
+
+                foreach (var memberRole in ctx.Member.Roles)
+                    if (avaliableRoles.Contains(memberRole))
+                    {
+                        await ctx.Member.RevokeRoleAsync(memberRole);
+                        break;
+                    }
+
+                await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет!");
+            }
+            else if (donator.Balance >= prices.RolePrice)
+            {
+                if (donator.PrivateRole == 0)
+                {
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет приватной роли.");
+                }
+                else
+                {
+                    var role = await GetDonatorRoleOrCreate(ctx.Guild, ctx.Member, donator);
+                    foreach (var memberRole in ctx.Member.Roles)
+                        if (role == memberRole)
+                        {
+                            await ctx.Member.RevokeRoleAsync(role);
+                            break;
+                        }
+
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалена приватная роль!");
+                }
+            }
         }
 
         [Command("generatecolors")]
@@ -594,7 +665,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            if (donator.GetFriends().Count == 5)
+            if (donator.GetFriends().Count >= donator.Balance / 100)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
                 return;
@@ -660,9 +731,7 @@ namespace Bot_NetCore.Commands
         public async Task Unfriend(CommandContext ctx, DiscordMember member)
         {
             var donator = DonatorSQL.GetById(ctx.Member.Id);
-            donator.GetFriends();
             var friendDonator = DonatorSQL.GetById(member.Id);
-            donator.GetFriends();
 
             if (friendDonator != null && friendDonator.PrivateRole != 0)
             {
@@ -736,7 +805,8 @@ namespace Bot_NetCore.Commands
 
             var i = 0;
             var friendsMsg = "";
-            foreach (var friend in donator.GetFriends())
+            var friends = donator.GetFriends();
+            foreach (var friend in friends)
             {
                 DiscordUser discordMember = null;
                 try
@@ -750,7 +820,7 @@ namespace Bot_NetCore.Commands
                 i++;
                 friendsMsg += $"**{i}**. {discordMember.Username}#{discordMember.Discriminator} \n";
             }
-            await ctx.RespondAsync("**Список друзей с вашей ролью**\n\n" +
+            await ctx.RespondAsync($"**Друзья с твоей ролью ({friends.Count}/{donator.Balance / 100})**\n\n" +
                                    $"{friendsMsg}");
 
             //if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id))
@@ -1049,7 +1119,7 @@ namespace Bot_NetCore.Commands
             File.WriteAllLines($"errored_{filePath}", errored);
         }
 
-            private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
+        private List<DiscordRole> GetColorRolesIds(DiscordGuild guild)
         {
             if (!File.Exists("generated/color_roles.txt"))
                 return null;

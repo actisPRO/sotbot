@@ -260,8 +260,8 @@ namespace Bot_NetCore.Commands
             var durationTimeSpan = Utility.TimeSpanParse(duration);
             var id = RandomString.NextString(6);
 
-            if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
-                durationTimeSpan = new TimeSpan(3, 0, 0, 0);
+            if (durationTimeSpan.TotalDays > 31 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(31, 0, 0, 0);
 
             var reportEnd = DateTime.Now + durationTimeSpan;
 
@@ -332,8 +332,8 @@ namespace Bot_NetCore.Commands
             var durationTimeSpan = Utility.TimeSpanParse(duration);
             var id = RandomString.NextString(6);
 
-            if (durationTimeSpan.TotalDays > 3 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
-                durationTimeSpan = new TimeSpan(3, 0, 0, 0);
+            if (durationTimeSpan.TotalDays > 31 && isFleetCaptain) //Максимальное время блокировки капитанам 1day
+                durationTimeSpan = new TimeSpan(31, 0, 0, 0);
 
             var reportEnd = DateTime.Now + durationTimeSpan;
 
@@ -567,7 +567,7 @@ namespace Bot_NetCore.Commands
             }
 
             Warn(ctx.Client, ctx.Member, ctx.Guild, member, reason);
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {member.Mention}!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {member.Mention}! Количество предупреждений: **{WarnSQL.GetForUser(member.Id).Count + 1}**");
         }
 
         [Command("warn")]
@@ -583,18 +583,20 @@ namespace Bot_NetCore.Commands
 
             var id = RandomString.NextString(6);
 
+            var warnsCount = WarnSQL.GetForUser(user.Id).Count + 1;
+
             var message = await ctx.Guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync
             ("**Предупреждение**\n\n" +
              $"**От:** {ctx.User}\n" +
              $"**Кому:** {user.Username}#{user.Discriminator}\n" +
              $"**Дата:** {DateTime.Now}\n" +
              $"**ID предупреждения:** {id}\n" +
-             $"**Количество предупреждений:** {WarnSQL.GetForUser(user.Id).Count + 1}\n" +
+             $"**Количество предупреждений:** {warnsCount}\n" +
              $"**Причина:** {reason}");
 
             WarnSQL.Create(id, user.Id, ctx.Member.Id, reason, DateTime.Now, message.Id);
 
-            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {user.Username}#{user.Discriminator}!");
+            await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно выдано предупреждение {user.Username}#{user.Discriminator}! Количество предупреждений: **{warnsCount}**");
         }
 
         [Command("unwarn")]

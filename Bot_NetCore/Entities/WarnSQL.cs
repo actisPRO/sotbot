@@ -19,20 +19,20 @@ namespace Bot_NetCore.Entities
             get => _user;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE warnings SET user = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE warnings SET user = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("?id", Id);
 
-                        _user = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _user = value;
             }
         }
 
@@ -41,20 +41,20 @@ namespace Bot_NetCore.Entities
             get => _moderator;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE warnings SET moderator = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE warnings SET moderator = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _moderator = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _moderator = value;
             }
         }
 
@@ -63,20 +63,20 @@ namespace Bot_NetCore.Entities
             get => _reason;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE warnings SET reason = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE warnings SET reason = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _reason = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _reason = value;
             }
         }
 
@@ -85,20 +85,20 @@ namespace Bot_NetCore.Entities
             get => _date;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE warnings SET date = '{value:yyyy-MM-dd HH:mm:ss}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE warnings SET date = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _date = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _date = value;
             }
         }
 
@@ -107,20 +107,20 @@ namespace Bot_NetCore.Entities
             get => _logMessage;
             set
             {
-                using (var connection = new MySqlConnection(Bot.ConnectionString))
-                {
-                    using (var cmd = new MySqlCommand())
-                    {
-                        var statement = $"UPDATE warnings SET logmessage = '{value}' WHERE id = '{Id}'";
-                        cmd.CommandText = statement;
-                        cmd.Connection = connection;
-                        cmd.Connection.Open();
+                using var connection = new MySqlConnection(Bot.ConnectionString);
+                using var cmd = new MySqlCommand();
+                var statement = "UPDATE warnings SET logmessage = @value WHERE id = @id";
 
-                        cmd.ExecuteNonQuery();
+                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@id", Id);
 
-                        _logMessage = value;
-                    }
-                }
+                cmd.CommandText = statement;
+                cmd.Connection = connection;
+                cmd.Connection.Open();
+
+                cmd.ExecuteNonQuery();
+
+                _logMessage = value;
             }
         }
 
@@ -140,21 +140,25 @@ namespace Bot_NetCore.Entities
         public static WarnSQL Create(string id, ulong user, ulong moderator, string reason,
             DateTime date, ulong logMessage)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    var statement = $"INSERT INTO warnings(id, user, moderator, reason, date, logmessage) " +
-                                    $"VALUES ('{id}', {user}, {moderator}, '{reason}', '{date:yyyy-MM-dd HH:mm:ss}', {logMessage});";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var statement = "INSERT INTO warnings(id, user, moderator, reason, date, logmessage) " +
+                            "VALUES (@id, @user, @moderator, @reason, @date, @logMessage);";
 
-                    cmd.ExecuteNonQuery();
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@user", user);
+            cmd.Parameters.AddWithValue("@moderator", moderator);
+            cmd.Parameters.AddWithValue("@reason", reason);
+            cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@logMessage", logMessage);
 
-                    return new WarnSQL(id, user, moderator, reason, date, logMessage);
-                }
-            }
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
+
+            return new WarnSQL(id, user, moderator, reason, date, logMessage);
         }
 
         /// <summary>
@@ -165,27 +169,29 @@ namespace Bot_NetCore.Entities
         /// <returns>Предупреждение или null, если не существует</returns>
         public static WarnSQL Get(string id)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    cmd.CommandText = $"SELECT * FROM warnings WHERE id='{id}';";
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            cmd.CommandText = "SELECT * FROM warnings WHERE id=@id;";
 
-                    var reader = cmd.ExecuteReader();
-                    if (!reader.Read())
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        var ret = new WarnSQL(reader.GetString("id"), reader.GetUInt64("user"),
-                            reader.GetUInt64("moderator"),
-                            reader.GetString("reason"), reader.GetDateTime("date"), reader.GetUInt64("logmessage"));
-                        return ret;
-                    }
-                }
+            cmd.Parameters.AddWithValue("@id", id);
+
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+            if (!reader.Read())
+            {
+                return null;
+            }
+            else
+            {
+                var ret = new WarnSQL(reader.GetString("id"), 
+                    reader.GetUInt64("user"),
+                    reader.GetUInt64("moderator"),
+                    reader.GetString("reason"),
+                    reader.GetDateTime("date"),
+                    reader.GetUInt64("logmessage"));
+                return ret;
             }
         }
 
@@ -194,44 +200,45 @@ namespace Bot_NetCore.Entities
         /// </summary>
         public static void Delete(string id)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
-            {
-                using (var cmd = new MySqlCommand())
-                {
-                    var statement = $"DELETE FROM warnings WHERE id = '{id}';";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var statement = "DELETE FROM warnings WHERE id=@id;";
 
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            cmd.Parameters.AddWithValue("@id", id);
+
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            cmd.ExecuteNonQuery();
         }
 
         public static List<WarnSQL> GetForUser(ulong user)
         {
-            using (var connection = new MySqlConnection(Bot.ConnectionString))
+            using var connection = new MySqlConnection(Bot.ConnectionString);
+            using var cmd = new MySqlCommand();
+            var statement = "SELECT * FROM warnings WHERE user = @user;";
+
+            cmd.Parameters.AddWithValue("@user", user);
+
+            cmd.CommandText = statement;
+            cmd.Connection = connection;
+            cmd.Connection.Open();
+
+            var reader = cmd.ExecuteReader();
+
+            var warns = new List<WarnSQL>();
+            while (reader.Read())
             {
-                using (var cmd = new MySqlCommand())
-                {
-                    var statement = $"SELECT * FROM warnings WHERE user='{user}';";
-                    cmd.CommandText = statement;
-                    cmd.Connection = connection;
-                    cmd.Connection.Open();
-
-                    var reader = cmd.ExecuteReader();
-
-                    var warns = new List<WarnSQL>();
-                    while (reader.Read())
-                    {
-                        warns.Add(new WarnSQL(reader.GetString("id"), reader.GetUInt64("user"),
-                            reader.GetUInt64("moderator"),
-                            reader.GetString("reason"), reader.GetDateTime("date"), reader.GetUInt64("logmessage")));
-                    }
-
-                    return warns;
-                }
+                warns.Add(new WarnSQL(reader.GetString("id"),
+                    reader.GetUInt64("user"),
+                    reader.GetUInt64("moderator"),
+                    reader.GetString("reason"),
+                    reader.GetDateTime("date"),
+                    reader.GetUInt64("logmessage")));
             }
+
+            return warns;
         }
     }
 }
