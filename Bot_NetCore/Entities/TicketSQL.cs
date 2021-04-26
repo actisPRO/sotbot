@@ -70,7 +70,7 @@ namespace Bot_NetCore.Entities
                 using var cmd = new MySqlCommand();
                 var statement = "UPDATE tickets SET status = @value WHERE channel = @ChannelId";
 
-                cmd.Parameters.AddWithValue("@value", value);
+                cmd.Parameters.AddWithValue("@value", (int) value + 1);
                 cmd.Parameters.AddWithValue("@ChannelId", ChannelId);
 
                 cmd.CommandText = statement;
@@ -119,14 +119,14 @@ namespace Bot_NetCore.Entities
             cmd.Parameters.AddWithValue("@createdAt", createdAt.ToString("yyyy-MM-dd HH:mm:ss"));
             cmd.Parameters.AddWithValue("@category", category);
 
-            var statusStr = status switch
+            /*var statusStr = status switch
             {
                 TicketStatus.Open => "Open",
                 TicketStatus.Closed => "Closed",
                 TicketStatus.Deleted => "Deleted",
                 _ => "Unknown"
-            };
-            cmd.Parameters.AddWithValue("@status", statusStr);
+            };*/
+            cmd.Parameters.AddWithValue("@status", (int) status + 1);
 
 
             cmd.CommandText = statement;
