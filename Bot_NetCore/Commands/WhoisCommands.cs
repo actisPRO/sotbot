@@ -33,7 +33,10 @@ namespace Bot_NetCore.Commands
                     Random random = new Random();
                     int value = random.Next(100);
                     if (value < 30)
-                        await ctx.RespondAsync("https://media.tenor.co/videos/df033d19c763a265fa1063fada1c1ae9/mp4");
+                    {
+                        await ctx.RespondAsync("https://media.giphy.com/media/eKrgVyZ7zLvJrgZNZn/giphy.gif");
+                        return;
+                    }
                 }
                 
                 await ctx.TriggerTypingAsync();
