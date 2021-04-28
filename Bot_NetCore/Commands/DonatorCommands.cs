@@ -667,7 +667,7 @@ namespace Bot_NetCore.Commands
 
             if (donator.GetFriends().Count >= donator.Balance / 100)
             {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только 5 друзей!");
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Вы можете добавить только {donator.Balance / 100} друзей!");
                 return;
             }
 
@@ -730,6 +730,40 @@ namespace Bot_NetCore.Commands
         [Description("Убирает цвет у друга")]
         public async Task Unfriend(CommandContext ctx, DiscordMember member)
         {
+            bool updated = false;
+            
+            // Remove given role
+            var callerDonator = DonatorSQL.GetById(ctx.Member.Id);
+            if (callerDonator != null && callerDonator.PrivateRole != 0)
+            {
+                var friends = callerDonator.GetFriends();
+                if (friends.Contains(member.Id))
+                {
+                    callerDonator.RemoveFriend(member.Id);
+                    await member.RevokeRoleAsync(ctx.Guild.GetRole(callerDonator.PrivateRole));
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён цвет у твоего друга");
+                    updated = true;
+                }
+            }
+
+            // Remove received role
+            var memberDonator = DonatorSQL.GetById(member.Id);
+            if (memberDonator != null && memberDonator.PrivateRole != 0)
+            {
+                var friends = memberDonator.GetFriends();
+                if (friends.Contains(ctx.Member.Id))
+                {
+                    memberDonator.RemoveFriend(ctx.Member.Id);
+                    await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(memberDonator.PrivateRole));
+                    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удалён цвет твоего друга");
+                    updated = true;
+                }
+            }
+
+            if (!updated)
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не найдены общие приватные роли");
+
+            /*
             var donator = DonatorSQL.GetById(ctx.Member.Id);
             var friendDonator = DonatorSQL.GetById(member.Id);
 
@@ -745,43 +779,7 @@ namespace Bot_NetCore.Commands
                 donator.RemoveFriend(member.Id);
                 await member.RevokeRoleAsync(ctx.Guild.GetRole(donator.PrivateRole));
                 await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
-            }
-
-            ////Удаление роли которую дали
-            //if (Subscriber.Subscribers.ContainsKey(member.Id) &&
-            //    Subscriber.Subscribers[member.Id].Friends.Contains(ctx.Member.Id))
-            //{
-            //    Subscriber.Subscribers[member.Id].Friends.Remove(ctx.Member.Id);
-            //    await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[member.Id].PrivateRole));
-            //    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
-            //    Subscriber.Save(Bot.BotSettings.DonatorXML);
-            //}
-            //else if (Donator.Donators.ContainsKey(member.Id) &&
-            //    Donator.Donators[member.Id].Friends.Contains(ctx.Member.Id))
-            //{
-            //    Donator.Donators[member.Id].Friends.Remove(ctx.Member.Id);
-            //    await ctx.Member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[member.Id].PrivateRole));
-            //    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет вашего друга!");
-            //    Donator.Save(Bot.BotSettings.DonatorXML);
-            //}
-
-            ////Удаление своей роли
-            //if (Subscriber.Subscribers.ContainsKey(ctx.Member.Id) &&
-            //    Subscriber.Subscribers[ctx.Member.Id].Friends.Contains(member.Id))
-            //{
-            //    Subscriber.Subscribers[ctx.Member.Id].Friends.Remove(member.Id);
-            //    await member.RevokeRoleAsync(ctx.Guild.GetRole(Subscriber.Subscribers[ctx.Member.Id].PrivateRole));
-            //    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
-            //    Subscriber.Save(Bot.BotSettings.SubscriberXML);
-            //}
-            //else if (Donator.Donators.ContainsKey(ctx.Member.Id) &&
-            //          Donator.Donators[ctx.Member.Id].Friends.Contains(member.Id))
-            //{
-            //    Donator.Donators[ctx.Member.Id].Friends.Remove(member.Id);
-            //    await member.RevokeRoleAsync(ctx.Guild.GetRole(Donator.Donators[ctx.Member.Id].PrivateRole));
-            //    await ctx.RespondAsync($"{Bot.BotSettings.OkEmoji} Успешно удален цвет у вашего друга!");
-            //    Donator.Save(Bot.BotSettings.DonatorXML);
-            //}
+            }*/
         }
 
         [Command("friends")]

@@ -38,7 +38,7 @@ namespace Bot_NetCore.Entities
                 Connection = connection
             };
 
-            cmd.Parameters.AddWithValue("?userId", UserId);
+            cmd.Parameters.AddWithValue("@userId", UserId);
 
             cmd.Connection.Open();
 
