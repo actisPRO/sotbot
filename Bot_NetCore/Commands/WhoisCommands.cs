@@ -28,6 +28,14 @@ namespace Bot_NetCore.Commands
             [GroupCommand]
             public async Task WhoIs(CommandContext ctx, [Description("Пользователь"), RemainingText] DiscordUser user)
             {
+                if (user.Id == 261137595965243393)
+                {
+                    Random random = new Random();
+                    int value = random.Next(100);
+                    if (value < 30)
+                        await ctx.RespondAsync("https://media.tenor.co/videos/df033d19c763a265fa1063fada1c1ae9/mp4");
+                }
+                
                 await ctx.TriggerTypingAsync();
                 try
                 {
