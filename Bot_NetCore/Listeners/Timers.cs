@@ -449,9 +449,9 @@ namespace Bot_NetCore.Listeners
                 var guild = Client.Guilds[Bot.BotSettings.Guild];
                 foreach (var entry in guild.VoiceStates.Where(
                                         x => x.Value.Channel != null && 
-                                            x.Value.Channel.Id != guild.AfkChannel.Id && 
-                                            x.Value.Channel.Id != Bot.BotSettings.WaitingRoom &&
-                                            x.Value.Channel.Users.Count() < 2)
+                                             x.Value.Channel.Id != guild.AfkChannel.Id && 
+                                             x.Value.Channel.Id != Bot.BotSettings.WaitingRoom &&
+                                             x.Value.Channel.Users.Count() > 2)
                                         .ToList())
                 {
                     if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
@@ -485,6 +485,7 @@ namespace Bot_NetCore.Listeners
                     await guild.GetChannel(ticket.ChannelId).DeleteAsync();
                 }
                 catch (NotFoundException) { }
+                catch (NullReferenceException) { }
             }
         }
 

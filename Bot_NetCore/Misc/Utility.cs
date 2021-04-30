@@ -87,7 +87,7 @@ namespace Bot_NetCore.Misc
         //https://stackoverflow.com/questions/47702094/parse-the-string-26h44m3s-to-timespan-in-c-sharp
         public static TimeSpan TimeSpanParse(string input)
         {
-            var m = Regex.Match(input, @"^((?<days>\d+)d)?((?<hours>\d+)h)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$",
+            var m = Regex.Match(input.Trim(), @"^((?<days>\d+)d)?((?<hours>\d+)h)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.RightToLeft);
 
             int ds = m.Groups["days"].Success ? int.Parse(m.Groups["days"].Value) : 0;
