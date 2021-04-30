@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
@@ -251,7 +252,16 @@ namespace Bot_NetCore.Listeners
                                 doc.Save($"generated/voters-{vote.Id}.xml");
 
                                 var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
-                                await channel.SendFileAsync($"generated/voters-{vote.Id}.xml", embed: embed);
+
+                                var newMessage = new DiscordMessageBuilder()
+                                    .WithEmbed(embed);
+
+                                using (var fs = new FileStream($"generated/voters-{vote.Id}.xml", FileMode.Open, FileAccess.Read))
+                                {
+                                    newMessage.WithFile(fs);
+                                }
+
+                                await channel.SendMessageAsync($"generated/voters-{vote.Id}.xml", embed: embed);
 
                                 await message.DeleteAsync();
 
