@@ -451,7 +451,7 @@ namespace Bot_NetCore.Listeners
                                         x => x.Value.Channel != null && 
                                              x.Value.Channel.Id != guild.AfkChannel.Id && 
                                              x.Value.Channel.Id != Bot.BotSettings.WaitingRoom &&
-                                             x.Value.Channel.Users.Count() > 2)
+                                             x.Value.Channel.Users.Count() >= 2)
                                         .ToList())
                 {
                     if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
