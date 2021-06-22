@@ -399,7 +399,7 @@ namespace Bot_NetCore.Listeners
                                 if (channel.Parent.Name.StartsWith("Рейд"))
                                 {
                                     if (channel.Name.StartsWith("Рейд"))
-                                        usersNeeded = Math.Max(0, (usersNeeded - 1));
+                                        usersNeeded = Math.Max(0, usersNeeded.Value - 1);
 
                                     embedThumbnail = usersNeeded switch
                                     {

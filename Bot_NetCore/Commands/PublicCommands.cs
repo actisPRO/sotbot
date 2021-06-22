@@ -75,7 +75,7 @@ namespace Bot_NetCore.Commands
             if (channel.Parent.Name.StartsWith("Рейд"))
             {
                 if (channel.Name.StartsWith("Рейд"))
-                    usersNeeded = Math.Max(0, (usersNeeded - 1));
+                    usersNeeded = Math.Max(0, usersNeeded.Value - 1);
 
                 embedThumbnail = usersNeeded switch
                 {
@@ -264,7 +264,16 @@ namespace Bot_NetCore.Commands
 
             embed.WithAuthor($"{member.Username}#{member.Discriminator}", iconUrl: member.AvatarUrl);
             embed.WithFooter($"Голосование закончится через 60 сек. Нужно {votesNeeded} голос(а).");
-            var msg = await ctx.RespondAsync(embed: embed);
+
+            // Mentioning voters
+            var voters = channel.Users.Where(m => m != ctx.Member && m != member);
+            var mention = "";
+            foreach (var voter in voters)
+            {
+                mention += voter.Mention + " ";
+            }
+            
+            var msg = await ctx.RespondAsync(mention, embed: embed);
 
             //Добавляем реакции к сообщению
             await msg.CreateReactionAsync(emoji);
