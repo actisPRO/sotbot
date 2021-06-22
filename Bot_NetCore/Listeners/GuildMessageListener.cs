@@ -64,10 +64,11 @@ namespace Bot_NetCore.Listeners
                                                     $"**Содержимое: ```{e.Message.Content}```**");
 
                                         using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read))
-                                        { 
+                                        {
                                             message.WithFile(fs);
+
+                                            await e.Guild.GetChannel(Bot.BotSettings.FulllogChannel).SendMessageAsync(message);
                                         }
-                                        await e.Guild.GetChannel(Bot.BotSettings.FulllogChannel).SendMessageAsync(message);
                                         File.Delete(file);
                                         return;
                                         
@@ -157,7 +158,7 @@ namespace Bot_NetCore.Listeners
                         }
                         catch (UnauthorizedException) { }
                         return;
-                    } 
+                    }
                     else if (!member.Roles.Contains(e.Channel.Guild.GetRole(Bot.BotSettings.CodexRole)))
                     {
                         //Выдаем роль правил
@@ -185,14 +186,18 @@ namespace Bot_NetCore.Listeners
                         var file = $"generated/attachments/{attachment.FileName}";
                         wClient.DownloadFile(attachment.Url, file);
 
+                        DiscordMessage logMessage;
+
                         using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+                        {
                             message.WithFile(fs);
 
-                        var logMessage = await e.Guild.GetChannel(Bot.BotSettings.AttachmentsLog).SendMessageAsync(message);
+                            logMessage = await e.Guild.GetChannel(Bot.BotSettings.AttachmentsLog).SendMessageAsync(message);
+                        }
                         File.Delete(file);
 
-                        using (var fs = new FileStream("generated/attachments_messages.csv", FileMode.Append))
-                        using (var sw = new StreamWriter(fs))
+                        using (var fsCsd = new FileStream("generated/attachments_messages.csv", FileMode.Append))
+                        using (var sw = new StreamWriter(fsCsd))
                             await sw.WriteLineAsync($"{e.Message.Id},{logMessage.Id}");
                     }
                 }
