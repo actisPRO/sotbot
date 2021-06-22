@@ -30,7 +30,7 @@ namespace Bot_NetCore.Commands
         {
             { SupportType.Admin, "Администрация"},
             { SupportType.Moderator, "Модерация"},
-            { SupportType.Developer, "Разработчики"},
+            { SupportType.Developer, "Поддержка бота"},
             { SupportType.Donate, "Донат/Реклама"},
             { SupportType.FleetCaptain, "Рейды"},
             { SupportType.Events, "Ивенты"}
@@ -65,7 +65,7 @@ namespace Bot_NetCore.Commands
 
                 ticketEmbed.AddField($"{SupportEmoji[SupportType.Admin]} {SupportNames[SupportType.Admin]}", "Связь с администрацией, используйте только для **ВАЖНЫХ** вопросов", true);
                 ticketEmbed.AddField($"{SupportEmoji[SupportType.Moderator]} {SupportNames[SupportType.Moderator]}", "Вопросы по поводу модерации, нарушений и так далее. (Отвечают модераторы и администраторы)", true);
-                ticketEmbed.AddField($"{SupportEmoji[SupportType.Developer]} {SupportNames[SupportType.Developer]}", "По вопросам бота, техническим вопросам, помощь с командами и их ошибками.", true);
+                ticketEmbed.AddField($"{SupportEmoji[SupportType.Developer]} {SupportNames[SupportType.Developer]}", "По вопросам бота, сайта, техническим вопросам, помощь с командами и их ошибками.", true);
                 ticketEmbed.AddField($"{SupportEmoji[SupportType.Donate]} {SupportNames[SupportType.Donate]}", "По вопросам рекламы и при проблемах с донатами.", true);
                 ticketEmbed.AddField($"{SupportEmoji[SupportType.FleetCaptain]} {SupportNames[SupportType.FleetCaptain]}", "По вопросам рейдов и нарушений в рейдах. (Ошибки при выдаче роли -> к `Разработчикам`)", true);
                 ticketEmbed.AddField($"{SupportEmoji[SupportType.Events]} {SupportNames[SupportType.Events]}", "По вопросам ивентов на сервере. Как игровых так и внутри сервера.", true);
