@@ -189,7 +189,7 @@ namespace Bot_NetCore.Commands
         public static async Task ClientOnEventReationAdded(DiscordClient client, MessageReactionAddEventArgs e)
         {
             //Check channel id in dev and main server
-            if (e.Channel.Id == 803193543426441217 || e.Channel.Id == 801834857504178206)
+            if (e.Channel != null && (e.Channel.Id == 803193543426441217 || e.Channel.Id == 801834857504178206))
             {
                 var dayTime = new DateTime(2021, 01, 29, 18, 0, 0);
 
