@@ -51,7 +51,7 @@ namespace StatsBot
                 
                 // all the messages in the channel
 
-                ulong lastMessageId = channel.LastMessageId;
+                ulong lastMessageId = channel.LastMessageId.Value;
                 var messages = await channel.GetMessagesBeforeAsync(lastMessageId, 100);
                 int count = 0;
                 bool first = true;
@@ -119,7 +119,7 @@ namespace StatsBot
                 
             // all the messages in the channel
 
-            ulong lastMessageId = channel.LastMessageId;
+            ulong lastMessageId = channel.LastMessageId.Value;
             var messages = await channel.GetMessagesBeforeAsync(lastMessageId, 100);
             int count = 0;
             while (messages.Count != 0)
@@ -230,7 +230,12 @@ namespace StatsBot
             }
             result.ExportToFile("global_stats_full.csv");
 
-            await ctx.RespondWithFileAsync("global_stats_full.csv", "Сгенерирован обновленный файл **global_stats_full.csv**!");
+            var builder = new DiscordMessageBuilder();
+            using (var fs = new FileStream("global_stats_full.csv", FileMode.Open))
+                builder.WithFile(fs);
+            builder.WithContent("Сгенерирован обновленный файл **global_stats_full.csv**!");
+
+            await ctx.RespondAsync(builder);
         }
 
         [Command("get")]
