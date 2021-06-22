@@ -236,7 +236,7 @@ namespace Bot_NetCore.Listeners
                     await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
 
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                            .SendMessageAsync($"{DiscordEmoji.FromName(client, ":new:")} Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) получил роль рейда.");
+                            .SendMessageAsync($"{DiscordEmoji.FromName(client, ":new:")} Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) получил роль рейда. **Xbox:** {webUser.LastXbox}.");
 
                     client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил рейда.");
                 }

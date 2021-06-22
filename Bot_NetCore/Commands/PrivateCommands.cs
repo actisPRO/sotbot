@@ -466,7 +466,7 @@ namespace Bot_NetCore.Commands
         }
         
         [Command("demote")]
-        [Description("Назначает пользователя офицером")]
+        [Description("Снимает пользователя с должности офицера")]
         public async Task Demote(CommandContext ctx, [Description("Офицер")] DiscordMember member)
         {
             var ship = PrivateShip.GetOwnedShip(ctx.Member.Id);
