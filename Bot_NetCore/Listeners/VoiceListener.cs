@@ -186,25 +186,32 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.VoiceStateUpdated)]
         public static async Task DeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            var shipCategories = new[] {
-                    e.Guild.GetChannel(Bot.BotSettings.AutocreateSloopCategory),
-                    e.Guild.GetChannel(Bot.BotSettings.AutocreateBrigantineCategory),
-                    e.Guild.GetChannel(Bot.BotSettings.AutocreateGalleonCategory)
+            if (e.Before?.Channel != null) // Только если пользователь находился в каком либо канале
+            {
+                var shipCategories = new[] {
+                    await client.GetChannelAsync(Bot.BotSettings.AutocreateSloopCategory),
+                    await client.GetChannelAsync(Bot.BotSettings.AutocreateBrigantineCategory),
+                    await client.GetChannelAsync(Bot.BotSettings.AutocreateGalleonCategory)
                 };
 
-            shipCategories.ToList().ForEach(x =>
-            {
-                x.Children.Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0).ToList()
-                    .ForEach(async x =>
-                        {
-                            try
+                shipCategories.ToList().ForEach(x =>
+                {
+                    x.Children.Where(x => x.Type == ChannelType.Voice &&
+                                        x.Users.Count() == 0 &&
+                                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 30)
+                        .ToList()
+                        .ForEach(async x =>
                             {
-                                await x.DeleteAsync();
-                            }
-                            catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
-                            catch (NotFoundException) { }
-                        });
-            });
+                                try
+                                {
+                                    await x.DeleteAsync();
+
+                                }
+                                catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
+                                catch (NotFoundException) { }
+                            });
+                });
+            }
 
             await Task.CompletedTask;
         }
@@ -399,7 +406,7 @@ namespace Bot_NetCore.Listeners
                                 if (channel.Parent.Name.StartsWith("Рейд"))
                                 {
                                     if (channel.Name.StartsWith("Рейд"))
-                                        usersNeeded = Math.Max(0, usersNeeded.Value - 1);
+                                        usersNeeded = Math.Max(0, usersNeeded - 1);
 
                                     embedThumbnail = usersNeeded switch
                                     {
