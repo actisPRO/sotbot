@@ -420,7 +420,7 @@ namespace Bot_NetCore.Listeners
                             }
                             else
                             {
-                                var channelUsers = guild.VoiceStates.Values.Where(u => u.Channel.Id == channel.Id).Select(u => u.User).ToList();
+                                var channelUsers = guild.VoiceStates.Values.Where(u => u.Channel?.Id == channel.Id).Select(u => u.User).ToList();
                                 var oldEmbed = embedMessage.Embeds.FirstOrDefault();
                                 var oldContent = oldEmbed.Description.Split("\n\n");
 
