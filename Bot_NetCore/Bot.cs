@@ -98,6 +98,7 @@ namespace Bot_NetCore
                 Token = BotSettings.Token,
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
+                Intents = DiscordIntents.All,
                 MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information
             };
 
