@@ -75,7 +75,7 @@ namespace Bot_NetCore.Commands
             if (channel.Parent.Name.StartsWith("Рейд"))
             {
                 if (channel.Name.StartsWith("Рейд"))
-                    usersNeeded = Math.Max(0, usersNeeded - 1);
+                    usersNeeded = Math.Max(0, usersNeeded.Value - 1);
 
                 embedThumbnail = usersNeeded switch
                 {

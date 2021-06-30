@@ -11,9 +11,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="4.0.1" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.1" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.1" />
+        <PackageReference Include="DSharpPlus" Version="4.1.0-nightly-00908" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="4.1.0-nightly-00908" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0-nightly-00908" />
         <PackageReference Include="MaxMind.GeoIP2" Version="3.3.0" />
         <PackageReference Include="MySql.Data" Version="8.0.21" />
     </ItemGroup>

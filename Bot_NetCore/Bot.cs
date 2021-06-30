@@ -162,7 +162,8 @@ namespace Bot_NetCore
         {
             await client.UpdateStatusAsync(new DiscordActivity("личные сообщения.\n" +
                 $"Участников: {guild.MemberCount} \n" +
-                $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()}", ActivityType.Watching));
+                $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()} \n" +
+                $"Shards: {client.ShardCount}. {DateTime.Now:HH:mm:ss}", ActivityType.Watching));
         }
 
         /// <summary>

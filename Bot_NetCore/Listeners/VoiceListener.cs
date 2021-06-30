@@ -226,6 +226,7 @@ namespace Bot_NetCore.Listeners
                 // удалим пустые каналы
                 var autocreatedChannels = new List<DiscordChannel>();  // это все автосозданные каналы
                 var notEmptyChannels = new List<DiscordChannel>(); // это все НЕ пустые каналы
+                var forDeletionChannels = new List<DiscordChannel>();
                 shipCategories.ToList().ForEach(category =>
                 {
                     autocreatedChannels.AddRange(category.Children.Where(x => x.Type == ChannelType.Voice &&
@@ -235,9 +236,14 @@ namespace Bot_NetCore.Listeners
                     if(voiceState.Channel != null)
                         notEmptyChannels.Add(voiceState.Channel);
 
-                var forDeletionChannels = autocreatedChannels.Except(notEmptyChannels); // это пустые каналы
+                forDeletionChannels = autocreatedChannels.Except(notEmptyChannels).ToList(); // это пустые каналы
 
-                foreach (var channel in forDeletionChannels) await channel.DeleteAsync(); // мы их удаляем
+                foreach (var channel in forDeletionChannels)
+                    try
+                    {
+                        await channel.DeleteAsync(); // мы их удаляем
+                    } 
+                    catch (NotFoundException) { }
             }
 
             await Task.CompletedTask;
@@ -435,7 +441,7 @@ namespace Bot_NetCore.Listeners
                                 if (channel.Parent.Name.StartsWith("Рейд"))
                                 {
                                     if (channel.Name.StartsWith("Рейд"))
-                                        usersNeeded = Math.Max(0, usersNeeded - 1);
+                                        usersNeeded = Math.Max(0, usersNeeded.Value - 1);
 
                                     embedThumbnail = usersNeeded switch
                                     {
