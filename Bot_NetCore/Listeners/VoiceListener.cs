@@ -229,10 +229,14 @@ namespace Bot_NetCore.Listeners
                 shipCategories.ToList().ForEach(category =>
                 {
                     autocreatedChannels.AddRange(category.Children.Where(x => x.Type == ChannelType.Voice &&
-                                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 5));
+                                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 2));
                 });
-                foreach (var voiceState in e.Guild.VoiceStates.Values) notEmptyChannels.Add(voiceState.Channel);
+                foreach (var voiceState in e.Guild.VoiceStates.Values) 
+                    if(voiceState.Channel != null)
+                        notEmptyChannels.Add(voiceState.Channel);
+
                 var forDeletionChannels = autocreatedChannels.Except(notEmptyChannels); // это пустые каналы
+
                 foreach (var channel in forDeletionChannels) await channel.DeleteAsync(); // мы их удаляем
             }
 

@@ -11,7 +11,7 @@ namespace Bot_NetCore.Misc
     {
         public static IEnumerable<ListenerMethod> ListenerMethods { get; private set; }
 
-        public static void InstallListeners(DiscordClient client, Bot bot)
+        public static void InstallListeners(DiscordShardedClient client, Bot bot)
         {
             // find all methods from ModCore with AsyncListener attr
             ListenerMethods =

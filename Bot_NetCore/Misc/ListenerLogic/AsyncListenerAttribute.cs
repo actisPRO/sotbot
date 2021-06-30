@@ -18,7 +18,7 @@ namespace Bot_NetCore.Misc
             Target = targetType;
         }
 
-        public void Register(Bot bot, DiscordClient client, MethodInfo listener)
+        public void Register(Bot bot, DiscordShardedClient client, MethodInfo listener)
         {
             Task OnEventWithArgs(DiscordClient client, object e)
             {
@@ -158,9 +158,9 @@ namespace Bot_NetCore.Misc
                 case EventTypes.GuildRoleDeleted:
                     client.GuildRoleDeleted += OnEventWithArgs;
                     break;
-                case EventTypes.MessageAcknowledged:
-                    client.MessageAcknowledged += OnEventWithArgs;
-                    break;
+                //case EventTypes.MessageAcknowledged:
+                //    client.MessageAcknowledged += OnEventWithArgs;
+                //    break;
                 case EventTypes.MessageUpdated:
                     client.MessageUpdated += OnEventWithArgs;
                     break;
@@ -216,10 +216,12 @@ namespace Bot_NetCore.Misc
                     client.VoiceStateUpdated += OnChannelChangedEvent;
                     break;
                 case EventTypes.CommandExecuted:
-                    bot.Commands.CommandExecuted += OnCommandWithArgs;
+                    foreach(var c in bot.Commands.Values)
+                        c.CommandExecuted += OnCommandWithArgs;
                     break;
                 case EventTypes.CommandErrored:
-                    bot.Commands.CommandErrored += OnCommandWithArgs;
+                    foreach (var c in bot.Commands.Values)
+                        c.CommandErrored += OnCommandWithArgs;
                     break;
             }
         }
