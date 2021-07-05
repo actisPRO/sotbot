@@ -267,6 +267,8 @@ namespace Bot_NetCore.Listeners
                                 x.Id == Bot.BotSettings.ArenaRole).ToList()
                          .ForEach(async x => await member.RevokeRoleAsync(x) );
 
+                Console.WriteLine(e.Emoji.GetDiscordName());
+
                 //Выдаем роль в зависимости от реакции
                 switch (e.Emoji.GetDiscordName())
                 {
@@ -276,13 +278,13 @@ namespace Bot_NetCore.Listeners
                     case ":pig:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole));
                         break;
-                    case ":skeleton:":
+                    case ":skull:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryOrderOfSoulsRole));
                         break;
                     case ":gem:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryAthenaRole));
                         break;
-                    case ":skull_and_crossbones:":
+                    case ":skull_crossbones:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryReaperBonesRole));
                         break;
                     case ":fish:":
