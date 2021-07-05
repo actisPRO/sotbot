@@ -205,45 +205,23 @@ namespace Bot_NetCore.Listeners
                     await client.GetChannelAsync(Bot.BotSettings.AutocreateGalleonCategory)
                 };
 
-                //shipCategories.ToList().ForEach(category =>
-                //{
-                //    category.Children.Where(x => x.Type == ChannelType.Voice &&
-                //                        x.Users.Count() == 0 &&
-                //                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 30)
-                //        .ToList()
-                //        .ForEach(async x =>
-                //            {
-                //                try
-                //                {
-                //                    await x.DeleteAsync();
-
-                //                }
-                //                catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
-                //                catch (NotFoundException) { }
-                //            });
-                //});
-
-                // удалим пустые каналы
-                var autocreatedChannels = new List<DiscordChannel>();  // это все автосозданные каналы
-                var notEmptyChannels = new List<DiscordChannel>(); // это все НЕ пустые каналы
-                var forDeletionChannels = new List<DiscordChannel>();
                 shipCategories.ToList().ForEach(category =>
                 {
-                    autocreatedChannels.AddRange(category.Children.Where(x => x.Type == ChannelType.Voice &&
-                                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 2));
+                    category.Children.Where(x => x.Type == ChannelType.Voice &&
+                                        x.Users.Count() == 0 &&
+                                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 30)
+                        .ToList()
+                        .ForEach(async x =>
+                        {
+                            try
+                            {
+                                await x.DeleteAsync();
+
+                            }
+                            catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
+                            catch (NotFoundException) { }
+                        });
                 });
-                foreach (var voiceState in e.Guild.VoiceStates.Values) 
-                    if(voiceState.Channel != null)
-                        notEmptyChannels.Add(voiceState.Channel);
-
-                forDeletionChannels = autocreatedChannels.Except(notEmptyChannels).ToList(); // это пустые каналы
-
-                foreach (var channel in forDeletionChannels)
-                    try
-                    {
-                        await channel.DeleteAsync(); // мы их удаляем
-                    } 
-                    catch (NotFoundException) { }
             }
 
             await Task.CompletedTask;

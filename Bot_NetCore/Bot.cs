@@ -39,12 +39,12 @@ namespace Bot_NetCore
         /// <summary>
         ///     Модуль команд.
         /// </summary>
-        public IReadOnlyDictionary<int, CommandsNextExtension> Commands { get; set; }
+        public CommandsNextExtension Commands { get; set; }
 
         /// <summary>
         ///     Модуль взаимодействия.
         /// </summary>
-        public IReadOnlyDictionary<int, InteractivityExtension> Interactivity { get; set; }
+        public InteractivityExtension Interactivity { get; set; }
 
         /// <summary>
         ///     Структура с настройками бота.
@@ -102,8 +102,7 @@ namespace Bot_NetCore
                 MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information
             };
 
-
-            var Client = new DiscordShardedClient(cfg);
+            Client = new DiscordClient(cfg);
 
             var ccfg = new CommandsNextConfiguration
             {
@@ -113,7 +112,7 @@ namespace Bot_NetCore
                 EnableMentionPrefix = true
             };
 
-            Commands = await Client.UseCommandsNextAsync(ccfg);
+            Commands = Client.UseCommandsNext(ccfg);
 
             var icfg = new InteractivityConfiguration
             {
@@ -122,18 +121,13 @@ namespace Bot_NetCore
                 Timeout = TimeSpan.FromMinutes(2)
             };
 
+            Interactivity = Client.UseInteractivity(icfg);
 
-           Interactivity = await Client.UseInteractivityAsync(icfg);
+            //Команды
+            Commands.RegisterCommands(Assembly.GetExecutingAssembly());
 
-           
-            Commands.Values.ToList().ForEach(c =>
-            {
-                //Команды
-                c.RegisterCommands(Assembly.GetExecutingAssembly());
-                //Кастомная справка команд
-                c.SetHelpFormatter<HelpFormatter>();
-            });
-
+            //Кастомная справка команд
+            Commands.SetHelpFormatter<HelpFormatter>();
 
             //Ивенты
             AsyncListenerHandler.InstallListeners(Client, this);
@@ -141,7 +135,7 @@ namespace Bot_NetCore
             ConnectionString =
                 $"Server={Bot.BotSettings.DatabaseHost}; Port=3306; Database={Bot.BotSettings.DatabaseName}; Uid={Bot.BotSettings.DatabaseUser}; Pwd={Bot.BotSettings.DatabasePassword}; CharSet=utf8mb4;";
 
-            await Client.StartAsync();
+            await Client.ConnectAsync();
 
             if (!Directory.Exists("generated")) Directory.CreateDirectory("generated");
             if (!File.Exists("generated/attachments_messages.csv")) File.Create("generated/attachments_messages.csv");
