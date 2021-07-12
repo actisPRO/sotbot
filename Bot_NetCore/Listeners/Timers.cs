@@ -485,7 +485,7 @@ namespace Bot_NetCore.Listeners
 
             var expiredTickets = TicketSQL.GetClosedFor(TimeSpan.FromDays(2));
 
-            var guild = Client.Guilds[Bot.BotSettings.Guild];
+            var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
 
             foreach (var ticket in expiredTickets)
             {

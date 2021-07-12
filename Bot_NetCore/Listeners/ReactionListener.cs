@@ -267,8 +267,6 @@ namespace Bot_NetCore.Listeners
                                 x.Id == Bot.BotSettings.ArenaRole).ToList()
                          .ForEach(async x => await member.RevokeRoleAsync(x) );
 
-                Console.WriteLine(e.Emoji.GetDiscordName());
-
                 //Выдаем роль в зависимости от реакции
                 switch (e.Emoji.GetDiscordName())
                 {

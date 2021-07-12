@@ -249,7 +249,7 @@ namespace Bot_NetCore.Listeners
                     {
                         try
                         {
-                            if(!e.Message.Pinned)
+                            if(!e.Message.Pinned && !VoiceListener.FindChannelInvites.ContainsValue(e.Message.Id))
                                 await e.Message.DeleteAsync();
                         }
                         catch { }
