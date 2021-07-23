@@ -164,37 +164,44 @@ namespace Bot_NetCore.Listeners
             {
                 if ((DateTime.Now - ship.LastUsed).Days >= 3)
                 {
-                    var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
                     try
                     {
-                        var channel = guild.GetChannel(ship.Channel);
-                        await channel.DeleteAsync();
-                    }
-                    catch (NotFoundException)
-                    {
-                        
-                    }
+                        var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
+                        try
+                        {
+                            var channel = guild.GetChannel(ship.Channel);
+                            await channel.DeleteAsync();
+                        }
+                        catch (NotFoundException)
+                        {
 
-                    try
-                    {
-                        var member = await guild.GetMemberAsync(ship.GetCaptain().MemberId);
-                        await member.SendMessageAsync($"Твой корабль **{ship.Name}** был удалён из-за неактивности.");
-                    }
-                    catch (UnauthorizedException)
-                    {
+                        }
 
+                        try
+                        {
+                            var member = await guild.GetMemberAsync(ship.GetCaptain().MemberId);
+                            await member.SendMessageAsync($"Твой корабль **{ship.Name}** был удалён из-за неактивности.");
+                        }
+                        catch (UnauthorizedException)
+                        {
+
+                        }
+                        catch (NotFoundException)
+                        {
+
+                        }
+
+                        PrivateShip.Delete(ship.Name);
+
+                        await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
+                            $"**Модератор:** {Client.CurrentUser}\n" +
+                            $"**Название:** {ship.Name}\n" +
+                            $"**Дата:** {DateTime.Now}");
                     }
-                    catch (NotFoundException)
+                    catch (NullReferenceException ex)
                     {
-                        
+                        Client.Logger.LogError(BotLoggerEvents.Timers, $"DeleteShipsOnElapsed Ship: {ship.Name} Channel: {ship.Channel} {ex.Message}");
                     }
-                    
-                    PrivateShip.Delete(ship.Name);
-                    
-                    await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
-                        $"**Модератор:** {Client.CurrentUser}\n" +
-                        $"**Название:** {ship.Name}\n" +
-                        $"**Дата:** {DateTime.Now}");
                 }
             }
         }
@@ -485,7 +492,7 @@ namespace Bot_NetCore.Listeners
 
             var expiredTickets = TicketSQL.GetClosedFor(TimeSpan.FromDays(2));
 
-            var guild = Client.Guilds[Bot.BotSettings.Guild];
+            var guild = await Client.GetGuildAsync(Bot.BotSettings.Guild);
 
             foreach (var ticket in expiredTickets)
             {

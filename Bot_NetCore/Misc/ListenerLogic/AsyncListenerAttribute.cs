@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Misc
@@ -25,6 +26,26 @@ namespace Bot_NetCore.Misc
                 {
                     try
                     {
+                        await (Task)listener.Invoke(null, new[] { client, e });
+                    }
+                    catch (Exception ex)
+                    {
+                        client.Logger.LogError(BotLoggerEvents.AsyncListener, ex, $"Uncaught exception in listener thread");
+                    }
+                });
+                return Task.CompletedTask;
+            }
+
+            Task OnChannelChangedEvent(DiscordClient client, object e)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var ev = (VoiceStateUpdateEventArgs)e;
+                        if (ev.Before?.Channel?.Id == ev.After?.Channel?.Id)
+                            return;
+
                         await (Task)listener.Invoke(null, new[] { client, e });
                     }
                     catch (Exception ex)
@@ -191,11 +212,14 @@ namespace Bot_NetCore.Misc
                 case EventTypes.InviteDeleted:
                     client.InviteDeleted += OnEventWithArgs;
                     break;
+                case EventTypes.ChannelChanged:
+                    client.VoiceStateUpdated += OnChannelChangedEvent;
+                    break;
                 case EventTypes.CommandExecuted:
-                    bot.Commands.CommandExecuted += OnCommandWithArgs;
+                    Bot.Commands.CommandExecuted += OnCommandWithArgs;
                     break;
                 case EventTypes.CommandErrored:
-                    bot.Commands.CommandErrored += OnCommandWithArgs;
+                    Bot.Commands.CommandErrored += OnCommandWithArgs;
                     break;
             }
         }

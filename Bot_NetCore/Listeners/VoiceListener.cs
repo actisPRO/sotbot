@@ -31,7 +31,7 @@ namespace Bot_NetCore.Listeners
         /// </summary>
         public static Dictionary<ulong, DateTime> VoiceTimeCounters = new Dictionary<ulong, DateTime>();
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task CreateOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             try
@@ -135,7 +135,7 @@ namespace Bot_NetCore.Listeners
             }
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task FindOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             if (e.Channel != null &&
@@ -171,7 +171,7 @@ namespace Bot_NetCore.Listeners
             }
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task PrivateOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             if (e.Channel != null &&
@@ -183,42 +183,58 @@ namespace Bot_NetCore.Listeners
             await Task.CompletedTask;
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
-        public static async Task DeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
+        [AsyncListener(EventTypes.ChannelChanged)]
+        public static async Task LogOnVoiceError(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            var shipCategories = new[] {
-                    e.Guild.GetChannel(Bot.BotSettings.AutocreateSloopCategory),
-                    e.Guild.GetChannel(Bot.BotSettings.AutocreateBrigantineCategory),
-                    e.Guild.GetChannel(Bot.BotSettings.AutocreateGalleonCategory)
-                };
-
-            shipCategories.ToList().ForEach(x =>
-            {
-                x.Children.Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0).ToList()
-                    .ForEach(async x =>
-                        {
-                            try
-                            {
-                                await x.DeleteAsync();
-                            }
-                            catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
-                            catch (NotFoundException) { }
-                        });
-            });
+            if (!e.Guild.VoiceStates.Values.Any(x => x.User.Id == e.User.Id))
+                client.Logger.LogError($"User: {e.User.Username} Channel: {e.Channel?.Name} Before: {e.Before?.Channel?.Name} " +
+                    $"After: {e.After?.Channel?.Name} In VoiceStates: {e.Guild.VoiceStates.Values.Any(x => x.User.Id == e.User.Id)} " +
+                    $"In channels: {e.Guild.Channels.Values.Where(x => x.Type == ChannelType.Category).Any(x => x.Children.Any(y => y.Users.Any(u => u.Id == e.User.Id)))}");
 
             await Task.CompletedTask;
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
+        public static async Task DeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
+        {
+            if (e.Before?.Channel != null) // Только если пользователь находился в каком либо канале
+            {
+                var shipCategories = new[] {
+                    await client.GetChannelAsync(Bot.BotSettings.AutocreateSloopCategory),
+                    await client.GetChannelAsync(Bot.BotSettings.AutocreateBrigantineCategory),
+                    await client.GetChannelAsync(Bot.BotSettings.AutocreateGalleonCategory)
+                };
+
+                shipCategories.ToList().ForEach(category =>
+                {
+                    category.Children.Where(x => x.Type == ChannelType.Voice && x.Users.Count() == 0)
+                        .ToList()
+                        .ForEach(async x =>
+                        {
+                            try
+                            {
+                                await x.DeleteAsync();
+
+                            }
+                            catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
+                            catch (NotFoundException) { }
+                        });
+                });
+            }
+
+            await Task.CompletedTask;
+        }
+
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task UpdateClientStatusOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             await Bot.UpdateBotStatusAsync(client, e.Guild);
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task UpdateVoiceTimeOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            // User changed voice channel
+           // User changed voice channel
             if (e.Before != null && e.Before.Channel != null &&
                 e.After != null && e.After.Channel != null &&
                 e.Before.Channel.Id != e.After.Channel.Id)
@@ -267,7 +283,7 @@ namespace Bot_NetCore.Listeners
         }
 
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task FleetLogOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             //Для проверки если канал рейда чекать если название КАТЕГОРИИ канала начинается с "рейд"
@@ -311,7 +327,7 @@ namespace Bot_NetCore.Listeners
             }
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task FleetDeleteOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             //Проверка на пустые рейды
@@ -351,12 +367,9 @@ namespace Bot_NetCore.Listeners
             }
         }
 
-        [AsyncListener(EventTypes.VoiceStateUpdated)]
+        [AsyncListener(EventTypes.ChannelChanged)]
         public static async Task UpdateFindChannelEmbedOnVoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
-            if (e.Before?.Channel?.Id == e.After?.Channel?.Id)
-                return;
-
             List<DiscordChannel> channels = new List<DiscordChannel>();
 
             if (e.Before?.Channel?.Id != null)

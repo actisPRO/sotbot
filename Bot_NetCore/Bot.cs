@@ -39,7 +39,7 @@ namespace Bot_NetCore
         /// <summary>
         ///     Модуль команд.
         /// </summary>
-        public CommandsNextExtension Commands { get; set; }
+        public static CommandsNextExtension Commands { get; set; }
 
         /// <summary>
         ///     Модуль взаимодействия.
@@ -98,6 +98,7 @@ namespace Bot_NetCore
                 Token = BotSettings.Token,
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
+                Intents = DiscordIntents.All,
                 MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information
             };
 
@@ -156,7 +157,8 @@ namespace Bot_NetCore
         {
             await client.UpdateStatusAsync(new DiscordActivity("личные сообщения.\n" +
                 $"Участников: {guild.MemberCount} \n" +
-                $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()}", ActivityType.Watching));
+                $"Активных: {guild.VoiceStates.Values.Where(x => x.Channel != null).Count()} \n" +
+                $"Обновлено: {DateTime.Now:HH:mm:ss}", ActivityType.Watching));
         }
 
         /// <summary>
@@ -190,10 +192,6 @@ namespace Bot_NetCore
             catch (NullReferenceException)
             {
                 throw new NullReferenceException("Не был найден указанный параметр");
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
         }
 

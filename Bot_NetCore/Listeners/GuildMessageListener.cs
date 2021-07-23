@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -12,11 +13,17 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
+using Renci.SshNet.Security;
 
 namespace Bot_NetCore.Listeners
 {
     public static class GuildMessageListener
     {
+        /// <summary>
+        ///     Словарь, содержащий в качестве ключа пользователя Discord, а в качестве значения - время истечения кулдауна.
+        /// </summary>
+        public static Dictionary<ulong, DateTime> BlackListCooldowns = new Dictionary<ulong, DateTime>();
+        
         [AsyncListener(EventTypes.MessageDeleted)]
         public static async Task LogOnMessageDeleted(DiscordClient client, MessageDeleteEventArgs e)
         {
@@ -71,7 +78,7 @@ namespace Bot_NetCore.Listeners
                                         }
                                         File.Delete(file);
                                         return;
-                                        
+
                                     }
                                 }
                             }
@@ -230,11 +237,11 @@ namespace Bot_NetCore.Listeners
                     }
 
                 //Чистка сообщений в канале поиска игроков
-                if (e.Channel.Id == Bot.BotSettings.FindChannel && 
+                if (e.Channel.Id == Bot.BotSettings.FindChannel &&
                     !VoiceListener.FindChannelInvites.ContainsValue(e.Message.Id)) //Защита от любой другой команды
                 {
                     //Проверка если сообщение содержит команду, если нет то отправляем инструкцию в лс.
-                    if(!e.Message.Content.StartsWith(Bot.BotSettings.Prefix) && !e.Author.IsBot)
+                    if (!e.Message.Content.StartsWith(Bot.BotSettings.Prefix) && !e.Author.IsBot)
                     {
                         try
                         {
@@ -249,7 +256,7 @@ namespace Bot_NetCore.Listeners
                     {
                         try
                         {
-                            if(!e.Message.Pinned)
+                            if (!e.Message.Pinned && !VoiceListener.FindChannelInvites.ContainsValue(e.Message.Id))
                                 await e.Message.DeleteAsync();
                         }
                         catch { }
@@ -259,6 +266,50 @@ namespace Bot_NetCore.Listeners
                     };
                     delete.Enabled = true;
                 }
+            }
+        }
+
+        [AsyncListener(EventTypes.MessageCreated)]
+        public static async Task FilterBannedWords(DiscordClient client, MessageCreateEventArgs e)
+        {
+            if (e.Guild == null) return;
+            if (e.Author.IsBot) return;
+            if (((DiscordMember)e.Message.Author).Roles.Any(r => r.Permissions.HasPermission(Permissions.KickMembers))) return;
+            if (BlacklistedWordsSQL.Words.Any(w => e.Message.Content.Contains(w)))
+            {
+                try
+                {
+                    await e.Message.DeleteAsync();
+                }
+                catch (Exception) { }
+
+                string msgContent = e.Message.Content;
+
+                BlackListCooldowns = BlackListCooldowns.Where(x => (x.Value - DateTime.Now).Seconds > 0)
+                    .ToDictionary(x => x.Key, x => x.Value);
+
+                if (BlackListCooldowns.ContainsKey(e.Author.Id)) return;
+        
+                BlackListCooldowns[e.Author.Id] = DateTime.Now.AddSeconds(10);
+
+                var modChannel = await client.GetChannelAsync(558237431007019010);
+
+                // get the command service, we need this for sudo purposes
+                var cmds = Bot.Commands;
+
+                // retrieve the command and its arguments from the given string
+                var cmd = cmds.FindCommand($"mute {e.Message.Author.Id} 2h Автоблокировка.\n**Содержимое: ```{msgContent}```**", out var customArgs);
+
+                // create a fake CommandContext
+                var fakeContext = cmds.CreateFakeContext(client.CurrentUser, modChannel, "mute", Bot.BotSettings.Prefix, cmd, customArgs);
+
+                // and perform the sudo
+                await cmds.ExecuteCommandAsync(fakeContext);
+
+                await modChannel.SendMessageAsync($"<@&{Bot.BotSettings.ModeratorsRole}> Проверьте сообщение.\n" + 
+                                                  $"**Автор:** {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) " +
+                                                  $"**Канал:** {e.Channel}\n" +
+                                                  $"```{msgContent}```");
             }
         }
     }

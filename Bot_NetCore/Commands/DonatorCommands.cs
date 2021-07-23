@@ -433,16 +433,17 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            var message = new DiscordMessageBuilder()
-                .WithContent("Используйте `!d color название цвета`, чтобы получить цвет.\n" +
-                "Для удаления цвета, повторно введите `!d color название цвета`.");
+            
 
             using (var fs = new FileStream("generated/colors.jpeg", FileMode.Open, FileAccess.Read))
+            {
+                var message = new DiscordMessageBuilder()
+                .WithContent("Используйте `!d color название цвета`, чтобы получить цвет.\n" +
+                "Для удаления цвета, повторно введите `!d color название цвета`.");
                 message.WithFile(fs);
-
-            await ctx.RespondAsync(message);
-
-            await ctx.RespondAsync(message);
+                await ctx.RespondAsync(message);
+            }
+            
         }
 
         [Command("colorrm")]

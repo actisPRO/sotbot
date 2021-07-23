@@ -45,7 +45,6 @@ namespace StatsBot
             foreach (var channelId in channels)
             {
                 var channel = ctx.Guild.Channels[channelId];
-                bool errored = false;
                 var channelData = new Dictionary<DiscordUser, Data>();
                 await ctx.RespondAsync("Парсинг сообщений в канале " + channel);
                 
