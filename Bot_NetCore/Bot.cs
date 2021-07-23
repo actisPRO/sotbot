@@ -39,7 +39,7 @@ namespace Bot_NetCore
         /// <summary>
         ///     Модуль команд.
         /// </summary>
-        public CommandsNextExtension Commands { get; set; }
+        public static CommandsNextExtension Commands { get; set; }
 
         /// <summary>
         ///     Модуль взаимодействия.
@@ -192,10 +192,6 @@ namespace Bot_NetCore
             catch (NullReferenceException)
             {
                 throw new NullReferenceException("Не был найден указанный параметр");
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
         }
 

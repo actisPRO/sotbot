@@ -216,10 +216,10 @@ namespace Bot_NetCore.Misc
                     client.VoiceStateUpdated += OnChannelChangedEvent;
                     break;
                 case EventTypes.CommandExecuted:
-                    bot.Commands.CommandExecuted += OnCommandWithArgs;
+                    Bot.Commands.CommandExecuted += OnCommandWithArgs;
                     break;
                 case EventTypes.CommandErrored:
-                    bot.Commands.CommandErrored += OnCommandWithArgs;
+                    Bot.Commands.CommandErrored += OnCommandWithArgs;
                     break;
             }
         }

@@ -264,10 +264,10 @@ namespace Bot_NetCore.Commands
                 }
                 DmMessageListener.DmHandled.Remove(ctx.User);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 DmMessageListener.DmHandled.Remove(ctx.User);
-                throw ex;
+                throw;
             }
         }
 

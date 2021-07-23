@@ -5,7 +5,7 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <Company>Denis Karev</Company>
         <Product>Sea of Thieves Bot</Product>
-        <AssemblyVersion>2.9.0</AssemblyVersion>
+        <AssemblyVersion>2.21</AssemblyVersion>
         <NeutralLanguage>ru-RU</NeutralLanguage>
         <AssemblyName>Bot</AssemblyName>
     </PropertyGroup>
