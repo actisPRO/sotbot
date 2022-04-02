@@ -634,11 +634,6 @@ namespace Bot_NetCore
         public ulong HuntersRole;
 
         /// <summary>
-        ///     Id роли арены.
-        /// </summary>
-        public ulong ArenaRole;
-
-        /// <summary>
         ///     Id канала с поиском игроков.
         /// </summary>
         public ulong FindChannel;

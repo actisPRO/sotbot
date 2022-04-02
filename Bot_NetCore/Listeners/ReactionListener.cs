@@ -263,8 +263,7 @@ namespace Bot_NetCore.Listeners
                                 x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole ||
                                 x.Id == Bot.BotSettings.EmissaryAthenaRole ||
                                 x.Id == Bot.BotSettings.EmissaryReaperBonesRole ||
-                                x.Id == Bot.BotSettings.HuntersRole ||
-                                x.Id == Bot.BotSettings.ArenaRole).ToList()
+                                x.Id == Bot.BotSettings.HuntersRole).ToList()
                          .ForEach(async x => await member.RevokeRoleAsync(x) );
 
                 //Выдаем роль в зависимости от реакции
@@ -287,9 +286,6 @@ namespace Bot_NetCore.Listeners
                         break;
                     case ":fish:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.HuntersRole));
-                        break;
-                    case ":crossed_swords:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.ArenaRole));
                         break;
                     default:
                         break;

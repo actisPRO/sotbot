@@ -28,7 +28,10 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task Create(CommandContext ctx)
         {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
+            if (ctx.Channel.LastMessageId.HasValue)
+            {
+                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId.Value));
+            }
 
             await UpdateLeaderboard(ctx.Guild);
         }

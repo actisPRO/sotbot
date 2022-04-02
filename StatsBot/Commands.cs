@@ -50,7 +50,7 @@ namespace StatsBot
                 
                 // all the messages in the channel
 
-                ulong lastMessageId = channel.LastMessageId;
+                ulong lastMessageId = channel.LastMessageId.Value;
                 var messages = await channel.GetMessagesBeforeAsync(lastMessageId, 100);
                 int count = 0;
                 bool first = true;
@@ -118,7 +118,7 @@ namespace StatsBot
                 
             // all the messages in the channel
 
-            ulong lastMessageId = channel.LastMessageId;
+            ulong lastMessageId = channel.LastMessageId.Value;
             var messages = await channel.GetMessagesBeforeAsync(lastMessageId, 100);
             int count = 0;
             while (messages.Count != 0)

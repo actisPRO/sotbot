@@ -70,7 +70,7 @@ namespace Bot_NetCore.Commands
             await ctx.TriggerTypingAsync();
 
             var invite = await channel.CreateInviteAsync();
-            var usersNeeded = channel.UserLimit - channel.Users.Count();
+            var usersNeeded = channel.UserLimit.Value - channel.Users.Count();
 
 
             string embedThumbnail;

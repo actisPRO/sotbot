@@ -77,8 +77,6 @@ namespace Bot_NetCore.Listeners
                                 channelSymbol = DiscordEmoji.FromName(client, ":skull_crossbones:");
                             else if (x.Id == Bot.BotSettings.HuntersRole)
                                 channelSymbol = DiscordEmoji.FromName(client, ":fish:");
-                            else if (x.Id == Bot.BotSettings.ArenaRole)
-                                channelSymbol = DiscordEmoji.FromName(client, ":crossed_swords:");
 
                         });
 
@@ -422,7 +420,7 @@ namespace Bot_NetCore.Listeners
                                 var oldEmbed = embedMessage.Embeds.FirstOrDefault();
                                 var oldContent = oldEmbed.Description.Split("\n\n");
 
-                                var usersNeeded = channel.UserLimit - channel.Users.Count();
+                                var usersNeeded = channel.UserLimit.Value - channel.Users.Count();
 
                                 var embedThumbnail = "";
                                 //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
