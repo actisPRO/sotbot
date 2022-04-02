@@ -122,7 +122,7 @@ namespace Bot_NetCore.Commands
         [RequirePermissions(Permissions.Administrator)]
         public async Task CodexMessage(CommandContext ctx, DiscordMessage message)
         {
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId.Value));
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
             //Обновляем настроки бота
             if (Bot.BotSettings.CodexMessageId != message.Id)
@@ -227,7 +227,7 @@ namespace Bot_NetCore.Commands
                 return;
             }
 
-            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId.Value));
+            await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId));
 
             //Обновляем настроки бота
             if (Bot.BotSettings.EmissaryMessageId != message.Id)

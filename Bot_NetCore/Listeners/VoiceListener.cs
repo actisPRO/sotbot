@@ -219,6 +219,23 @@ namespace Bot_NetCore.Listeners
                             catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
                             catch (NotFoundException) { }
                         });
+                  
+                /*shipCategories.ToList().ForEach(x => // this was in master before merging 2.21
+                {
+                    x.Children.Where(x => x.Type == ChannelType.Voice &&
+                                        x.Users.Count() == 0 &&
+                                        (DateTimeOffset.UtcNow - x.CreationTimestamp).TotalSeconds > 30)
+                        .ToList()
+                        .ForEach(async x =>
+                            {
+                                try
+                                {
+                                    await x.DeleteAsync();
+
+                                }
+                                catch (NullReferenceException) { } // исключения выбрасывается если пользователь покинул канал
+                                catch (NotFoundException) { }
+                            });*/
                 });
             }
 
@@ -412,7 +429,7 @@ namespace Bot_NetCore.Listeners
                                 if (channel.Parent.Name.StartsWith("Рейд"))
                                 {
                                     if (channel.Name.StartsWith("Рейд"))
-                                        usersNeeded = Math.Max(0, usersNeeded.Value - 1);
+                                        usersNeeded = Math.Max(0, usersNeeded - 1);
 
                                     embedThumbnail = usersNeeded switch
                                     {
