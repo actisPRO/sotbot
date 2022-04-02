@@ -276,13 +276,13 @@ namespace Bot_NetCore.Listeners
                     case ":pig:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole));
                         break;
-                    case ":skeleton:":
+                    case ":skull:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryOrderOfSoulsRole));
                         break;
                     case ":gem:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryAthenaRole));
                         break;
-                    case ":skull_and_crossbones:":
+                    case ":skull_crossbones:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryReaperBonesRole));
                         break;
                     case ":fish:":

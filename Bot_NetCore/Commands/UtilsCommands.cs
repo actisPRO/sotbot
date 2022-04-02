@@ -8,6 +8,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
@@ -203,7 +204,14 @@ namespace Bot_NetCore.Commands
             var settingsPagination = Utility.GeneratePagesInEmbeds(settings, "**Текущие настройки бота**");
 
             if (settingsPagination.Count() > 1)
-                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, settingsPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                await interactivity.SendPaginatedMessageAsync(
+                    channel: await ctx.Member.CreateDmChannelAsync(),
+                    user: ctx.User,
+                    pages: settingsPagination,
+                    behaviour: PaginationBehaviour.Ignore,
+                    deletion: ButtonPaginationBehavior.DeleteButtons,
+                    token: default);
             else
                 await ctx.RespondAsync(embed: settingsPagination.First().Embed);
         }

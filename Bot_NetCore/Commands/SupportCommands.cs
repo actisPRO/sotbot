@@ -10,6 +10,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
@@ -264,10 +265,10 @@ namespace Bot_NetCore.Commands
                 }
                 DmMessageListener.DmHandled.Remove(ctx.User);
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 DmMessageListener.DmHandled.Remove(ctx.User);
-                throw ex;
+                throw;
             }
         }
 
@@ -565,7 +566,14 @@ namespace Bot_NetCore.Commands
                 var inviters_pagination = Utility.GeneratePagesInEmbeds(formattedList, "Список ЧС поддержки.");
 
                 if (inviters_pagination.Count() > 1)
-                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    await interactivity.SendPaginatedMessageAsync(
+                        channel: await ctx.Member.CreateDmChannelAsync(),
+                        user: ctx.User,
+                        pages: inviters_pagination,
+                        behaviour: PaginationBehaviour.Ignore,
+                        deletion: ButtonPaginationBehavior.DeleteButtons,
+                        token: default);
                 else
                     await ctx.RespondAsync(embed: inviters_pagination.First().Embed);
             }

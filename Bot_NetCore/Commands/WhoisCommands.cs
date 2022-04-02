@@ -10,6 +10,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using MaxMind.GeoIP2;
 using MaxMind.GeoIP2.Exceptions;
@@ -202,7 +203,14 @@ namespace Bot_NetCore.Commands
                 var fields_pagination = Utility.GeneratePagesInEmbeds(fields, "Список варнов.");
 
                 if (fields_pagination.Count() > 1)
-                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, fields_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, fields_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    await interactivity.SendPaginatedMessageAsync(
+                        channel: await ctx.Member.CreateDmChannelAsync(),
+                        user: ctx.User,
+                        pages: fields_pagination,
+                        behaviour: PaginationBehaviour.Ignore,
+                        deletion: ButtonPaginationBehavior.DeleteButtons,
+                        token: default);
                 else
                     await ctx.RespondAsync(embed: fields_pagination.First().Embed);
             }

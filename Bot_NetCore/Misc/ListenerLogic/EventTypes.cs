@@ -50,6 +50,7 @@
         Heartbeated, // AsyncEventHandler<HeartbeatEventArgs>
         InviteCreated, // AsyncEventHandler<InviteCreateEventArgs>
         InviteDeleted, // AsyncEventHandler<InviteDeleteEventArgs>
+        ChannelChanged,
         CommandExecuted,
         CommandErrored
     }

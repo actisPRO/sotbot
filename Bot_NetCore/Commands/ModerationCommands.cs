@@ -11,9 +11,11 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using MaxMind.GeoIP2;
 using MaxMind.GeoIP2.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Bot_NetCore.Commands
 {
@@ -756,7 +758,63 @@ namespace Bot_NetCore.Commands
                                    $"Снятие через: {Utility.FormatTimespan(durationTimeSpan)}!");
         }
 
-        [Command("unban")]
+        [Command("massiveban")]
+        [Aliases("mban")]
+        [RequirePermissions(Permissions.KickMembers)]
+        [Description("Массовый бан пользователей")]
+        [Priority(3)]
+        public async Task MassiveBan(CommandContext ctx, [Description("Список пользователей через ,")] string members, string duration = "1d", [RemainingText] string reason = "Не указана")
+        {
+            List<string> results = new List<string>();
+            // get the command service, we need this for sudo purposes
+            var cmds = ctx.CommandsNext;
+
+            var membersId = members.Split(',').ToList();
+
+            foreach (var memberId in membersId)
+            {
+                try
+                {
+                    var memberIdTrimmed = ulong.Parse(memberId.Trim());
+                    var member = await ctx.Guild.GetMemberAsync(memberIdTrimmed);
+                    var banCommand = $"ban {member.Id} {duration} {reason}";
+                    // retrieve the command and its arguments from the given string
+                    var cmd = cmds.FindCommand(banCommand, out var customArgs);
+
+                    // create a fake CommandContext
+                    var fakeContext = cmds.CreateFakeContext(ctx.User, ctx.Channel, banCommand, ctx.Prefix, cmd, customArgs);
+
+                    // and perform the sudo
+                    await cmds.ExecuteCommandAsync(fakeContext);
+
+                    results.Add($"{Bot.BotSettings.OkEmoji} {memberId}");
+                    await Task.Delay(300);
+                }
+                catch (Exception ex)
+                {
+                    results.Add($"{Bot.BotSettings.ErrorEmoji} {memberId}");
+                    ctx.Client.Logger.LogError(BotLoggerEvents.Commands, $"MassiveBan command: Ошибка при бане пользователя { memberId.Trim()}");
+                    await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Не удалось забанить пользователя {memberId.Trim()}. Ошибка {ex.Message}");
+                }
+            }
+
+            var members_pagination = Utility.GeneratePagesInEmbeds(results, $"Массовый бан пользователей.");
+
+            var interactivity = ctx.Client.GetInteractivity();
+            if (members_pagination.Count() > 1)
+                //await interactivity.SendPaginatedMessageAsync(await ctx.Member.CreateDmChannelAsync(), ctx.User, members_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                await interactivity.SendPaginatedMessageAsync(
+                    channel: await ctx.Member.CreateDmChannelAsync(),
+                    user: ctx.User,
+                    pages: members_pagination,
+                    behaviour: PaginationBehaviour.Ignore,
+                    deletion: ButtonPaginationBehavior.DeleteButtons,
+                    token: default);
+            else
+                await ctx.RespondAsync(embed: members_pagination.First().Embed);
+        }
+
+            [Command("unban")]
         [RequirePermissions(Permissions.KickMembers)]
         public async Task Unban(CommandContext ctx, DiscordUser member)
         {

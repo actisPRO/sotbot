@@ -5,15 +5,15 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <Company>Denis Karev</Company>
         <Product>Sea of Thieves Bot</Product>
-        <AssemblyVersion>2.9.0</AssemblyVersion>
+        <AssemblyVersion>2.21</AssemblyVersion>
         <NeutralLanguage>ru-RU</NeutralLanguage>
         <AssemblyName>Bot</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DSharpPlus" Version="4.0.1" />
-        <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.1" />
-        <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.1" />
+        <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01105" />
+        <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01105" />
+        <PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01105" />
         <PackageReference Include="MaxMind.GeoIP2" Version="3.3.0" />
         <PackageReference Include="MySql.Data" Version="8.0.21" />
     </ItemGroup>

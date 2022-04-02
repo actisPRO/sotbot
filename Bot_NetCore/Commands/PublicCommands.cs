@@ -58,6 +58,9 @@ namespace Bot_NetCore.Commands
             //Проверка на условия голосового канала
             var channel = ctx.Member.VoiceState?.Channel;
 
+            if (channel == null)
+                throw new Exceptions.NotFoundException("Не удалось определить канал!");
+
             if (channel.Users.Count() >= channel.UserLimit)
             {
                 await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Ваш канал уже заполнен!");
@@ -102,7 +105,7 @@ namespace Bot_NetCore.Commands
             content += ($"{DiscordEmoji.FromName(ctx.Client, ":loudspeaker:")} {description}\n\n");
 
             var slotsCount = 1;
-            foreach (var member in channel.Users)
+            foreach (var member in channel.Users.Where(x => x != null))
             {
                 if (content.Length > 1900 || slotsCount > 15)
                 {
