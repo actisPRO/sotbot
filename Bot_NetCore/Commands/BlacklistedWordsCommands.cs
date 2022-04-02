@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Bot_NetCore.Attributes;
 using Bot_NetCore.Entities;
@@ -7,6 +8,7 @@ using Bot_NetCore.Misc;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
@@ -50,7 +52,14 @@ namespace Bot_NetCore.Commands
 
             var interactivity = ctx.Client.GetInteractivity();
             if (words_pagination.Count() > 1)
-                await interactivity.SendPaginatedMessageAsync(await ctx.Member.CreateDmChannelAsync(), ctx.User, words_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                //await interactivity.SendPaginatedMessageAsync(await ctx.Member.CreateDmChannelAsync(), ctx.User, words_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                await interactivity.SendPaginatedMessageAsync(
+                    channel: await ctx.Member.CreateDmChannelAsync(),
+                    user: ctx.User,
+                    pages: words_pagination,
+                    behaviour: PaginationBehaviour.Ignore,
+                    deletion: ButtonPaginationBehavior.DeleteButtons,
+                    token: default);
             else
                 await ctx.RespondAsync(embed: words_pagination.First().Embed);
         }

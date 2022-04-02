@@ -9,6 +9,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using NotFoundException = DSharpPlus.Exceptions.NotFoundException;
 
@@ -185,7 +186,14 @@ namespace Bot_NetCore.Commands
             var membersPagination = Utility.GeneratePagesInEmbeds(memberList, $"Список членов экипажа вашего корабля.");
 
             if (memberList.Count() > 1)
-                await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, membersPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, membersPagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                await interactivity.SendPaginatedMessageAsync(
+                    channel: await ctx.Member.CreateDmChannelAsync(),
+                    user: ctx.User,
+                    pages: membersPagination,
+                    behaviour: PaginationBehaviour.Ignore,
+                    deletion: ButtonPaginationBehavior.DeleteButtons,
+                    token: default);
             else
                 await ctx.RespondAsync(embed: membersPagination.First().Embed);
         }

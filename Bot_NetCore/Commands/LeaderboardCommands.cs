@@ -11,6 +11,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Exceptions;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 
 namespace Bot_NetCore.Commands
@@ -99,7 +100,14 @@ namespace Bot_NetCore.Commands
                 var inviters_pagination = Utility.GeneratePagesInEmbeds(inviters, "Полный список рефералов");
 
                 if (inviters_pagination.Count() > 1)
-                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, inviters_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    await interactivity.SendPaginatedMessageAsync(
+                        channel: await ctx.Member.CreateDmChannelAsync(),
+                        user: ctx.User,
+                        pages: inviters_pagination,
+                        behaviour: PaginationBehaviour.Ignore,
+                        deletion: ButtonPaginationBehavior.DeleteButtons,
+                        token: default);
                 else
                     await ctx.RespondAsync(embed: inviters_pagination.First().Embed);
             }
@@ -146,7 +154,14 @@ namespace Bot_NetCore.Commands
                 var referrals_pagination = Utility.GeneratePagesInEmbeds(referrals, $"Список приглашенных пользователем {member.DisplayName}");
 
                 if (referrals_pagination.Count() > 1)
-                    await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    //await interactivity.SendPaginatedMessageAsync(ctx.Channel, ctx.User, referrals_pagination, timeoutoverride: TimeSpan.FromMinutes(5));
+                    await interactivity.SendPaginatedMessageAsync(
+                        channel: await ctx.Member.CreateDmChannelAsync(),
+                        user: ctx.User,
+                        pages: referrals_pagination,
+                        behaviour: PaginationBehaviour.Ignore,
+                        deletion: ButtonPaginationBehavior.DeleteButtons,
+                        token: default);
                 else
                     await ctx.RespondAsync(embed: referrals_pagination.First().Embed);
             }
