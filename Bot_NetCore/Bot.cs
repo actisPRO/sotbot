@@ -492,6 +492,11 @@ namespace Bot_NetCore
         public ulong ErrorLog;
 
         /// <summary>
+        ///     ID канала-лога с автоматическими блокировками
+        /// </summary>
+        public ulong BannedWordsLogChannel;
+
+        /// <summary>
         ///     ID канала-лога вложений
         /// </summary>
         public ulong AttachmentsLog;

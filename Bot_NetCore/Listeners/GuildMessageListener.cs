@@ -292,7 +292,7 @@ namespace Bot_NetCore.Listeners
         
                 BlackListCooldowns[e.Author.Id] = DateTime.Now.AddSeconds(10);
 
-                var modChannel = await client.GetChannelAsync(558237431007019010);
+                var bannedWordsLog = await client.GetChannelAsync(Bot.BotSettings.BannedWordsLogChannel);
 
                 // get the command service, we need this for sudo purposes
                 var cmds = Bot.Commands;
@@ -301,12 +301,12 @@ namespace Bot_NetCore.Listeners
                 var cmd = cmds.FindCommand($"mute {e.Message.Author.Id} 2h Автоблокировка.\n**Содержимое: ```{msgContent}```**", out var customArgs);
 
                 // create a fake CommandContext
-                var fakeContext = cmds.CreateFakeContext(client.CurrentUser, modChannel, "mute", Bot.BotSettings.Prefix, cmd, customArgs);
+                var fakeContext = cmds.CreateFakeContext(client.CurrentUser, bannedWordsLog, "mute", Bot.BotSettings.Prefix, cmd, customArgs);
 
                 // and perform the sudo
                 await cmds.ExecuteCommandAsync(fakeContext);
 
-                await modChannel.SendMessageAsync($"<@&{Bot.BotSettings.ModeratorsRole}> Проверьте сообщение.\n" + 
+                await bannedWordsLog.SendMessageAsync($"**Автоблокировка**\n" + 
                                                   $"**Автор:** {e.Author.Username}#{e.Author.Discriminator} ({e.Author.Id}) " +
                                                   $"**Канал:** {e.Channel}\n" +
                                                   $"```{msgContent}```");
