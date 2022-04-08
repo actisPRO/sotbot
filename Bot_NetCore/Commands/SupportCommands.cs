@@ -137,7 +137,7 @@ namespace Bot_NetCore.Commands
                         {
                             Title = "Sea of Thieves RU | Подтверждение тикета",
                             Description = "Подтвердите ваш тикет для отправки. \n" +
-                            "`✅ отравить` `❌ отменить` \n‎",
+                            "`✅ отправить` `❌ отменить` \n‎",
                             Color = new DiscordColor("#e67e22")
                         };
 
