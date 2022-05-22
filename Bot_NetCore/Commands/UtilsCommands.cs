@@ -301,14 +301,40 @@ namespace Bot_NetCore.Commands
 
             var table = new DataTable();
             table.Load(reader);
-
-            string message;
+            
             if (table.Rows.Count != 0)
-                message = $"**Результат выполнения SQL-запроса:**\n```{table.ToPrettyPrintedString()}```";
-            else
-                message = $"{Bot.BotSettings.OkEmoji} SQL-запрос ничего не вернул.";
+            {
+                var prettyTable = table.ToPrettyPrintedString();
+                var message = $"**Результат выполнения SQL-запроса:**\n```{prettyTable}```";
+                
+                if (message.Length <= 2000)
+                    await ctx.RespondAsync(message);
+                else
+                {
+                    var timestamp = (int) DateTime.Now.Subtract(new DateTime(2002, 1, 20, 0, 0, 0)).TotalSeconds;
+                    
+                    await using (var fsWriter = new FileStream($"generated/request_{timestamp}.txt", FileMode.Create))
+                    {
+                        await using var sw = new StreamWriter(fsWriter);
+                        await sw.WriteAsync(prettyTable);
+                    }
 
-            await ctx.RespondAsync(message);
+                    await using (var fsReader = new FileStream($"generated/request_{timestamp}.txt", FileMode.Open))
+                    {
+                        var mb = new DiscordMessageBuilder();
+                        mb.Content = "**Результат выполнения SQL-запроса:**";
+                        mb.WithFile(fsReader);
+                        await ctx.RespondAsync(mb);
+                    }
+                    
+                    File.Delete($"generated/request_{timestamp}.txt");
+                }
+            }
+            else
+            {
+                var message = $"{Bot.BotSettings.OkEmoji} SQL-запрос ничего не вернул.";
+                await ctx.RespondAsync(message);
+            }
         }
     }
 }
