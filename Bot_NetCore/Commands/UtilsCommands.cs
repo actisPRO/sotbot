@@ -336,5 +336,16 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync(message);
             }
         }
+
+        [Command("message")]
+        [Aliases("msg")]
+        [Description("Отправляет сообщение от имени бота")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Message(CommandContext ctx, [Description("Канал, в который будет отправлено сообщение")] DiscordChannel channel,
+            [RemainingText, Description("Сообщение, которое будет отправлено")] string message)
+        {
+            await channel.SendMessageAsync(message);
+            await ctx.Message.DeleteAsync();
+        }
     }
 }
