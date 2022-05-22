@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Misc;
+using DataTablePrettyPrinter;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Commands
 {
@@ -375,6 +378,33 @@ namespace Bot_NetCore.Commands
 
             // and perform the sudo
             await cmds.ExecuteCommandAsync(fakeContext);
+        }
+
+        [Command("sql")]
+        [Description("Выполняет SQL-запрос. НЕБЕЗОПАСНО!")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task Sql(CommandContext ctx, [Description("SQL-запрос"), RemainingText] string sqlRequest)
+        {
+            await ctx.TriggerTypingAsync();
+            
+            await using var connection = new MySqlConnection(Bot.ConnectionString);
+            await using var cmd = new MySqlCommand();
+            cmd.CommandText = sqlRequest;
+            cmd.Connection = connection;
+            
+            await cmd.Connection.OpenAsync();
+            var reader = await cmd.ExecuteReaderAsync();
+
+            var table = new DataTable();
+            table.Load(reader);
+
+            string message;
+            if (table.Rows.Count != 0)
+                message = $"**Результат выполнения SQL-запроса:**\n```{table.ToPrettyPrintedString()}```";
+            else
+                message = $"{Bot.BotSettings.OkEmoji} SQL-запрос ничего не вернул.";
+
+            await ctx.RespondAsync(message);
         }
     }
 }
