@@ -44,10 +44,10 @@ namespace Bot_NetCore.Listeners
                     VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
             }
 
-            RegisterEmojiRoleProviders(client, e.Guild);
+            await RegisterEmojiRoleProvidersAsync(client, e.Guild);
         }
 
-        private static async void RegisterEmojiRoleProviders(DiscordClient client, DiscordGuild guild)
+        private static async Task RegisterEmojiRoleProvidersAsync(DiscordClient client, DiscordGuild guild)
         {
             var eventProvider = new EmojiRoleProvider
             {
@@ -60,7 +60,7 @@ namespace Bot_NetCore.Listeners
                     { DiscordEmoji.FromName(client, ":EmissaryReaper:"), guild.GetRole(1037115077133873192) }
                 }
             };
-            eventProvider.ValidateEmojis(client);
+            await eventProvider.ValidateEmojisAsync(client);
             GlobalState.EmojiRoleProviders.Add(eventProvider);
         }
     }

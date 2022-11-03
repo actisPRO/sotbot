@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Renci.SshNet.Messages;
@@ -28,7 +29,7 @@ namespace Bot_NetCore.Providers
             Removable = removable;
         }
 
-        public async void ValidateEmojis(DiscordClient client)
+        public async Task ValidateEmojisAsync(DiscordClient client)
         {
             var message = await Channel.GetMessageAsync(MessageId);
 
@@ -47,7 +48,7 @@ namespace Bot_NetCore.Providers
             }
         }
 
-        public async void GrantRole(DiscordClient client, DiscordMember member, DiscordEmoji emoji)
+        public async Task GrantRoleAsync(DiscordClient client, DiscordMember member, DiscordEmoji emoji)
         {
             if (Removable && emoji == DiscordEmoji.FromName(client, ":x:"))
             {
