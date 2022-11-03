@@ -254,62 +254,6 @@ namespace Bot_NetCore.Listeners
                 return;
             }
 
-            //Проверка на сообщение эмиссарства
-            if (e.Message.Id == Bot.BotSettings.EmissaryMessageId)
-            {
-                await e.Message.DeleteReactionAsync(e.Emoji, discordUser);
-
-                if (EmojiCooldowns.ContainsKey(discordUser)) 
-                    if ((EmojiCooldowns[discordUser] - DateTime.Now).Seconds > 0)
-                        return;
-
-                // если проверка успешно пройдена, добавим пользователя
-                // в словарь кулдаунов
-                EmojiCooldowns[discordUser] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
-
-                //Проверка у пользователя уже существующих ролей эмисарства и их удаление
-                var member = await e.Guild.GetMemberAsync(discordUser.Id);
-                member.Roles.Where(x => x.Id == Bot.BotSettings.EmissaryGoldhoadersRole ||
-                                        x.Id == Bot.BotSettings.EmissaryTradingCompanyRole ||
-                                        x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole ||
-                                        x.Id == Bot.BotSettings.EmissaryAthenaRole ||
-                                        x.Id == Bot.BotSettings.EmissaryReaperBonesRole ||
-                                        x.Id == Bot.BotSettings.HuntersRole).ToList()
-                    .ForEach(async x => await member.RevokeRoleAsync(x));
-
-                //Выдаем роль в зависимости от реакции
-                switch (e.Emoji.GetDiscordName())
-                {
-                    case ":moneybag:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryGoldhoadersRole));
-                        break;
-                    case ":pig:":
-                        await member.GrantRoleAsync(
-                            e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole));
-                        break;
-                    case ":skull:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryOrderOfSoulsRole));
-                        break;
-                    case ":gem:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryAthenaRole));
-                        break;
-                    case ":skull_crossbones:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryReaperBonesRole));
-                        break;
-                    case ":fish:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.HuntersRole));
-                        break;
-                    default:
-                        break;
-                }
-
-                //Отправка в лог
-                client.Logger.LogInformation(BotLoggerEvents.Event,
-                    $"{discordUser.Username}#{discordUser.Discriminator} получил новую роль эмиссарства.");
-
-                return;
-            }
-
             if (e.Guild.Id == Bot.BotSettings.Guild)
             {
                 var member = await e.Guild.GetMemberAsync(e.User.Id);
