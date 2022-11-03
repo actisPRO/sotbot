@@ -33,7 +33,7 @@ namespace Bot_NetCore.Providers
         {
             var message = await Channel.GetMessageAsync(MessageId);
 
-            var requiredEmojiList = Roles.Keys;
+            var requiredEmojiList = new List<DiscordEmoji>(Roles.Keys);
             if (Removable) requiredEmojiList.Add(DiscordEmoji.FromName(client, ":x:"));
 
             var existingEmojis = (from reaction in message.Reactions
