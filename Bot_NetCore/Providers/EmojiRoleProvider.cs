@@ -50,15 +50,12 @@ namespace Bot_NetCore.Providers
 
         public async Task GrantRoleAsync(DiscordClient client, DiscordMember member, DiscordEmoji emoji)
         {
-            if (Removable && emoji == DiscordEmoji.FromName(client, ":x:"))
-            {
-                var providerRoles = Roles.Values;
-                foreach (var role in member.Roles)
-                    if (providerRoles.Contains(role))
-                        await member.RevokeRoleAsync(role);
-
-                return;
-            }
+            var providerRoles = Roles.Values;
+            foreach (var role in member.Roles)
+                if (providerRoles.Contains(role))
+                    await member.RevokeRoleAsync(role);
+            
+            if (Removable && emoji == DiscordEmoji.FromName(client, ":x:")) return;
 
             if (Roles.ContainsKey(emoji))
             {

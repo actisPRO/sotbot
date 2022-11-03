@@ -106,6 +106,7 @@ namespace Bot_NetCore.Listeners
                     {
                         //user can block the bot
                     }
+
                     return;
                 }
 
@@ -121,9 +122,13 @@ namespace Bot_NetCore.Listeners
                             $"{Bot.BotSettings.ErrorEmoji} Для принятия правил вы должны находиться на сервере минимум " +
                             $"**{Utility.FormatTimespan(TimeSpan.FromMinutes(10))}**.");
 
-                        await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
+                        await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"),
+                            member);
                     }
-                    catch (UnauthorizedException) { }
+                    catch (UnauthorizedException)
+                    {
+                    }
+
                     return;
                 }
 
@@ -135,7 +140,8 @@ namespace Bot_NetCore.Listeners
                     //Убираем роль блокировки правил
                     await member.RevokeRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.PurgeCodexRole));
 
-                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил через реакцию.");
+                    client.Logger.LogInformation(BotLoggerEvents.Event,
+                        $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил через реакцию.");
                 }
 
                 return;
@@ -173,6 +179,7 @@ namespace Bot_NetCore.Listeners
                     {
                         //user can block the bot
                     }
+
                     return;
                 } //Удаляем блокировку если истекла
 
@@ -215,8 +222,9 @@ namespace Bot_NetCore.Listeners
 
                 if (webUser.LastXbox == "")
                 {
-                    await member.SendMessageAsync($"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны привязать Xbox к своему аккаунту, затем перейдите по ссылке " +
-                                                $"{Bot.BotSettings.WebURL}xbox - это обновит базу данных.");
+                    await member.SendMessageAsync(
+                        $"{Bot.BotSettings.ErrorEmoji} Для получения доступа к рейдам вы должны привязать Xbox к своему аккаунту, затем перейдите по ссылке " +
+                        $"{Bot.BotSettings.WebURL}xbox - это обновит базу данных.");
                     await e.Message.DeleteReactionAsync(DiscordEmoji.FromName(client, ":white_check_mark:"), member);
                     return;
                 }
@@ -236,9 +244,11 @@ namespace Bot_NetCore.Listeners
                     await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.FleetCodexRole));
 
                     await e.Guild.GetChannel(Bot.BotSettings.FleetLogChannel)
-                            .SendMessageAsync($"{DiscordEmoji.FromName(client, ":new:")} Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) получил роль рейда. **Xbox:** {webUser.LastXbox}.");
+                        .SendMessageAsync(
+                            $"{DiscordEmoji.FromName(client, ":new:")} Пользователь **{e.User.Username}#{e.User.Discriminator}** ({e.User.Id}) получил роль рейда. **Xbox:** {webUser.LastXbox}.");
 
-                    client.Logger.LogInformation(BotLoggerEvents.Event, $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил рейда.");
+                    client.Logger.LogInformation(BotLoggerEvents.Event,
+                        $"Пользователь {discordUser.Username}#{discordUser.Discriminator} ({discordUser.Id}) подтвердил прочтение правил рейда.");
                 }
 
                 return;
@@ -250,7 +260,8 @@ namespace Bot_NetCore.Listeners
                 await e.Message.DeleteReactionAsync(e.Emoji, discordUser);
 
                 if (EmojiCooldowns.ContainsKey(discordUser)) // проверка на кулдаун
-                    if ((EmojiCooldowns[discordUser] - DateTime.Now).Seconds > 0) return;
+                    if ((EmojiCooldowns[discordUser] - DateTime.Now).Seconds > 0)
+                        return;
 
                 // если проверка успешно пройдена, добавим пользователя
                 // в словарь кулдаунов
@@ -259,12 +270,12 @@ namespace Bot_NetCore.Listeners
                 //Проверка у пользователя уже существующих ролей эмисарства и их удаление
                 var member = await e.Guild.GetMemberAsync(discordUser.Id);
                 member.Roles.Where(x => x.Id == Bot.BotSettings.EmissaryGoldhoadersRole ||
-                                x.Id == Bot.BotSettings.EmissaryTradingCompanyRole ||
-                                x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole ||
-                                x.Id == Bot.BotSettings.EmissaryAthenaRole ||
-                                x.Id == Bot.BotSettings.EmissaryReaperBonesRole ||
-                                x.Id == Bot.BotSettings.HuntersRole).ToList()
-                         .ForEach(async x => await member.RevokeRoleAsync(x) );
+                                        x.Id == Bot.BotSettings.EmissaryTradingCompanyRole ||
+                                        x.Id == Bot.BotSettings.EmissaryOrderOfSoulsRole ||
+                                        x.Id == Bot.BotSettings.EmissaryAthenaRole ||
+                                        x.Id == Bot.BotSettings.EmissaryReaperBonesRole ||
+                                        x.Id == Bot.BotSettings.HuntersRole).ToList()
+                    .ForEach(async x => await member.RevokeRoleAsync(x));
 
                 //Выдаем роль в зависимости от реакции
                 switch (e.Emoji.GetDiscordName())
@@ -273,7 +284,8 @@ namespace Bot_NetCore.Listeners
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryGoldhoadersRole));
                         break;
                     case ":pig:":
-                        await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole));
+                        await member.GrantRoleAsync(
+                            e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole));
                         break;
                     case ":skull:":
                         await member.GrantRoleAsync(e.Channel.Guild.GetRole(Bot.BotSettings.EmissaryOrderOfSoulsRole));
@@ -290,10 +302,18 @@ namespace Bot_NetCore.Listeners
                     default:
                         break;
                 }
+
                 //Отправка в лог
-                client.Logger.LogInformation(BotLoggerEvents.Event, $"{discordUser.Username}#{discordUser.Discriminator} получил новую роль эмиссарства.");
+                client.Logger.LogInformation(BotLoggerEvents.Event,
+                    $"{discordUser.Username}#{discordUser.Discriminator} получил новую роль эмиссарства.");
 
                 return;
+            }
+
+            if (e.Guild.Id == Bot.BotSettings.Guild)
+            {
+                var member = await e.Guild.GetMemberAsync(e.User.Id);
+                await RunEmojiRoleProvidersTask(client, member, e.Message.Id, e.Emoji);
             }
 
             if (e.Message.Channel != null)
@@ -344,7 +364,8 @@ namespace Bot_NetCore.Listeners
                     Vote.Save(Bot.BotSettings.VotesXML);
 
                     await e.Message.ModifyAsync(embed: embed);
-                    await (await e.Guild.GetMemberAsync(discordUser.Id)).SendMessageAsync($"{Bot.BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
+                    await (await e.Guild.GetMemberAsync(discordUser.Id)).SendMessageAsync(
+                        $"{Bot.BotSettings.OkEmoji} Спасибо, ваш голос учтён!");
                 }
 
                 // Private ship confirmation message
@@ -359,15 +380,16 @@ namespace Bot_NetCore.Listeners
                                 e.Guild.GetChannel(Bot.BotSettings.PrivateCategory), bitrate: Bot.BotSettings.Bitrate);
                             await channel.AddOverwriteAsync(e.Guild.GetRole(Bot.BotSettings.CodexRole),
                                 Permissions.AccessChannels);
-                            await channel.AddOverwriteAsync(e.Guild.EveryoneRole, Permissions.None, Permissions.UseVoice);
+                            await channel.AddOverwriteAsync(e.Guild.EveryoneRole, Permissions.None,
+                                Permissions.UseVoice);
 
                             ship.Channel = channel.Id;
                             ship.CreatedAt = DateTime.Now;
                             ship.LastUsed = DateTime.Now;
 
                             var captain = (from member in ship.GetMembers()
-                                           where member.Role == PrivateShipMemberRole.Captain
-                                           select member).First();
+                                where member.Role == PrivateShipMemberRole.Captain
+                                select member).First();
                             var captainMember = await e.Guild.GetMemberAsync(captain.MemberId);
                             await channel.AddOverwriteAsync(captainMember, Permissions.UseVoice);
                             captain.Status = true;
@@ -383,14 +405,13 @@ namespace Bot_NetCore.Listeners
                             }
                             catch (UnauthorizedException)
                             {
-
                             }
                         }
                         else if (e.Emoji == DiscordEmoji.FromName(client, ":no_entry:"))
                         {
                             var captain = (from member in ship.GetMembers()
-                                           where member.Role == PrivateShipMemberRole.Captain
-                                           select member).First();
+                                where member.Role == PrivateShipMemberRole.Captain
+                                select member).First();
                             var captainMember = await e.Guild.GetMemberAsync(captain.MemberId);
 
                             PrivateShip.Delete(ship.Name);
@@ -405,7 +426,6 @@ namespace Bot_NetCore.Listeners
                             }
                             catch (UnauthorizedException)
                             {
-
                             }
                         }
 
@@ -413,6 +433,18 @@ namespace Bot_NetCore.Listeners
                     }
                 }
             }
+        }
+
+        private static async Task RunEmojiRoleProvidersTask(DiscordClient client, DiscordMember member,
+            ulong messageId,
+            DiscordEmoji emoji)
+        {
+            foreach (var emojiRoleProvider in GlobalState.EmojiRoleProviders)
+                if (emojiRoleProvider.MessageId == messageId)
+                {
+                    await emojiRoleProvider.GrantRoleAsync(client, member, emoji);
+                    return;
+                }
         }
     }
 }
