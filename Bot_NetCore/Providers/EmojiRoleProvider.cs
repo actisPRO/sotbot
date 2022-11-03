@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Logging;
-using Renci.SshNet.Messages;
 
 namespace Bot_NetCore.Providers
 {

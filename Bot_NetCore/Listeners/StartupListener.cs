@@ -16,7 +16,8 @@ namespace Bot_NetCore.Listeners
         [AsyncListener(EventTypes.Ready)]
         public static async Task ClientOnReady(DiscordClient client, ReadyEventArgs e)
         {
-            client.Logger.LogInformation(BotLoggerEvents.Bot, "SoT", $"Sea Of Thieves Bot, version {Bot.BotSettings.Version}");
+            client.Logger.LogInformation(BotLoggerEvents.Bot, "SoT",
+                $"Sea Of Thieves Bot, version {Bot.BotSettings.Version}");
             client.Logger.LogInformation(BotLoggerEvents.Bot, "Made by Actis and VanguardFx"); // и еще немного ЧСВ
 
             var guild = client.Guilds[Bot.BotSettings.Guild];
@@ -36,9 +37,12 @@ namespace Bot_NetCore.Listeners
             {
                 VoiceListener.ReadFindChannelMesages();
             }
-            catch { }
+            catch
+            {
+            }
 
-            foreach (var entry in e.Guild.VoiceStates.Where(x => x.Value.Channel != null && x.Value.Channel.Id != e.Guild.AfkChannel.Id).ToList())
+            foreach (var entry in e.Guild.VoiceStates
+                         .Where(x => x.Value.Channel != null && x.Value.Channel.Id != e.Guild.AfkChannel.Id).ToList())
             {
                 if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
                     VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
@@ -50,6 +54,52 @@ namespace Bot_NetCore.Listeners
         private static async Task RegisterEmojiRoleProvidersAsync(DiscordClient client, DiscordGuild guild)
         {
             client.Logger.LogInformation("Started EmojiRoleProvider registration");
+            await RegisterEventRoleProviderAsync(client, guild);
+            await RegisterEmissaryRoleProviderAsync(client, guild);
+            client.Logger.LogInformation("Finished EmojiRoleProvider registration");
+        }
+
+        private static async Task RegisterEmissaryRoleProviderAsync(DiscordClient client, DiscordGuild guild)
+        {
+            var emissaryProvider = new EmojiRoleProvider
+            {
+                Channel = guild.GetChannel(696668143430533190),
+                MessageId = Bot.BotSettings.EmissaryMessageId,
+                Removable = true,
+                Roles = new Dictionary<DiscordEmoji, DiscordRole>()
+                {
+                    {
+                        DiscordEmoji.FromName(client, ":moneybag:"),
+                        guild.GetRole(Bot.BotSettings.EmissaryGoldhoadersRole)
+                    },
+                    {
+                        DiscordEmoji.FromName(client, ":pig:"),
+                        guild.GetRole(Bot.BotSettings.EmissaryTradingCompanyRole)
+                    },
+                    {
+                        DiscordEmoji.FromName(client, ":skull:"),
+                        guild.GetRole(Bot.BotSettings.EmissaryOrderOfSoulsRole)
+                    },
+                    { 
+                        DiscordEmoji.FromName(client, ":gem:"), 
+                        guild.GetRole(Bot.BotSettings.EmissaryAthenaRole) 
+                    },
+                    {
+                        DiscordEmoji.FromName(client, ":skull_crossbones:"),
+                        guild.GetRole(Bot.BotSettings.EmissaryReaperBonesRole)
+                    },
+                    {
+                        DiscordEmoji.FromName(client, ":fish:"), 
+                        guild.GetRole(Bot.BotSettings.HuntersRole)
+                    }
+                }
+            };
+            await emissaryProvider.ValidateEmojisAsync(client);
+            GlobalState.EmojiRoleProviders.Add(emissaryProvider);
+        }
+
+        private static async Task RegisterEventRoleProviderAsync(DiscordClient client, DiscordGuild guild)
+        {
             var eventProvider = new EmojiRoleProvider
             {
                 Channel = guild.GetChannel(696668143430533190),
@@ -57,14 +107,12 @@ namespace Bot_NetCore.Listeners
                 Removable = true,
                 Roles = new Dictionary<DiscordEmoji, DiscordRole>
                 {
-                    { DiscordEmoji.FromName(client, ":EmissaryAthena:"), guild.GetRole(1037115622603108392 ) },
+                    { DiscordEmoji.FromName(client, ":EmissaryAthena:"), guild.GetRole(1037115622603108392) },
                     { DiscordEmoji.FromName(client, ":EmissaryReaper:"), guild.GetRole(1037115077133873192) }
                 }
             };
             await eventProvider.ValidateEmojisAsync(client);
             GlobalState.EmojiRoleProviders.Add(eventProvider);
-            
-            client.Logger.LogInformation("Finished EmojiRoleProvider registration");
         }
     }
 }
