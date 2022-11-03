@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Misc;
+using Bot_NetCore.Providers;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 
@@ -41,6 +44,24 @@ namespace Bot_NetCore.Listeners
                     VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
             }
 
+            RegisterEmojiRoleProviders(client, e.Guild);
+        }
+
+        private static async void RegisterEmojiRoleProviders(DiscordClient client, DiscordGuild guild)
+        {
+            var eventProvider = new EmojiRoleProvider
+            {
+                Channel = guild.GetChannel(696668143430533190),
+                MessageId = 1037120219837104149,
+                Removable = true,
+                Roles = new Dictionary<DiscordEmoji, DiscordRole>
+                {
+                    { DiscordEmoji.FromName(client, ":EmissaryAthena:"), guild.GetRole(1037115622603108392 ) },
+                    { DiscordEmoji.FromName(client, ":EmissaryReaper:"), guild.GetRole(1037115077133873192) }
+                }
+            };
+            eventProvider.ValidateEmojis(client);
+            GlobalState.EmojiRoleProviders.Add(eventProvider);
         }
     }
 }

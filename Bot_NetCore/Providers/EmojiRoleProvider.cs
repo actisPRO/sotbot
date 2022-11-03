@@ -13,9 +13,13 @@ namespace Bot_NetCore.Providers
         public IDictionary<DiscordEmoji, DiscordRole> Roles { get; init; }
         public bool Removable { get; init; }
 
+        public EmojiRoleProvider()
+        {
+        }
+
         public EmojiRoleProvider(DiscordChannel channel,
-            IDictionary<DiscordEmoji, DiscordRole> roles, 
-            ulong messageId, 
+            IDictionary<DiscordEmoji, DiscordRole> roles,
+            ulong messageId,
             bool removable = true)
         {
             Channel = channel;
@@ -27,7 +31,7 @@ namespace Bot_NetCore.Providers
         public async void ValidateEmojis(DiscordClient client)
         {
             var message = await Channel.GetMessageAsync(MessageId);
-            
+
             var requiredEmojiList = Roles.Keys;
             if (Removable) requiredEmojiList.Add(DiscordEmoji.FromName(client, ":x:"));
 
@@ -51,7 +55,7 @@ namespace Bot_NetCore.Providers
                 foreach (var role in member.Roles)
                     if (providerRoles.Contains(role))
                         await member.RevokeRoleAsync(role);
-                
+
                 return;
             }
 
