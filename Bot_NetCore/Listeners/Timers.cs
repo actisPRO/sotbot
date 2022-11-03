@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Xml.Linq;
@@ -13,6 +14,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
+using Timer = System.Timers.Timer;
 
 namespace Bot_NetCore.Listeners
 {
@@ -20,6 +22,7 @@ namespace Bot_NetCore.Listeners
     {
         private static DiscordClient Client;
         private static int RainbowColor = 0;
+
         private static DiscordColor[] Colors = new DiscordColor[]
         {
             DiscordColor.Red,
@@ -67,7 +70,7 @@ namespace Bot_NetCore.Listeners
             updateVoiceTimes.Elapsed += UpdateVoiceTimesOnElapsedAsync;
             updateVoiceTimes.AutoReset = true;
             updateVoiceTimes.Enabled = true;
-            
+
             var sendMessagesOnExactTime = new Timer(60000);
             sendMessagesOnExactTime.Elapsed += SendMessagesOnExactTimeOnElapsed;
             sendMessagesOnExactTime.AutoReset = true;
@@ -82,6 +85,8 @@ namespace Bot_NetCore.Listeners
             checkExpiredFleetPoll.Elapsed += CheckExpiredFleetPoll;
             checkExpiredFleetPoll.AutoReset = true;
             checkExpiredFleetPoll.Enabled = true;
+
+            await StartFixEmojiRoleProvidersTaskAsync();
 
             await Task.CompletedTask;
         }
@@ -101,7 +106,6 @@ namespace Bot_NetCore.Listeners
                 }
                 catch (NullReferenceException)
                 {
-                    
                 }
             }
         }
@@ -113,48 +117,9 @@ namespace Bot_NetCore.Listeners
             // send a new year message
             DateTime currentTime = DateTime.Now;
             if (currentTime.Month == 1 && currentTime.Day == 1 && currentTime.Hour == 0 && currentTime.Minute == 0)
-                await Client.Guilds[Bot.BotSettings.Guild].GetChannel(435730405077811200).SendMessageAsync("**:christmas_tree: С Новым Годом, пираты! :christmas_tree:**");
+                await Client.Guilds[Bot.BotSettings.Guild].GetChannel(435730405077811200)
+                    .SendMessageAsync("**:christmas_tree: С Новым Годом, пираты! :christmas_tree:**");
         }
-
-        //private static async void ClearSubscriptionsOnElapsed(object sender, ElapsedEventArgs e)
-        //{
-        //    Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearSubscriptionsOnElapsed running");
-
-        //    for (int i = 0; i < Subscriber.Subscribers.Count; ++i)
-        //    {
-        //        var sub = Subscriber.Subscribers.Values.ToArray()[i];
-        //        if (DateTime.Now > sub.SubscriptionEnd)
-        //        {
-        //            try
-        //            {
-        //                var guild = Client.Guilds[Bot.BotSettings.Guild];
-        //                var member = await guild.GetMemberAsync(sub.Member);
-        //                try
-        //                {
-        //                    if (member != null)
-        //                    {
-        //                        await member.SendMessageAsync("Ваша подписка истекла :cry:");
-        //                    }
-        //                }
-        //                catch (NotFoundException) { }
-        //                catch (ArgumentException) { }
-
-        //                try
-        //                {
-        //                    await DonatorCommands.DeletePrivateRoleAsync(guild, member.Id);
-        //                }
-        //                catch (Exceptions.NotFoundException) { }
-
-        //                Subscriber.Subscribers.Remove(sub.Member);
-        //                Subscriber.Save(Bot.BotSettings.SubscriberXML);
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Возникла ошибка при очистке подписок.");
-        //            }
-        //        }
-        //    }
-        //}
 
         private static async void DeleteShipsOnElapsed(object sender, ElapsedEventArgs e)
         {
@@ -174,33 +139,33 @@ namespace Bot_NetCore.Listeners
                         }
                         catch (NotFoundException)
                         {
-
                         }
 
                         try
                         {
                             var member = await guild.GetMemberAsync(ship.GetCaptain().MemberId);
-                            await member.SendMessageAsync($"Твой корабль **{ship.Name}** был удалён из-за неактивности.");
+                            await member.SendMessageAsync(
+                                $"Твой корабль **{ship.Name}** был удалён из-за неактивности.");
                         }
                         catch (UnauthorizedException)
                         {
-
                         }
                         catch (NotFoundException)
                         {
-
                         }
 
                         PrivateShip.Delete(ship.Name);
 
-                        await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync("**Удаление корабля**\n\n" +
+                        await guild.GetChannel(Bot.BotSettings.ModlogChannel).SendMessageAsync(
+                            "**Удаление корабля**\n\n" +
                             $"**Модератор:** {Client.CurrentUser}\n" +
                             $"**Название:** {ship.Name}\n" +
                             $"**Дата:** {DateTime.Now}");
                     }
                     catch (NullReferenceException ex)
                     {
-                        Client.Logger.LogError(BotLoggerEvents.Timers, $"DeleteShipsOnElapsed Ship: {ship.Name} Channel: {ship.Channel} {ex.Message}");
+                        Client.Logger.LogError(BotLoggerEvents.Timers,
+                            $"DeleteShipsOnElapsed Ship: {ship.Name} Channel: {ship.Channel} {ex.Message}");
                     }
                 }
             }
@@ -212,8 +177,9 @@ namespace Bot_NetCore.Listeners
 
             try
             {
-                var channelMessages = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel)
-                            .GetMessagesAsync();
+                var channelMessages = await Client.Guilds[Bot.BotSettings.Guild]
+                    .GetChannel(Bot.BotSettings.VotesChannel)
+                    .GetMessagesAsync();
                 for (int i = 0; i < Vote.Votes.Count; ++i)
                 {
                     var vote = Vote.Votes.Values.ToArray()[i];
@@ -222,7 +188,8 @@ namespace Bot_NetCore.Listeners
                         var message = channelMessages.FirstOrDefault(x => x.Id == vote.Message);
                         if (message != null)
                         {
-                            if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days < 10) // выключение голосования
+                            if (DateTime.Now >= vote.End &&
+                                (DateTime.Now - vote.End).Days < 10) // выключение голосования
                             {
                                 if (message.Reactions.Count == 0) continue;
 
@@ -239,7 +206,8 @@ namespace Bot_NetCore.Listeners
                                 await message.ModifyAsync(embed: embed);
                                 await message.DeleteAllReactionsAsync();
                             }
-                            else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 && !message.Pinned) // архивирование голосования
+                            else if (DateTime.Now >= vote.End && (DateTime.Now - vote.End).Days >= 3 &&
+                                     !message.Pinned) // архивирование голосования
                             {
                                 var author = await Client.Guilds[Bot.BotSettings.Guild].GetMemberAsync(vote.Author);
                                 var embed = Utility.GenerateVoteEmbed(
@@ -258,12 +226,14 @@ namespace Bot_NetCore.Listeners
                                 doc.Add(root);
                                 doc.Save($"generated/voters-{vote.Id}.xml");
 
-                                var channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesArchive);
+                                var channel = Client.Guilds[Bot.BotSettings.Guild]
+                                    .GetChannel(Bot.BotSettings.VotesArchive);
 
                                 var newMessage = new DiscordMessageBuilder()
                                     .WithEmbed(embed);
 
-                                using (var fs = new FileStream($"generated/voters-{vote.Id}.xml", FileMode.Open, FileAccess.Read))
+                                using (var fs = new FileStream($"generated/voters-{vote.Id}.xml", FileMode.Open,
+                                           FileAccess.Read))
                                 {
                                     newMessage.WithFile(fs);
                                 }
@@ -273,10 +243,13 @@ namespace Bot_NetCore.Listeners
                                 await message.DeleteAsync();
 
                                 //Закрытие канала, если в нём больше нету голосований
-                                if(channelMessages.Count() == 0)
+                                if (channelMessages.Count() == 0)
                                 {
-                                    channel = Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.VotesChannel);
-                                    await channel.AddOverwriteAsync(Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.CodexRole), deny: Permissions.AccessChannels);
+                                    channel = Client.Guilds[Bot.BotSettings.Guild]
+                                        .GetChannel(Bot.BotSettings.VotesChannel);
+                                    await channel.AddOverwriteAsync(
+                                        Client.Guilds[Bot.BotSettings.Guild].GetRole(Bot.BotSettings.CodexRole),
+                                        deny: Permissions.AccessChannels);
                                 }
                             }
                             else if (DateTime.Now < vote.End) // починка голосования
@@ -284,7 +257,8 @@ namespace Bot_NetCore.Listeners
                                 if (message.Reactions.Count < 2)
                                 {
                                     await message.DeleteAllReactionsAsync();
-                                    await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":white_check_mark:"));
+                                    await message.CreateReactionAsync(DiscordEmoji.FromName(Client,
+                                        ":white_check_mark:"));
                                     await Task.Delay(400);
                                     await message.CreateReactionAsync(DiscordEmoji.FromName(Client, ":no_entry:"));
                                 }
@@ -303,12 +277,9 @@ namespace Bot_NetCore.Listeners
             }
         }
 
-
         /// <summary>
         ///     Очистка сообщений из каналов
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private static async void ClearChannelMessagesOnElapsed(object sender, ElapsedEventArgs e)
         {
             Client.Logger.LogDebug(BotLoggerEvents.Timers, $"ClearChannelMessagesOnElapsed running");
@@ -319,8 +290,12 @@ namespace Bot_NetCore.Listeners
 
                 var channels = new Dictionary<DiscordChannel, TimeSpan>
                 {
-                    { guild.GetChannel(Bot.BotSettings.FindChannel), new TimeSpan(0, 30, 0) },           //30 минут для канала поиска
-                    { guild.GetChannel(Bot.BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0) }   //24 часа для канала создания рейда
+                    {
+                        guild.GetChannel(Bot.BotSettings.FindChannel), new TimeSpan(0, 30, 0)
+                    }, //30 минут для канала поиска
+                    {
+                        guild.GetChannel(Bot.BotSettings.FleetCreationChannel), new TimeSpan(24, 0, 0)
+                    } //24 часа для канала создания рейда
                 };
 
                 foreach (var channel in channels)
@@ -329,34 +304,38 @@ namespace Bot_NetCore.Listeners
                     {
                         var messages = await channel.Key.GetMessagesAsync();
                         var toDelete = messages.ToList()
-                            .Where(x => !x.Pinned).ToList()                                             //Не закрепленные сообщения
+                            .Where(x => !x.Pinned).ToList() //Не закрепленные сообщения
                             .Where(x =>
                             {
                                 if (x.IsEdited && x.Embeds.Count() != 0 &&
                                     x.Embeds.FirstOrDefault().Footer.Text.Contains("заполнен"))
-                                    return DateTimeOffset.Now.Subtract(x.EditedTimestamp.Value.Add(new TimeSpan(0, 5, 0))).TotalSeconds > 0;
+                                    return DateTimeOffset.Now
+                                        .Subtract(x.EditedTimestamp.Value.Add(new TimeSpan(0, 5, 0))).TotalSeconds > 0;
                                 else
-                                    return DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value)).TotalSeconds > 0;
-                            });     //Опубликованные ранее определенного времени
+                                    return DateTimeOffset.Now.Subtract(x.CreationTimestamp.Add(channel.Value))
+                                        .TotalSeconds > 0;
+                            }); //Опубликованные ранее определенного времени
 
                         //Clear FindChannelInvites from deleted messages
                         foreach (var message in toDelete)
                             if (VoiceListener.FindChannelInvites.ContainsValue(message.Id))
                             {
-                                VoiceListener.FindChannelInvites.Remove(VoiceListener.FindChannelInvites.FirstOrDefault(x => x.Value == message.Id).Key);
+                                VoiceListener.FindChannelInvites.Remove(VoiceListener.FindChannelInvites
+                                    .FirstOrDefault(x => x.Value == message.Id).Key);
                                 await VoiceListener.SaveFindChannelMessagesAsync();
                             }
 
                         if (toDelete.Count() > 0)
                         {
                             await channel.Key.DeleteMessagesAsync(toDelete);
-                            Client.Logger.LogInformation(BotLoggerEvents.Timers, $"Канал {channel.Key.Name} был очищен.");
+                            Client.Logger.LogInformation(BotLoggerEvents.Timers,
+                                $"Канал {channel.Key.Name} был очищен.");
                         }
-
                     }
                     catch (Exception ex)
                     {
-                        Client.Logger.LogWarning(BotLoggerEvents.Timers, ex, $"Ошибка при удалении сообщений в {channel.Key.Name}.", DateTime.Now);
+                        Client.Logger.LogWarning(BotLoggerEvents.Timers, ex,
+                            $"Ошибка при удалении сообщений в {channel.Key.Name}.", DateTime.Now);
                     }
                 }
             }
@@ -416,6 +395,7 @@ namespace Bot_NetCore.Listeners
                     {
                         //Пользователь не найден
                     }
+
                     ReportSQL.Delete(report.Id);
                 }
                 else if (report.ReportType == ReportType.VoiceMute)
@@ -430,11 +410,11 @@ namespace Bot_NetCore.Listeners
                     {
                         //Пользователь не найден
                     }
+
                     ReportSQL.Delete(report.Id);
                 }
             }
         }
-
 
         /// <summary>
         ///     Обновление времени в голосовых каналах
@@ -456,7 +436,8 @@ namespace Bot_NetCore.Listeners
                     }
                     catch (Exception ex)
                     {
-                        Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении времени активности пользователя ({entry.Key}).");
+                        Client.Logger.LogError(BotLoggerEvents.Timers, ex,
+                            $"Ошибка при обновлении времени активности пользователя ({entry.Key}).");
                     }
                 }
 
@@ -465,11 +446,11 @@ namespace Bot_NetCore.Listeners
 
                 var guild = Client.Guilds[Bot.BotSettings.Guild];
                 foreach (var entry in guild.VoiceStates.Where(
-                                        x => x.Value.Channel != null && 
-                                             x.Value.Channel.Id != guild.AfkChannel.Id && 
-                                             x.Value.Channel.Id != Bot.BotSettings.WaitingRoom &&
-                                             x.Value.Channel.Users.Count() >= 2)
-                                        .ToList())
+                                 x => x.Value.Channel != null &&
+                                      x.Value.Channel.Id != guild.AfkChannel.Id &&
+                                      x.Value.Channel.Id != Bot.BotSettings.WaitingRoom &&
+                                      x.Value.Channel.Users.Count() >= 2)
+                             .ToList())
                 {
                     if (!VoiceListener.VoiceTimeCounters.ContainsKey(entry.Key))
                         VoiceListener.VoiceTimeCounters.Add(entry.Key, DateTime.Now);
@@ -477,15 +458,14 @@ namespace Bot_NetCore.Listeners
             }
             catch (Exception ex)
             {
-                Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении времени активности пользователей.");
+                Client.Logger.LogError(BotLoggerEvents.Timers, ex,
+                    $"Ошибка при обновлении времени активности пользователей.");
             }
         }
 
         /// <summary>
         ///     Удаление старых тикетов.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private static async void CheckExpiredTicketsAsync(object sender, ElapsedEventArgs e)
         {
             Client.Logger.LogDebug(BotLoggerEvents.Timers, $"CheckExpiredTicketsAsync running");
@@ -501,41 +481,48 @@ namespace Bot_NetCore.Listeners
                 {
                     await guild.GetChannel(ticket.ChannelId).DeleteAsync();
                 }
-                catch (NotFoundException) { }
-                catch (NullReferenceException) { }
+                catch (NotFoundException)
+                {
+                }
+                catch (NullReferenceException)
+                {
+                }
             }
         }
 
         /// <summary>
         ///     Удаление старых тикетов.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private static async void CheckExpiredFleetPoll(object sender, ElapsedEventArgs e)
         {
             Client.Logger.LogDebug(BotLoggerEvents.Timers, $"CheckExpiredFleetPoll running");
 
             try
             {
-                var fleetPollResetTime = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 12, 0, 0);
+                var fleetPollResetTime =
+                    new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, 12, 0, 0);
 
                 if (DateTime.Now > fleetPollResetTime)
                 {
-                    var message = await Client.Guilds[Bot.BotSettings.Guild].GetChannel(Bot.BotSettings.FleetCreationChannel)
+                    var message = await Client.Guilds[Bot.BotSettings.Guild]
+                        .GetChannel(Bot.BotSettings.FleetCreationChannel)
                         .GetMessageAsync(Bot.BotSettings.FleetVotingMessage);
 
                     if (message.Embeds.Count > 0)
                     {
                         var oldEmbed = message.Embeds.FirstOrDefault();
 
-                        var messageTime = message.EditedTimestamp != null ? message.EditedTimestamp : message.CreationTimestamp;
+                        var messageTime = message.EditedTimestamp != null
+                            ? message.EditedTimestamp
+                            : message.CreationTimestamp;
 
                         //Проверка времени
                         if (fleetPollResetTime >= oldEmbed.Timestamp)
                         {
                             var embed = new DiscordEmbedBuilder(oldEmbed)
-                                .WithDescription($"Вы можете проголосовать за тип рейда который вас интересует больше всего **{fleetPollResetTime.AddDays(2):dd/MM}**.\n\n" +
-                                                "Таким образом капитанам рейда будет легче узнать какой тип рейда больше всего востребован.\n")
+                                .WithDescription(
+                                    $"Вы можете проголосовать за тип рейда который вас интересует больше всего **{fleetPollResetTime.AddDays(2):dd/MM}**.\n\n" +
+                                    "Таким образом капитанам рейда будет легче узнать какой тип рейда больше всего востребован.\n")
                                 .WithTimestamp(fleetPollResetTime.AddDays(1));
 
                             foreach (var reaction in message.Reactions)
@@ -568,7 +555,8 @@ namespace Bot_NetCore.Listeners
                                 await message.CreateReactionAsync(emoji);
                             }
 
-                            Client.Logger.LogInformation(BotLoggerEvents.Timers, $"Успешно обновлено голосование рейдов");
+                            Client.Logger.LogInformation(BotLoggerEvents.Timers,
+                                $"Успешно обновлено голосование рейдов");
                         }
                     }
                 }
@@ -576,6 +564,25 @@ namespace Bot_NetCore.Listeners
             catch (Exception ex)
             {
                 Client.Logger.LogError(BotLoggerEvents.Timers, ex, $"Ошибка при обновлении голосования рейдов.");
+            }
+        }
+
+        private static async Task StartFixEmojiRoleProvidersTaskAsync()
+        {
+            var timer = new PeriodicTimer(TimeSpan.FromMinutes(5));
+            while (await timer.WaitForNextTickAsync())
+            {
+                Client.Logger.LogInformation("Running ERP check");
+                await FixEmojiRoleProvidersTask();
+                Client.Logger.LogInformation("Finished ERP check");
+            }
+        } 
+        
+        private static async Task FixEmojiRoleProvidersTask()
+        {
+            foreach (var emojiRoleProvider in GlobalState.EmojiRoleProviders)
+            {
+                await emojiRoleProvider.ValidateEmojisAsync(Client);
             }
         }
     }
