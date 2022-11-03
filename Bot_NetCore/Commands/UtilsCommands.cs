@@ -124,46 +124,6 @@ namespace Bot_NetCore.Commands
                 await ctx.RespondAsync(embed: settingsPagination.First().Embed);
         }
 
-        [Command("emissarymessage")]
-        [Description("Обновляет привязку к сообщению эмиссаров (вводится в канале с сообщением)")]
-        [RequirePermissions(Permissions.KickMembers)]
-        public async Task UpdateEmissaryMessage(CommandContext ctx, DiscordMessage message)
-        {
-            if (!Bot.IsModerator(ctx.Member))
-            {
-                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} У вас нет доступа к этой команде!");
-                return;
-            }
-
-            if (ctx.Channel.LastMessageId.HasValue)
-                await ctx.Channel.DeleteMessageAsync(await ctx.Channel.GetMessageAsync(ctx.Channel.LastMessageId.Value));
-
-            //Обновляем настроки бота
-            if (Bot.BotSettings.EmissaryMessageId != message.Id)
-                Bot.EditSettings("EmissaryMessageId", message.Id.ToString());
-
-            //Убираем все реакции с сообщения
-            await message.DeleteAllReactionsAsync();
-
-            //Добавляем реакции к сообщению
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":moneybag:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":pig:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skeleton:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":gem:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":skull_and_crossbones:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":fish:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":crossed_swords:"));
-            await Task.Delay(400);
-            await message.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, ":x:"));
-
-        }
-
         [Command("serverstatus")]
         [Description("Обновляет статус игровых серверов")]
         [RequirePermissions(Permissions.KickMembers)]
