@@ -259,7 +259,7 @@ namespace Bot_NetCore.Listeners
             {
                 await e.Message.DeleteReactionAsync(e.Emoji, discordUser);
 
-                if (EmojiCooldowns.ContainsKey(discordUser)) // проверка на кулдаун
+                if (EmojiCooldowns.ContainsKey(discordUser)) 
                     if ((EmojiCooldowns[discordUser] - DateTime.Now).Seconds > 0)
                         return;
 
@@ -442,8 +442,14 @@ namespace Bot_NetCore.Listeners
             foreach (var emojiRoleProvider in GlobalState.EmojiRoleProviders)
                 if (emojiRoleProvider.MessageId == message.Id)
                 {
-                    await emojiRoleProvider.GrantRoleAsync(client, member, emoji);
                     await message.DeleteReactionAsync(emoji, member);
+                    
+                    if (EmojiCooldowns.ContainsKey(member)) 
+                        if ((EmojiCooldowns[member] - DateTime.Now).Seconds > 0)
+                            return;
+                    EmojiCooldowns[member] = DateTime.Now.AddSeconds(Bot.BotSettings.FastCooldown);
+                    
+                    await emojiRoleProvider.GrantRoleAsync(client, member, emoji);
                     return;
                 }
         }
