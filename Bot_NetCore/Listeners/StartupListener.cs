@@ -49,6 +49,7 @@ namespace Bot_NetCore.Listeners
 
         private static async Task RegisterEmojiRoleProvidersAsync(DiscordClient client, DiscordGuild guild)
         {
+            client.Logger.LogInformation("Started EmojiRoleProvider registration");
             var eventProvider = new EmojiRoleProvider
             {
                 Channel = guild.GetChannel(696668143430533190),
@@ -62,6 +63,8 @@ namespace Bot_NetCore.Listeners
             };
             await eventProvider.ValidateEmojisAsync(client);
             GlobalState.EmojiRoleProviders.Add(eventProvider);
+            
+            client.Logger.LogInformation("Finished EmojiRoleProvider registration");
         }
     }
 }

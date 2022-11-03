@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Logging;
 using Renci.SshNet.Messages;
 
 namespace Bot_NetCore.Providers
@@ -31,6 +32,7 @@ namespace Bot_NetCore.Providers
 
         public async Task ValidateEmojisAsync(DiscordClient client)
         {
+            client.Logger.LogInformation($"Validating emojis for ERP: Channel {Channel.Id}, Message {MessageId}");
             var message = await Channel.GetMessageAsync(MessageId);
 
             var requiredEmojiList = new List<DiscordEmoji>(Roles.Keys);
@@ -51,7 +53,7 @@ namespace Bot_NetCore.Providers
         public async Task GrantRoleAsync(DiscordClient client, DiscordMember member, DiscordEmoji emoji)
         {
             var providerRoles = Roles.Values;
-            foreach (var role in member.Roles)
+            foreach (var role in new List<DiscordRole>(member.Roles))
                 if (providerRoles.Contains(role))
                     await member.RevokeRoleAsync(role);
             
@@ -63,11 +65,4 @@ namespace Bot_NetCore.Providers
             }
         }
     }
-}
-
-public class ReactionEmojiComparer : IEqualityComparer<DiscordReaction>
-{
-    public bool Equals(DiscordReaction x, DiscordReaction y) => x?.Emoji.Name == y?.Emoji.Name;
-
-    public int GetHashCode(DiscordReaction obj) => obj.Emoji.GetHashCode();
 }

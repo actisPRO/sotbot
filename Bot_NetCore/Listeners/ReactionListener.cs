@@ -313,7 +313,7 @@ namespace Bot_NetCore.Listeners
             if (e.Guild.Id == Bot.BotSettings.Guild)
             {
                 var member = await e.Guild.GetMemberAsync(e.User.Id);
-                await RunEmojiRoleProvidersTask(client, member, e.Message.Id, e.Emoji);
+                await RunEmojiRoleProvidersTask(client, member, e.Message, e.Emoji);
             }
 
             if (e.Message.Channel != null)
@@ -436,13 +436,14 @@ namespace Bot_NetCore.Listeners
         }
 
         private static async Task RunEmojiRoleProvidersTask(DiscordClient client, DiscordMember member,
-            ulong messageId,
+            DiscordMessage message,
             DiscordEmoji emoji)
         {
             foreach (var emojiRoleProvider in GlobalState.EmojiRoleProviders)
-                if (emojiRoleProvider.MessageId == messageId)
+                if (emojiRoleProvider.MessageId == message.Id)
                 {
                     await emojiRoleProvider.GrantRoleAsync(client, member, emoji);
+                    await message.DeleteReactionAsync(emoji, member);
                     return;
                 }
         }
