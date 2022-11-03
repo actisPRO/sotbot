@@ -40,6 +40,7 @@ namespace Bot_NetCore.Providers
 
             var existingEmojis = (from reaction in message.Reactions
                 select reaction.Emoji).ToList();
+            existingEmojis.ForEach(emoji => { client.Logger.LogInformation("Existing emoji: " + emoji.Name); });
 
             foreach (var emoji in requiredEmojiList)
             {
@@ -56,7 +57,7 @@ namespace Bot_NetCore.Providers
             foreach (var role in new List<DiscordRole>(member.Roles))
                 if (providerRoles.Contains(role))
                     await member.RevokeRoleAsync(role);
-            
+
             if (Removable && emoji == DiscordEmoji.FromName(client, ":x:")) return;
 
             if (Roles.ContainsKey(emoji))
