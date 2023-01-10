@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Bot_NetCore.Entities;
 using Bot_NetCore.Listeners;
 using Bot_NetCore.Misc;
 using DSharpPlus;
@@ -150,8 +151,8 @@ namespace Bot_NetCore.Commands
             //Проверка если сообщение было уже отправлено
             if (!VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
             {
-
                 var msg = await ctx.RespondAsync(embed: embed.Build());
+                await CreateFindTeamInviteAsync(ctx.Member, invite);
 
                 //Добавялем в словарь связку канал - сообщение и сохраняем в файл
                 VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
@@ -162,6 +163,19 @@ namespace Bot_NetCore.Commands
             {
                 var embedMessage = await ctx.Channel.GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
                 await embedMessage.ModifyAsync(embed: embed.Build());
+            }
+        }
+
+        private async Task CreateFindTeamInviteAsync(DiscordMember member, DiscordInvite invite)
+        {
+            try
+            {
+                using var client = new FindTeamClient(Bot.BotSettings.FindTeamToken);
+                await client.CreateAsync(invite.ToString(), member.Id);
+            }
+            catch (Exception e)
+            {
+                // no need to do anything
             }
         }
 
@@ -203,6 +217,7 @@ namespace Bot_NetCore.Commands
                     var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
                     ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
                     await embedMessage.DeleteAsync();
+                    await CloseFindTeamInviteAsync(ctx.Member);
                 }
                 catch (NotFoundException) { }
 
@@ -211,6 +226,18 @@ namespace Bot_NetCore.Commands
             }
         }
 
+        private async Task CloseFindTeamInviteAsync(DiscordMember member)
+        {
+            try
+            {
+                using var client = new FindTeamClient(Bot.BotSettings.FindTeamToken);
+                await client.CloseAsync(member.Id);
+            }
+            catch (Exception e)
+            {
+                // no need to do anything
+            }
+        }
 
         [Command("votekick")]
         [Aliases("vk")]

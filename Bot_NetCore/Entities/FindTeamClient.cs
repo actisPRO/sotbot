@@ -30,7 +30,7 @@ public class FindTeamClient : IDisposable
     {
         _client?.Dispose();
     }
-
+    
     public async Task CreateAsync(string inviteUrl, ulong userId, int time = 1800)
     {
         var request = new HttpRequestMessage
