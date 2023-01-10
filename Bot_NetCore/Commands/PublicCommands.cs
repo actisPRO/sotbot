@@ -171,7 +171,7 @@ namespace Bot_NetCore.Commands
             try
             {
                 using var client = new FindTeamClient(Bot.BotSettings.FindTeamToken);
-                await client.CreateAsync(invite.ToString(), member.Id);
+                await client.CreateAsync(invite.ToString(), member.Id, 600);
             }
             catch (Exception e)
             {
