@@ -827,6 +827,8 @@ namespace Bot_NetCore
         ///     Файл с вариантами названий кораблей.
         /// </summary>
         public string ShipNamesCSV;
+
+        public string FindTeamToken;
     }
 
     public enum CommandType
