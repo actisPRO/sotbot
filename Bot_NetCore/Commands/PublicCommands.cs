@@ -152,7 +152,7 @@ namespace Bot_NetCore.Commands
             if (!VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
             {
                 var msg = await ctx.RespondAsync(embed: embed.Build());
-                await CreateFindTeamInviteAsync(ctx.Member, invite);
+                await CreateFindTeamInviteAsync(ctx.Member, invite, ctx.Client.Logger);
 
                 //Добавялем в словарь связку канал - сообщение и сохраняем в файл
                 VoiceListener.FindChannelInvites[channel.Id] = msg.Id;
@@ -166,7 +166,7 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        private async Task CreateFindTeamInviteAsync(DiscordMember member, DiscordInvite invite)
+        private async Task CreateFindTeamInviteAsync(DiscordMember member, DiscordInvite invite, ILogger logger)
         {
             try
             {
@@ -175,7 +175,7 @@ namespace Bot_NetCore.Commands
             }
             catch (Exception e)
             {
-                // no need to do anything
+                logger.LogWarning("Error while creating find team invite: " + e.Message);
             }
         }
 
@@ -217,7 +217,7 @@ namespace Bot_NetCore.Commands
                     var embedMessage = await ctx.Guild.GetChannel(Bot.BotSettings.FindChannel).GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
                     ctx.Client.Logger.LogDebug(BotLoggerEvents.Commands, $"Удаление ембеда в поиске игроков!");
                     await embedMessage.DeleteAsync();
-                    await CloseFindTeamInviteAsync(ctx.Member);
+                    await CloseFindTeamInviteAsync(ctx.Member, ctx.Client.Logger);
                 }
                 catch (NotFoundException) { }
 
@@ -226,7 +226,7 @@ namespace Bot_NetCore.Commands
             }
         }
 
-        private async Task CloseFindTeamInviteAsync(DiscordMember member)
+        private async Task CloseFindTeamInviteAsync(DiscordMember member, ILogger logger)
         {
             try
             {
@@ -235,7 +235,7 @@ namespace Bot_NetCore.Commands
             }
             catch (Exception e)
             {
-                // no need to do anything
+                logger.LogWarning("Error while closing find team invite: " + e.Message);
             }
         }
 
