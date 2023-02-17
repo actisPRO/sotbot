@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bot_NetCore.DAL;
 using Bot_NetCore.Misc;
 using DataTablePrettyPrinter;
 using DSharpPlus;
@@ -306,6 +307,40 @@ namespace Bot_NetCore.Commands
         {
             await channel.SendMessageAsync(message);
             await ctx.Message.DeleteAsync();
+        }
+
+        [Command("dljoins")]
+        [Description("Генерирует CSV таблицу с новыми участниками")]
+        [RequirePermissions(Permissions.KickMembers)]
+        public async Task DownloadJoins(CommandContext ctx, int count = 500)
+        {
+            if (count < 1 || count > 20000)
+            {
+                await ctx.RespondAsync($"{Bot.BotSettings.ErrorEmoji} Количество должно быть между 1 и 20000");
+                return;
+            }
+
+            var joins = MemberJoinsDAL.GetLatestJoinsAsync(count);
+            var randomId = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
+            await using (var fs = new FileStream($"generated/joins_{randomId}.csv", FileMode.Create))
+            {
+                await using var sw = new StreamWriter(fs);
+                await foreach (var join in joins)
+                {
+                    var line = $"\"{join.MemberId}\",\"{join.Username}\",\"{join.JoinDate:dd.MM.yyyy HH:mm:ss}\",\"{join.Invite}\"\n";
+                    await sw.WriteAsync(line);
+                }
+            }
+
+            await using (var fs = new FileStream($"generated/joins_{randomId}.csv", FileMode.Open))
+            {
+                var builder = new DiscordMessageBuilder()
+                    .WithContent($"{Bot.BotSettings.OkEmoji} Список сгенерирован.")
+                    .WithFile(fs);
+                await ctx.RespondAsync(builder);
+            }
+            
+            File.Delete($"generated/joins_{randomId}.csv");
         }
     }
 }

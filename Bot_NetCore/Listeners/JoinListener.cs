@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bot_NetCore.Commands;
+using Bot_NetCore.DAL;
 using Bot_NetCore.Entities;
 using Bot_NetCore.Misc;
+using Bot_NetCore.Models;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -224,6 +226,7 @@ namespace Bot_NetCore.Listeners
             }
 
             //Определение инвайта
+            string invite = "unknown";
             try
             {
                 //Находит обновившийся инвайт по количеству приглашений
@@ -246,6 +249,8 @@ namespace Bot_NetCore.Listeners
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) используя " +
                         $"приглашение {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}. ");
 
+                    invite = updatedInvite.Code;
+                    
                     client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. " +
                         $"Приглашение: {updatedInvite.Code} от участника {updatedInvite.Inviter.Username}#{updatedInvite.Inviter.Discriminator}.");
 
@@ -273,6 +278,7 @@ namespace Bot_NetCore.Listeners
                         await e.Guild.GetChannel(Bot.BotSettings.UserlogChannel).SendMessageAsync(
                         $"**Участник присоединился:** {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}). " +
                         $"Используя персональную ссылку **{guildInvite.Code}**.");
+                        invite = guildInvite.Code;
 
                         client.Logger.LogInformation(BotLoggerEvents.Event, $"Участник {e.Member.Username}#{e.Member.Discriminator} ({e.Member.Id}) присоединился к серверу. Используя персональную ссылку {guildInvite.Code}.");
                     }
@@ -310,6 +316,14 @@ namespace Bot_NetCore.Listeners
 
                 await errChannel.SendMessageAsync(message);
             }
+
+            await MemberJoinsDAL.InsertAsync(new MemberJoin
+            {
+                MemberId = e.Member.Id.ToString(),
+                Username = e.Member.Username.Replace('"', '\'') + '#' + e.Member.Discriminator,
+                JoinDate = e.Member.JoinedAt.DateTime,
+                Invite = invite
+            });
 
             //Обновляем статус бота
             await Bot.UpdateBotStatusAsync(client, e.Guild);
