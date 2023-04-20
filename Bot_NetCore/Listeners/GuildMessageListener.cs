@@ -13,7 +13,6 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.FileIO;
-using Renci.SshNet.Security;
 
 namespace Bot_NetCore.Listeners
 {
@@ -72,7 +71,7 @@ namespace Bot_NetCore.Listeners
 
                                         using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read))
                                         {
-                                            message.WithFile(fs);
+                                            message.AddFile(fs);
 
                                             await e.Guild.GetChannel(Bot.BotSettings.FulllogChannel).SendMessageAsync(message);
                                         }
@@ -197,7 +196,7 @@ namespace Bot_NetCore.Listeners
 
                         using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read))
                         {
-                            message.WithFile(fs);
+                            message.AddFile(fs);
 
                             logMessage = await e.Guild.GetChannel(Bot.BotSettings.AttachmentsLog).SendMessageAsync(message);
                         }

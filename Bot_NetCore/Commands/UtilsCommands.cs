@@ -284,7 +284,7 @@ namespace Bot_NetCore.Commands
                     {
                         var mb = new DiscordMessageBuilder();
                         mb.Content = "**Результат выполнения SQL-запроса:**";
-                        mb.WithFile(fsReader);
+                        mb.AddFile(fsReader);
                         await ctx.RespondAsync(mb);
                     }
                     
@@ -336,7 +336,7 @@ namespace Bot_NetCore.Commands
             {
                 var builder = new DiscordMessageBuilder()
                     .WithContent($"{Bot.BotSettings.OkEmoji} Список сгенерирован.")
-                    .WithFile(fs);
+                    .AddFile(fs);
                 await ctx.RespondAsync(builder);
             }
             

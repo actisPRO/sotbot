@@ -432,15 +432,13 @@ namespace Bot_NetCore.Commands
                     $"{Bot.BotSettings.ErrorEmoji} Отсутствует файл colors.jpeg, обратитесь к администратору!");
                 return;
             }
-
             
-
             using (var fs = new FileStream("generated/colors.jpeg", FileMode.Open, FileAccess.Read))
             {
                 var message = new DiscordMessageBuilder()
                 .WithContent("Используйте `!d color название цвета`, чтобы получить цвет.\n" +
                 "Для удаления цвета, повторно введите `!d color название цвета`.");
-                message.WithFile(fs);
+                message.AddFile(fs);
                 await ctx.RespondAsync(message);
             }
             

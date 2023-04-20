@@ -19,6 +19,7 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using Google.Protobuf;
 using Microsoft.Extensions.Logging;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -99,7 +100,8 @@ namespace Bot_NetCore
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
-                MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information
+                MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information,
+                LogUnknownEvents = false
             };
 
             Client = new DiscordClient(cfg);
