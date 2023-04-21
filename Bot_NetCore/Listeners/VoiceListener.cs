@@ -411,6 +411,7 @@ namespace Bot_NetCore.Listeners
                                     client.Logger.LogDebug(BotLoggerEvents.Event, $"Удаление ембеда в поиске игроков!");
                                     await embedMessage.DeleteAsync();
                                     FindChannelInvites.Remove(channel.Id);
+                                    Invites.RemoveChannelInvite(client, channel);
                                     await SaveFindChannelMessagesAsync();
                                 }
                                 catch (NotFoundException) { }
@@ -462,7 +463,7 @@ namespace Bot_NetCore.Listeners
                                     }
                                     else
                                     {
-                                        content += $"{DiscordEmoji.FromName(client, ":warning:")} {member.Mention}\n";
+                                        content += $"{DiscordEmoji.FromName(client, ":doubloon:")} {member.Mention}\n";
                                         slotsCount++;
                                     }
                                 }
@@ -477,7 +478,7 @@ namespace Bot_NetCore.Listeners
                                     }
                                     else
                                     {
-                                        content += $"{DiscordEmoji.FromName(client, ":warning:")} ☐\n";
+                                        content += $"{DiscordEmoji.FromName(client, ":gold:")} ☐\n";
                                         slotsCount++;
                                     }
                                 }
@@ -505,6 +506,7 @@ namespace Bot_NetCore.Listeners
                         catch (NotFoundException)
                         {
                             FindChannelInvites.Remove(channel.Id);
+                            Invites.RemoveChannelInvite(client, channel);
                         }
                     }
                 }
@@ -512,6 +514,7 @@ namespace Bot_NetCore.Listeners
                 {
                     client.Logger.LogWarning(BotLoggerEvents.Event, $"Не удалось обновить сообщение с эмбедом для голосового канала. Канал будет удалён из привязки к сообщению.");
                     FindChannelInvites.Remove(channel.Id);
+                    Invites.RemoveChannelInvite(client, channel);
                     await SaveFindChannelMessagesAsync();
                     return;
                 }

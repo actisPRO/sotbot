@@ -226,6 +226,7 @@ namespace Bot_NetCore.Commands
                 catch (NotFoundException) { }
 
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
+                Invites.RemoveChannelInvite(ctx.Client, channel);
                 await VoiceListener.SaveFindChannelMessagesAsync();
             }
         }
