@@ -37,7 +37,10 @@ namespace Bot_NetCore.Commands
             {
                 await ctx.Message.DeleteAsync();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             try
             {
@@ -70,9 +73,8 @@ namespace Bot_NetCore.Commands
 
             await ctx.TriggerTypingAsync();
 
-            var invite = await channel.CreateInviteAsync();
+            var invite = await Invites.GetChannelInviteAsync(channel);
             var usersNeeded = channel.UserLimit.Value - channel.Users.Count();
-
 
             string embedThumbnail;
             //Если канал в категории рейда, вставляем картинку с рейдом и проверяем если это обычный канал рейда (в нём 1 лишний слот, его мы игнорируем)
@@ -134,9 +136,7 @@ namespace Bot_NetCore.Commands
                     slotsCount++;
                 }
             }
-
-            content += $"\n**Подключиться:** {invite}";
-
+            
             //Embed
             var embed = new DiscordEmbedBuilder
             {
@@ -147,11 +147,15 @@ namespace Bot_NetCore.Commands
             embed.WithThumbnail(embedThumbnail);
             embed.WithTimestamp(DateTime.Now);
             embed.WithFooter($"В поиске команды. +{usersNeeded}");
+            
+            var message = new DiscordMessageBuilder()
+                .AddEmbed(embed)
+                .AddComponents(new DiscordLinkButtonComponent(invite.ToString(), "Подключиться", usersNeeded <= 0)); // if room is full button is disabled
 
             //Проверка если сообщение было уже отправлено
             if (!VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
             {
-                var msg = await ctx.RespondAsync(embed: embed.Build());
+                var msg = await ctx.RespondAsync(message);
                 await CreateFindTeamInviteAsync(ctx.Member, invite, ctx.Client.Logger);
 
                 //Добавялем в словарь связку канал - сообщение и сохраняем в файл
@@ -162,16 +166,16 @@ namespace Bot_NetCore.Commands
             else
             {
                 var embedMessage = await ctx.Channel.GetMessageAsync(VoiceListener.FindChannelInvites[channel.Id]);
-                await embedMessage.ModifyAsync(embed: embed.Build());
+                await embedMessage.ModifyAsync(message);
             }
         }
 
-        private async Task CreateFindTeamInviteAsync(DiscordMember member, DiscordInvite invite, ILogger logger)
+        private async Task CreateFindTeamInviteAsync(DiscordMember member, string invite, ILogger logger)
         {
             try
             {
                 using var client = new FindTeamClient(Bot.BotSettings.FindTeamToken);
-                await client.CreateAsync(invite.ToString(), member.Id, 600);
+                await client.CreateAsync(invite, member.Id, 600);
             }
             catch (Exception e)
             {
@@ -222,6 +226,7 @@ namespace Bot_NetCore.Commands
                 catch (NotFoundException) { }
 
                 VoiceListener.FindChannelInvites.Remove(channel.Id);
+                Invites.RemoveChannelInvite(ctx.Client, channel);
                 await VoiceListener.SaveFindChannelMessagesAsync();
             }
         }

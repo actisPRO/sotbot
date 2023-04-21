@@ -235,7 +235,7 @@ namespace Bot_NetCore.Listeners
                                 using (var fs = new FileStream($"generated/voters-{vote.Id}.xml", FileMode.Open,
                                            FileAccess.Read))
                                 {
-                                    newMessage.WithFile(fs);
+                                    newMessage.AddFile(fs);
                                 }
 
                                 await channel.SendMessageAsync($"generated/voters-{vote.Id}.xml", embed: embed);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -99,7 +98,8 @@ namespace Bot_NetCore
                 AutoReconnect = true,
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
-                MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information
+                MinimumLogLevel = BotSettings.Debug ? LogLevel.Debug : LogLevel.Information,
+                LogUnknownEvents = false
             };
 
             Client = new DiscordClient(cfg);
