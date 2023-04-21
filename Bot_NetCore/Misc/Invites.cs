@@ -19,6 +19,7 @@ public static class Invites
         }
 
         var invite = await channel.CreateInviteAsync(max_age: 0);
+        LfgInvites.Add(channel.Id, invite.ToString());
         return invite.ToString();
     }
 }
