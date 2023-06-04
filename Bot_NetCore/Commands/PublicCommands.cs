@@ -143,14 +143,14 @@ namespace Bot_NetCore.Commands
                 Description = content,
                 Color = new DiscordColor("#e67e22")
             };
-            embed.WithAuthor($"{channel.Name}", url: invite.ToString(), iconUrl: ctx.Member.AvatarUrl);
+            embed.WithAuthor($"{channel.Name}", url: invite, iconUrl: ctx.Member.AvatarUrl);
             embed.WithThumbnail(embedThumbnail);
             embed.WithTimestamp(DateTime.Now);
             embed.WithFooter($"В поиске команды. +{usersNeeded}");
             
             var message = new DiscordMessageBuilder()
                 .AddEmbed(embed)
-                .AddComponents(new DiscordLinkButtonComponent(invite.ToString(), "Подключиться", usersNeeded <= 0)); // if room is full button is disabled
+                .AddComponents(new DiscordLinkButtonComponent(invite, "Подключиться", usersNeeded <= 0)); // if room is full button is disabled
 
             //Проверка если сообщение было уже отправлено
             if (!VoiceListener.FindChannelInvites.ContainsKey(channel.Id))
@@ -469,16 +469,24 @@ namespace Bot_NetCore.Commands
                 await fleetCategory.ModifyAsync(x =>
                 {
                     x.Name = $"Рейд {notes}";
-                    x.Position = rootFleetCategory.Position + 1;
+                    x.Position = rootFleetCategory.Position;
                 });
 
                 var textChannel = await ctx.Guild.CreateChannelAsync($"рейд-{notes}", ChannelType.Text, fleetCategory);
                 await ctx.Guild.CreateChannelAsync($"бронь-инвайты-{notes}", ChannelType.Text, fleetCategory);
-                await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
+
+                var voiceChannel = await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
+                // Запретить роли рейд отправку сообщений в голосовые каналы
+                await voiceChannel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole), deny: Permissions.SendMessages);
 
                 nShips = nShips == 1 ? 0 : nShips; //Пропускаем в случае одного корабля, нужен только общий голосовой
-                for (int i = 1; i <= nShips; i++)
-                    await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+                for (var i = 1; i <= nShips; i++)
+                {
+                    voiceChannel = await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory,
+                        bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
+                    // Запретить роли рейд отправку сообщений в голосовые каналы
+                    await voiceChannel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole), deny: Permissions.SendMessages);
+                }
 
                 await ctx.Guild.GetAuditLogsAsync(1); //Костыль, каналы в категории не успевают обновляться и последний канал не учитывается
 
