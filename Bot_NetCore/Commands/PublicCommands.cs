@@ -477,7 +477,7 @@ namespace Bot_NetCore.Commands
 
                 var voiceChannel = await ctx.Guild.CreateChannelAsync($"Общий - {notes}", ChannelType.Voice, fleetCategory, bitrate: Bot.BotSettings.Bitrate, userLimit: nShips * slots);
                 // Запретить роли рейд отправку сообщений в голосовые каналы
-                await voiceChannel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole), deny: Permissions.SendMessages);
+                // await voiceChannel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole), deny: Permissions.SendMessages);
 
                 nShips = nShips == 1 ? 0 : nShips; //Пропускаем в случае одного корабля, нужен только общий голосовой
                 for (var i = 1; i <= nShips; i++)
@@ -485,7 +485,7 @@ namespace Bot_NetCore.Commands
                     voiceChannel = await ctx.Guild.CreateChannelAsync($"Рейд {i} - {notes}", ChannelType.Voice, fleetCategory,
                         bitrate: Bot.BotSettings.Bitrate, userLimit: slots + 1);
                     // Запретить роли рейд отправку сообщений в голосовые каналы
-                    await voiceChannel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole), deny: Permissions.SendMessages);
+                    // await voiceChannel.AddOverwriteAsync(ctx.Guild.GetRole(Bot.BotSettings.FleetCodexRole), deny: Permissions.SendMessages);
                 }
 
                 await ctx.Guild.GetAuditLogsAsync(1); //Костыль, каналы в категории не успевают обновляться и последний канал не учитывается

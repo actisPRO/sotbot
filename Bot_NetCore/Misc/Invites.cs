@@ -20,7 +20,7 @@ public static class Invites
             return channelInvite;
         }
 
-        var invite = await channel.CreateInviteAsync(max_age: 0);
+        var invite = await channel.CreateInviteAsync();
         LfgInvites.Add(channel.Id, invite.ToString());
         return invite.ToString();
     }

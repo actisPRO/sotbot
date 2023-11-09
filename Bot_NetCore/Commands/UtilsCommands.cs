@@ -13,6 +13,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
+using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 
 namespace Bot_NetCore.Commands
@@ -341,6 +342,53 @@ namespace Bot_NetCore.Commands
             }
             
             File.Delete($"generated/joins_{randomId}.csv");
+        }
+
+        [Command("clearinvites")]
+        [Description("Чистит устарелые инвайты созданные ботом")]
+        [RequirePermissions(Permissions.Administrator)]
+        public async Task ClearInvites(CommandContext ctx, int count = 500)
+        {
+            var response = await ctx.RespondAsync("Запущена очистка приглашений. \nИдет получение списка приглашений.");
+
+            var invites = await ctx.Guild.GetInvitesAsync();
+
+            var deleted = 0;
+
+            var badInvites = invites
+                .Take(count)
+                .Where(invite => invite.Uses < 5 && invite.Inviter.IsBot && !invite.IsTemporary)
+                .ToList();
+
+            badInvites.GroupBy(invite => invite.Inviter)
+                .Select(group => group.First())
+                .ToList()
+                .ForEach(i => ctx.Client.Logger.LogInformation(i.Inviter.Username));
+
+            await response.ModifyAsync($"Было получено {badInvites.Count} устаревших приглашений.");
+
+            var deleteRespone = await ctx.RespondAsync("Запущено удаление приглашений...");
+
+
+            foreach (var badInvite in badInvites)
+            {
+                try
+                {
+                    await badInvite.DeleteAsync("Очистка приглашений");
+                    deleted++;
+
+                    if (deleted % 10 == 0)
+                    {
+                        await deleteRespone.ModifyAsync($"Идет удаление приглашений {deleted}/{badInvites.Count}");
+                    }
+                }
+                catch
+                {
+                    await ctx.RespondAsync($"Возникла ошибка при удалении приглашения: `{badInvite.Code}`");
+                }
+            }
+
+            await deleteRespone.ModifyAsync($"✅ Очистка приглашений закончена. Приглашений было удалено: {deleted}");
         }
     }
 }
