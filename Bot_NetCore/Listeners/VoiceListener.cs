@@ -182,10 +182,10 @@ namespace Bot_NetCore.Listeners
         }
 
         [AsyncListener(EventTypes.ChannelChanged)]
-        public static async Task LogOnVoiceError(DiscordClient client, VoiceStateUpdateEventArgs e)
+        public static async Task LogOnVoiceInfo(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             if (!e.Guild.VoiceStates.Values.Any(x => x.User.Id == e.User.Id))
-                client.Logger.LogError($"User: {e.User.Username} Channel: {e.Channel?.Name} Before: {e.Before?.Channel?.Name} " +
+                client.Logger.LogInformation($"User: {e.User.Username} Channel: {e.Channel?.Name} Before: {e.Before?.Channel?.Name} " +
                     $"After: {e.After?.Channel?.Name} In VoiceStates: {e.Guild.VoiceStates.Values.Any(x => x.User.Id == e.User.Id)} " +
                     $"In channels: {e.Guild.Channels.Values.Where(x => x.Type == ChannelType.Category).Any(x => x.Children.Any(y => y.Users.Any(u => u.Id == e.User.Id)))}");
 
